@@ -1,5 +1,6 @@
 module Pages.Home_ exposing (Model, Msg(..), page)
 
+import Auth
 import Bridge
 import Effect exposing (..)
 import Html exposing (..)
@@ -7,13 +8,15 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Lamdera
 import Page exposing (Page)
+import Ports
 import Route exposing (Route)
+import Route.Path
 import Shared
 import View exposing (View)
 
 
-page : Shared.Model -> Route () -> Page Model Msg
-page shared route =
+page : Auth.User -> Shared.Model -> Route () -> Page Model Msg
+page user shared route =
     Page.new
         { init = init
         , update = update
@@ -42,15 +45,15 @@ init _ =
 
 
 type Msg
-    = SmashedLikeButton
+    = NoOp
 
 
 update : Msg -> Model -> ( Model, Effect Msg )
 update msg model =
     case msg of
-        SmashedLikeButton ->
+        NoOp ->
             ( model
-            , Effect.sendCmd <| Lamdera.sendToBackend Bridge.SmashedLikeButton
+            , Effect.none
             )
 
 
@@ -116,15 +119,5 @@ view shared model =
             , style "opacity" "0.75"
             ]
             [ text "It's working, Mario!!" ]
-        , p
-            [ style "font-family" "Nunito Sans"
-            , style "cursor" "pointer"
-            , style "background-color" "#ffffff40"
-            , style "padding" "5px"
-            , style "border-radius" "5px"
-            , style "user-select" "none"
-            , onClick SmashedLikeButton
-            ]
-            [ text <| "👍 " ++ String.fromInt shared.smashedLikes ]
         ]
     }

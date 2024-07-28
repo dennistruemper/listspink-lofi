@@ -1,5 +1,5 @@
 /dist
-/.elm-land
+/.elm-land/server
 /.env
 /elm-stuff
 /node_modules

@@ -34,8 +34,14 @@ app =
 updateFromBackend : ToFrontend -> Model -> ( Model, Cmd FrontendMsg )
 updateFromBackend msg model =
     case msg of
-        NewSmashedLikes smashedLikes ->
-            ( model, sendSharedMsg <| Shared.Msg.GotNewSmashedLikes smashedLikes )
+        AdminDataRequested data ->
+            ( model, sendSharedMsg <| Shared.Msg.GotAdminData data )
+
+        SyncCodeCreated code ->
+            ( model, sendSharedMsg <| Shared.Msg.GotSyncCode code )
+
+        SyncCodeUsed userData ->
+            ( model, sendSharedMsg <| Shared.Msg.GotUserData userData )
 
 
 sendSharedMsg : Shared.Msg.Msg -> Cmd FrontendMsg

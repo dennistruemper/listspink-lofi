@@ -1,6 +1,9 @@
 module Shared.Msg exposing (Msg(..))
 
-{-| -}
+import Bridge
+import Dict exposing (Dict)
+import Primitives exposing (SessionId, UserId)
+import UserManagement
 
 
 {-| Normally, this value would live in "Shared.elm"
@@ -11,4 +14,8 @@ own file, so they can be imported by `Effect.elm`
 
 -}
 type Msg
-    = GotNewSmashedLikes Int
+    = GotAdminData { userManagement : UserManagement.Model }
+    | NewUserCreated Bridge.User
+    | GotSyncCode Int
+    | GotUserData { name : String, userId : UserId, deviceId : String, deviceName : String }
+    | GotMessageFromJs String
