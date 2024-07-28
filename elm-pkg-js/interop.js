@@ -60,7 +60,29 @@ function generateIds() {
 }
 
 function getId() {
-  return window.crypto.randomUUID();
+  if (window.crypto.randomUUID) {
+    return window.crypto.randomUUID();
+  }
+
+  return createPseudoUuid();
+}
+
+function createPseudoUuid() {
+  let result = "";
+
+  for (let i = 0; i < 32; i++) {
+    result += getRadomCharacter();
+    if ([8, 12, 16, 20].includes(i)) {
+      result += "-";
+    }
+  }
+  return result;
+}
+
+const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+const charactersLength = characters.length;
+function getRadomCharacter() {
+  return characters.charAt(Math.floor(Math.random() * charactersLength));
 }
 
 function storeUser(user) {
