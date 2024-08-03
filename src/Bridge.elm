@@ -1,7 +1,8 @@
 module Bridge exposing (..)
 
+import Event exposing (EventDefinition)
 import Json.Encode
-import Primitives exposing (DeviceId, UserId)
+import Time
 import UserManagement
 
 
@@ -35,12 +36,14 @@ encodeUserOnDeviceData data =
 
 
 type alias UserData =
-    { name : String, devices : List { deviceId : DeviceId, name : String }, userId : UserId }
+    { name : String, devices : List { deviceId : String, name : String }, userId : String }
 
 
 type ToBackend
     = NewUser User
-    | ReconnectUser { userId : UserId, deviceId : DeviceId }
+    | ReconnectUser { userId : String, deviceId : String }
     | RequestAdminData
     | GenerateSyncCode
-    | UseSyncCode { code : String, deviceId : DeviceId, deviceName : String }
+    | EventAdded EventDefinition
+    | UseSyncCode { code : String, deviceId : String, deviceName : String }
+    | RequestNewEvents Time.Posix

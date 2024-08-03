@@ -43,6 +43,12 @@ updateFromBackend msg model =
         SyncCodeUsed userData ->
             ( model, sendSharedMsg <| Shared.Msg.GotUserData userData )
 
+        ConnectionEstablished ->
+            ( model, sendSharedMsg Shared.Msg.ConnectionEstablished )
+
+        EventSyncResult result ->
+            ( model, sendSharedMsg <| Shared.Msg.GotSyncResult result )
+
 
 sendSharedMsg : Shared.Msg.Msg -> Cmd FrontendMsg
 sendSharedMsg msg =

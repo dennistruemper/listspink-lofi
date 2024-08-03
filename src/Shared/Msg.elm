@@ -2,7 +2,10 @@ module Shared.Msg exposing (Msg(..))
 
 import Bridge
 import Dict exposing (Dict)
-import Primitives exposing (SessionId, UserId)
+import Event exposing (EventDefinition)
+import Subscriptions
+import Sync
+import Time
 import UserManagement
 
 
@@ -14,8 +17,11 @@ own file, so they can be imported by `Effect.elm`
 
 -}
 type Msg
-    = GotAdminData { userManagement : UserManagement.Model }
+    = GotAdminData { userManagement : UserManagement.Model, backendSyncModel : Sync.BackendSyncModel, subscriptions : Subscriptions.Model }
     | NewUserCreated Bridge.User
+    | AddEvent EventDefinition
     | GotSyncCode Int
-    | GotUserData { name : String, userId : UserId, deviceId : String, deviceName : String }
+    | GotUserData { name : String, userId : String, deviceId : String, deviceName : String }
     | GotMessageFromJs String
+    | ConnectionEstablished
+    | GotSyncResult { events : List EventDefinition, lastSyncServerTime : Time.Posix }

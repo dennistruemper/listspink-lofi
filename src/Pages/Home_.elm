@@ -114,10 +114,7 @@ view shared model =
                 []
             ]
         , h1 [] [ text "Elm Land ❤️ Lamdera" ]
-        , p
-            [ style "font-family" "Nunito Sans"
-            , style "opacity" "0.75"
-            ]
-            [ text "It's working, Mario!!" ]
+        , a [ Route.Path.href Route.Path.Lists ] [ text "Show Lists" ]
+        , a [ Route.Path.href Route.Path.SetupKnown ] [ text "Connect other device" ]
         ]
     }

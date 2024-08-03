@@ -2,7 +2,9 @@ module Shared.Model exposing (Model, NextIds)
 
 import Bridge
 import Dict exposing (Dict)
-import Primitives exposing (SessionId, UserId)
+import Event exposing (EventDefinition)
+import Subscriptions
+import Sync
 import UserManagement
 
 
@@ -23,8 +25,10 @@ type alias NextIds =
 
 
 type alias Model =
-    { adminData : { userManagement : UserManagement.Model }
+    { adminData : { userManagement : UserManagement.Model, backendSyncModel : Sync.BackendSyncModel, subscriptions : Subscriptions.Model }
     , user : Maybe Bridge.User
     , syncCode : Maybe Int
     , nextIds : Maybe NextIds
+    , syncModel : Sync.FrontendSyncModel
+    , state : Event.State
     }

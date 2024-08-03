@@ -1,24 +1,23 @@
-module UserManagement exposing (Model, UserData, UserOnDeviceData, addDeviceDataToUser, addUser, canselSync, getOtherSessionsForUser, getSessionCount, getSyncCodeForUser, getUserForSession, init, reconnectUserOnDevice, startSyncForUser, useSyncCode)
+module UserManagement exposing (Model, UserData, UserOnDeviceData, addDeviceDataToUser, addUser, cancelSync, getAllSessionsForUser, getOtherSessionsForUser, getSessionCount, getSyncCodeForUser, getUserForSession, init, reconnectUserOnDevice, startSyncForUser, useSyncCode)
 
 import Dict exposing (Dict)
-import Primitives exposing (DeviceId, SessionId, UserId)
 import Time
 
 
 type alias Model =
-    { userSessions : Dict SessionId SessionData
-    , users : Dict UserId UserData
+    { userSessions : Dict String SessionData
+    , users : Dict String UserData
     }
 
 
 type alias SessionData =
-    { userId : UserId, deviceId : DeviceId, sessionId : SessionId, createdAt : Time.Posix }
+    { userId : String, deviceId : String, sessionId : String, createdAt : Time.Posix }
 
 
 type alias UserData =
     { name : String
-    , devices : List { deviceId : DeviceId, name : String }
-    , userId : UserId
+    , devices : List { deviceId : String, name : String }
+    , userId : String
     , syncInProgress : Maybe SyncData
     }
 
@@ -30,7 +29,7 @@ type alias SyncData =
 
 
 type alias UserOnDeviceData =
-    { userId : UserId, deviceId : DeviceId, deviceName : String, userName : String }
+    { userId : String, deviceId : String, deviceName : String, userName : String }
 
 
 init : Model
@@ -40,7 +39,7 @@ init =
     }
 
 
-getUserForSession : SessionId -> Model -> Maybe UserData
+getUserForSession : String -> Model -> Maybe UserData
 getUserForSession sessionId model =
     Dict.get sessionId model.userSessions
         |> Maybe.andThen (\sessionData -> Dict.get sessionData.userId model.users)
@@ -51,7 +50,7 @@ getSessionCount model =
     Dict.size model.userSessions
 
 
-addUser : SessionId -> UserOnDeviceData -> Time.Posix -> Model -> Model
+addUser : String -> UserOnDeviceData -> Time.Posix -> Model -> Model
 addUser sessionId newUserData now model =
     let
         userOrSessionExists =
@@ -79,7 +78,7 @@ addUser sessionId newUserData now model =
         { model | users = newUsers, userSessions = newSessions }
 
 
-reconnectUserOnDevice : SessionId -> { userId : UserId, deviceId : DeviceId } -> Time.Posix -> Model -> Model
+reconnectUserOnDevice : String -> { userId : String, deviceId : String } -> Time.Posix -> Model -> Model
 reconnectUserOnDevice sessionId { userId, deviceId } now model =
     let
         user =
@@ -116,7 +115,7 @@ reconnectUserOnDevice sessionId { userId, deviceId } now model =
     { model | userSessions = newSessions }
 
 
-addDeviceDataToUser : SessionId -> UserOnDeviceData -> Time.Posix -> Model -> Model
+addDeviceDataToUser : String -> UserOnDeviceData -> Time.Posix -> Model -> Model
 addDeviceDataToUser sessionId newUserData now model =
     let
         sessionData =
@@ -156,7 +155,7 @@ addDeviceDataToUser sessionId newUserData now model =
     { model | users = newUsers, userSessions = newSessions }
 
 
-getOtherSessionsForUser : SessionId -> Model -> List SessionId
+getOtherSessionsForUser : String -> Model -> List String
 getOtherSessionsForUser sessionId model =
     let
         sessionData =
@@ -184,7 +183,20 @@ getOtherSessionsForUser sessionId model =
     otherSessions
 
 
-startSyncForUser : SessionId -> Time.Posix -> String -> Model -> Model
+getAllSessionsForUser : String -> Model -> List String
+getAllSessionsForUser userId model =
+    Dict.toList model.userSessions
+        |> List.filterMap
+            (\( sid, data ) ->
+                if data.userId == userId then
+                    Just sid
+
+                else
+                    Nothing
+            )
+
+
+startSyncForUser : String -> Time.Posix -> String -> Model -> Model
 startSyncForUser sessionId now code model =
     let
         maybeUser =
@@ -203,7 +215,7 @@ startSyncForUser sessionId now code model =
     { model | users = newUsers }
 
 
-getSyncCodeForUser : SessionId -> Model -> Maybe String
+getSyncCodeForUser : String -> Model -> Maybe String
 getSyncCodeForUser sessionId model =
     getUserForSession sessionId model
         |> Maybe.andThen .syncInProgress
@@ -223,7 +235,7 @@ getUserDataBySyncCode code model =
         |> List.head
 
 
-useSyncCode : SessionId -> { code : String, deviceId : String, deviceName : String, now : Time.Posix } -> Model -> { newModel : Model, user : Maybe UserData }
+useSyncCode : String -> { code : String, deviceId : String, deviceName : String, now : Time.Posix } -> Model -> { newModel : Model, user : Maybe UserData }
 useSyncCode sessionId data model =
     case getUserDataBySyncCode data.code model of
         Nothing ->
@@ -245,8 +257,8 @@ useSyncCode sessionId data model =
             }
 
 
-canselSync : SessionId -> Model -> Model
-canselSync sessionId model =
+cancelSync : String -> Model -> Model
+cancelSync sessionId model =
     let
         maybeUser =
             getUserForSession sessionId model

@@ -15,6 +15,7 @@ module Shared exposing
 import Bridge
 import Dict
 import Effect exposing (Effect)
+import Event
 import Json.Decode
 import Lamdera
 import Ports
@@ -22,6 +23,9 @@ import Route exposing (Route)
 import Route.Path
 import Shared.Model
 import Shared.Msg
+import SortedEventList
+import Subscriptions
+import Sync
 import UserManagement
 
 
@@ -48,10 +52,12 @@ type alias Model =
 
 init : Result Json.Decode.Error Flags -> Route () -> ( Model, Effect Msg )
 init flagsResult route =
-    ( { adminData = { userManagement = UserManagement.init }
+    ( { adminData = { userManagement = UserManagement.init, backendSyncModel = Sync.initBackend, subscriptions = Subscriptions.init }
       , user = Nothing
       , syncCode = Nothing
       , nextIds = Nothing
+      , syncModel = Sync.initFrontend
+      , state = Event.initialState
       }
     , Effect.batch [ Effect.generateIds, Effect.loadUserData ]
     )
@@ -79,12 +85,39 @@ update route msg model =
         Shared.Msg.GotSyncCode code ->
             ( { model | syncCode = Just code }, Effect.none )
 
+        Shared.Msg.AddEvent event ->
+            let
+                newSyncModel =
+                    Sync.addEventToFrontend event model.syncModel
+            in
+            ( { model
+                | syncModel = newSyncModel
+                , state =
+                    Event.project
+                        (SortedEventList.getEvents model.syncModel.events)
+                        Event.initialState
+              }
+            , Effect.batch [ Effect.generateIds, Effect.sendCmd <| Lamdera.sendToBackend <| Bridge.EventAdded event ]
+            )
+
         Shared.Msg.GotUserData data ->
             let
                 user =
                     Bridge.UserOnDevice { userId = data.userId, deviceId = data.deviceId, deviceName = data.deviceName, userName = data.name }
             in
             ( { model | user = Just user }, Effect.batch [ Effect.storeUserData user, Effect.pushRoutePath Route.Path.Home_ ] )
+
+        Shared.Msg.ConnectionEstablished ->
+            ( model, Effect.sendCmd <| Lamdera.sendToBackend <| Bridge.RequestNewEvents model.syncModel.lastSyncServerTime )
+
+        Shared.Msg.GotSyncResult result ->
+            let
+                newSyncModel =
+                    Sync.addEventsToFrontend result.events
+                        result.lastSyncServerTime
+                        model.syncModel
+            in
+            ( { model | syncModel = newSyncModel, state = Event.project result.events model.state }, Effect.none )
 
         Shared.Msg.GotMessageFromJs message ->
             case Ports.decodeMsg message of

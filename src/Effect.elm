@@ -1,6 +1,7 @@
 module Effect exposing
     ( Effect
     , accountCreated
+    , addEvent
     , back
     , batch
     , generateIds
@@ -23,6 +24,7 @@ module Effect exposing
 import Bridge
 import Browser.Navigation
 import Dict exposing (Dict)
+import Event exposing (EventDefinition)
 import Json.Encode
 import Ports
 import Route exposing (Route)
@@ -98,6 +100,11 @@ logout =
 accountCreated : Bridge.User -> Effect msg
 accountCreated user =
     batch [ SendSharedMsg (Shared.Msg.NewUserCreated user), generateIds ]
+
+
+addEvent : EventDefinition -> Effect msg
+addEvent event =
+    SendSharedMsg (Shared.Msg.AddEvent event)
 
 
 
