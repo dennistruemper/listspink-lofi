@@ -21,6 +21,7 @@ import Lamdera
 import Ports
 import Route exposing (Route)
 import Route.Path
+import Set
 import Shared.Model
 import Shared.Msg
 import SortedEventList
@@ -88,7 +89,7 @@ update route msg model =
         Shared.Msg.AddEvent event ->
             let
                 newSyncModel =
-                    Sync.addEventToFrontend event model.syncModel
+                    Sync.addEventFromFrontend event model.syncModel
             in
             ( { model
                 | syncModel = newSyncModel
@@ -108,12 +109,24 @@ update route msg model =
             ( { model | user = Just user }, Effect.batch [ Effect.storeUserData user, Effect.pushRoutePath Route.Path.Home_ ] )
 
         Shared.Msg.ConnectionEstablished ->
-            ( model, Effect.sendCmd <| Lamdera.sendToBackend <| Bridge.RequestNewEvents model.syncModel.lastSyncServerTime )
+            let
+                requestNewEvents =
+                    Effect.sendCmd <| Lamdera.sendToBackend <| Bridge.RequestNewEvents model.syncModel.lastSyncServerTime
+
+                pushUnsyncedEvents =
+                    Set.toList model.syncModel.unsyncedEventIds
+                        |> List.filterMap
+                            (\eventId ->
+                                SortedEventList.findEvent eventId model.syncModel.events
+                            )
+                        |> List.map (\event -> Effect.sendCmd <| Lamdera.sendToBackend <| Bridge.EventAdded event)
+            in
+            ( model, Effect.batch (requestNewEvents :: pushUnsyncedEvents) )
 
         Shared.Msg.GotSyncResult result ->
             let
                 newSyncModel =
-                    Sync.addEventsToFrontend result.events
+                    Sync.addEventsFromBackend result.events
                         result.lastSyncServerTime
                         model.syncModel
             in

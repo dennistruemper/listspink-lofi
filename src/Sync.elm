@@ -1,9 +1,10 @@
-module Sync exposing (BackendSyncModel, FrontendSyncModel, addEventToBackend, addEventToFrontend, addEventsToFrontend, getEventsForAggregateId, getEventsForFrontend, getNewEventsForUser, initBackend, initFrontend)
+module Sync exposing (BackendSyncModel, FrontendSyncModel, addEventFromBackend, addEventFromFrontend, addEventToBackend, addEventsFromBackend, getEventsForAggregateId, getEventsForFrontend, getNewEventsForUser, initBackend, initFrontend)
 
 import Array exposing (Array)
 import Dict exposing (Dict)
 import Event exposing (EventDefinition)
 import Lamdera exposing (SessionId)
+import Set exposing (Set)
 import SortedEventList
 import Subscriptions
 import Time
@@ -26,6 +27,7 @@ type alias BackendSyncModel =
 type alias FrontendSyncModel =
     { events : SortedEventList.Model
     , lastSyncServerTime : Time.Posix
+    , unsyncedEventIds : Set String
     }
 
 
@@ -37,7 +39,7 @@ initBackend =
 
 initFrontend : FrontendSyncModel
 initFrontend =
-    { events = SortedEventList.init, lastSyncServerTime = Time.millisToPosix 0 }
+    { events = SortedEventList.init, lastSyncServerTime = Time.millisToPosix 0, unsyncedEventIds = Set.empty }
 
 
 addEventToBackend : EventDefinition -> Time.Posix -> Subscriptions.Model -> UserManagement.Model -> BackendSyncModel -> { newBackendModel : BackendSyncModel, subscribedSessions : List { sessionId : SessionId } }
@@ -131,18 +133,27 @@ updateLastServerSyncTime lastSyncServerTime frontendModel =
     { frontendModel | lastSyncServerTime = lastSyncServerTime }
 
 
-addEventToFrontend : EventDefinition -> FrontendSyncModel -> FrontendSyncModel
-addEventToFrontend event frontendModel =
+addEventFromFrontend : EventDefinition -> FrontendSyncModel -> FrontendSyncModel
+addEventFromFrontend event frontendModel =
     { frontendModel
-        | events = SortedEventList.addEvent event frontendModel.events
+        | unsyncedEventIds = Set.insert (Event.getEventId event) frontendModel.unsyncedEventIds
+        , events = SortedEventList.addEvent event frontendModel.events
     }
 
 
-addEventsToFrontend : List EventDefinition -> Time.Posix -> FrontendSyncModel -> FrontendSyncModel
-addEventsToFrontend events serverTime frontendModel =
+addEventFromBackend : EventDefinition -> FrontendSyncModel -> FrontendSyncModel
+addEventFromBackend event frontendModel =
+    { frontendModel
+        | events = SortedEventList.addEvent event frontendModel.events
+        , unsyncedEventIds = Set.remove (Event.getEventId event) frontendModel.unsyncedEventIds
+    }
+
+
+addEventsFromBackend : List EventDefinition -> Time.Posix -> FrontendSyncModel -> FrontendSyncModel
+addEventsFromBackend events serverTime frontendModel =
     -- TODO ensure ordered by time
     List.foldl
-        (\event model -> addEventToFrontend event model)
+        (\event model -> addEventFromBackend event model)
         frontendModel
         events
         |> updateLastServerSyncTime serverTime

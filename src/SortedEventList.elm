@@ -1,4 +1,4 @@
-module SortedEventList exposing (..)
+module SortedEventList exposing (Model, addEvent, findEvent, getEvents, init)
 
 import Array exposing (Array)
 import Event exposing (EventDefinition)
@@ -98,6 +98,37 @@ sortIntoArrayHelper event model low high =
 
     else
         Array.push event model
+
+
+
+-- search from the end, since the most recent events are at the end and might be more likely to be used
+
+
+findEvent : String -> Model -> Maybe EventDefinition
+findEvent eventId model =
+    findEventHelper eventId (Array.length model) model
+
+
+findEventHelper : String -> Int -> Model -> Maybe EventDefinition
+findEventHelper eventId index model =
+    if index < 0 then
+        Nothing
+
+    else
+        let
+            maybeEvent =
+                Array.get index model
+        in
+        case maybeEvent of
+            Just event ->
+                if Event.getEventId event == eventId then
+                    Just event
+
+                else
+                    findEventHelper eventId (index - 1) model
+
+            Nothing ->
+                findEventHelper eventId (index - 1) model
 
 
 getEvents : Model -> List EventDefinition

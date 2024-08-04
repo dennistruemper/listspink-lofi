@@ -92,15 +92,6 @@ update shared msg model =
 
                                 Just evt ->
                                     Effect.addEvent evt
-
-                        --Event.createListCreatedEvent { eventId = nextIds.eventId, aggregateId = nextIds.listId, userId = "dummy", timestamp = Time.millisToPosix 0 } { listId = nextIds.listId, name = "Dummy List" }
-                        newSyncModel =
-                            case event of
-                                Nothing ->
-                                    shared.syncModel
-
-                                Just evt ->
-                                    Sync.addEventToFrontend evt shared.syncModel
                     in
                     ( model
                     , Effect.batch [ Effect.generateIds, effect ]
