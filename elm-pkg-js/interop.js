@@ -3,6 +3,7 @@ port supermario_copy_to_clipboard_to_js : String -> Cmd msg
 */
 
 const userKey = "user";
+const frontendSyncModelKey = "frontendSyncModel";
 
 exports.init = async function (app) {
   app.ports.toJs.subscribe(function (event) {
@@ -28,6 +29,22 @@ exports.init = async function (app) {
     if (event.tag === "LoadUserData") {
       app.ports.toElm.send(
         JSON.stringify({ tag: "UserDataLoaded", data: getUser() })
+      );
+      return;
+    }
+
+    if (event.tag === "StoreFrontendSyncModel") {
+      localStorage.setItem(frontendSyncModelKey, JSON.stringify(event.data));
+      return;
+    }
+
+    if (event.tag === "LoadFrontendSyncModel") {
+      console.log("LoadFrontendSyncModel");
+      app.ports.toElm.send(
+        JSON.stringify({
+          tag: "FrontendSyncModelDataLoaded",
+          data: getFrontendSyncModel(),
+        })
       );
       return;
     }
@@ -92,4 +109,10 @@ function storeUser(user) {
 function getUser() {
   const user = localStorage.getItem(userKey);
   return user ? JSON.parse(user) : {};
+}
+
+function getFrontendSyncModel() {
+  const model = localStorage.getItem(frontendSyncModelKey);
+  console.log("getFrontendSyncModel", model);
+  return model ? JSON.parse(model) : null;
 }

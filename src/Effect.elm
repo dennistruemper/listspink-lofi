@@ -6,6 +6,7 @@ module Effect exposing
     , batch
     , generateIds
     , loadExternalUrl
+    , loadFrontendSyncModel
     , loadUserData
     , log
     , logout
@@ -17,6 +18,7 @@ module Effect exposing
     , replaceRoutePath
     , sendCmd
     , sendMsg
+    , storeFrontendSyncModel
     , storeUserData
     , toCmd
     )
@@ -25,12 +27,14 @@ import Bridge
 import Browser.Navigation
 import Dict exposing (Dict)
 import Event exposing (EventDefinition)
+import FrontendSyncModelSerializer
 import Json.Encode
 import Ports
 import Route exposing (Route)
 import Route.Path
 import Shared.Model
 import Shared.Msg
+import Sync
 import Task
 import Url exposing (Url)
 
@@ -85,6 +89,22 @@ loadUserData : Effect msg
 loadUserData =
     SendMessageToJavaScript
         { tag = "LoadUserData"
+        , data = Json.Encode.null
+        }
+
+
+storeFrontendSyncModel : Sync.FrontendSyncModel -> Effect msg
+storeFrontendSyncModel model =
+    SendMessageToJavaScript
+        { tag = "StoreFrontendSyncModel"
+        , data = Json.Encode.string (FrontendSyncModelSerializer.serializeFrontendSyncModel model)
+        }
+
+
+loadFrontendSyncModel : Effect msg
+loadFrontendSyncModel =
+    SendMessageToJavaScript
+        { tag = "LoadFrontendSyncModel"
         , data = Json.Encode.null
         }
 

@@ -60,7 +60,7 @@ init flagsResult route =
       , syncModel = Sync.initFrontend
       , state = Event.initialState
       }
-    , Effect.batch [ Effect.generateIds, Effect.loadUserData ]
+    , Effect.batch [ Effect.generateIds, Effect.loadUserData, Effect.loadFrontendSyncModel ]
     )
 
 
@@ -70,6 +70,11 @@ init flagsResult route =
 
 type alias Msg =
     Shared.Msg.Msg
+
+
+withSyncModelPersistence : ( Model, Effect Msg ) -> ( Model, Effect Msg )
+withSyncModelPersistence ( model, effect ) =
+    ( model, Effect.batch [ effect, Effect.storeFrontendSyncModel model.syncModel ] )
 
 
 update : Route () -> Msg -> Model -> ( Model, Effect Msg )
@@ -100,6 +105,7 @@ update route msg model =
               }
             , Effect.batch [ Effect.generateIds, Effect.sendCmd <| Lamdera.sendToBackend <| Bridge.EventAdded event ]
             )
+                |> withSyncModelPersistence
 
         Shared.Msg.GotUserData data ->
             let
@@ -131,6 +137,7 @@ update route msg model =
                         model.syncModel
             in
             ( { model | syncModel = newSyncModel, state = Event.project result.events model.state }, Effect.none )
+                |> withSyncModelPersistence
 
         Shared.Msg.GotMessageFromJs message ->
             case Ports.decodeMsg message of
@@ -151,6 +158,14 @@ update route msg model =
 
                 Ports.UnknownMessage error ->
                     ( model, Effect.log error )
+
+                Ports.FrontendSyncModelDataLoaded data ->
+                    case data of
+                        Ok syncModel ->
+                            ( { model | syncModel = syncModel, state = Event.project (Sync.getEventsForFrontend syncModel) model.state }, Effect.none )
+
+                        Err error ->
+                            ( model, Effect.log error )
 
                 Ports.UserLoggedOut ->
                     ( { model | user = Just Bridge.Unknown }, Effect.pushRoutePath Route.Path.Home_ )

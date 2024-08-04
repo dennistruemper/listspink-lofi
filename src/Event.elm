@@ -1,4 +1,19 @@
-module Event exposing (EventDefinition(..), State, createListCreatedEvent, getAggregateId, getEventId, getMetadata, getTime, getUserId, initialState, project)
+module Event exposing
+    ( EventData(..)
+    , EventDefinition(..)
+    , EventMetadata
+    , ListCreatedData
+    , ListUpdatedData
+    , State
+    , createListCreatedEvent
+    , getAggregateId
+    , getEventId
+    , getMetadata
+    , getTime
+    , getUserId
+    , initialState
+    , project
+    )
 
 import Dict exposing (Dict)
 import Time
@@ -13,8 +28,20 @@ type alias EventMetadata =
 
 
 type EventData
-    = ListCreated { listId : String, name : String }
-    | ListUpdated { listId : String, name : String }
+    = ListCreated ListCreatedData
+    | ListUpdated ListUpdatedData
+
+
+type alias ListCreatedData =
+    { listId : String
+    , name : String
+    }
+
+
+type alias ListUpdatedData =
+    { listId : String
+    , name : String
+    }
 
 
 type EventDefinition
