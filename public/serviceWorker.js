@@ -3,7 +3,7 @@ const assets = [];
 
 self.addEventListener("install", (installEvent) => {
   installEvent.waitUntil(
-    caches.open(versionCache).then((cache) => {
+    caches.open(cacheName).then((cache) => {
       cache.addAll(assets);
     })
   );
