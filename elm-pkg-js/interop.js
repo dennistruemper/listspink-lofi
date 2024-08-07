@@ -6,6 +6,7 @@ const userKey = "user";
 const frontendSyncModelKey = "frontendSyncModel";
 
 exports.init = async function (app) {
+  setupServiceworker();
   app.ports.toJs.subscribe(function (event) {
     console.log("fromElm", event);
 
@@ -65,6 +66,17 @@ exports.init = async function (app) {
     console.log(`fromElm event of tag ${event.tag} not handled`, event);
   });
 };
+
+function setupServiceworker() {
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () {
+      navigator.serviceWorker
+        .register("/serviceWorker.js")
+        .then((res) => console.log("service worker registered"))
+        .catch((err) => console.log("service worker not registered", err));
+    });
+  }
+}
 
 function generateIds() {
   return {
