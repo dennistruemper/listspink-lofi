@@ -45,15 +45,15 @@ init _ =
 
 
 type Msg
-    = NoOp
+    = LogoutClicked
 
 
 update : Msg -> Model -> ( Model, Effect Msg )
 update msg model =
     case msg of
-        NoOp ->
+        LogoutClicked ->
             ( model
-            , Effect.none
+            , Effect.logout
             )
 
 
@@ -116,5 +116,6 @@ view shared model =
         , h1 [] [ text "Elm Land ❤️ Lamdera" ]
         , a [ Route.Path.href Route.Path.Lists ] [ text "Show Lists" ]
         , a [ Route.Path.href Route.Path.SetupKnown ] [ text "Connect other device" ]
+        , button [ onClick LogoutClicked ] [ text "Logout" ]
         ]
     }
