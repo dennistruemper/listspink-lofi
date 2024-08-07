@@ -10,7 +10,10 @@ self.addEventListener("install", (installEvent) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  // Check if this is a request for an image
+  // check if request is on my domain
+  if (!event.request.url.startsWith(self.location.origin)) {
+    return;
+  }
 
   event.respondWith(
     caches.open(cacheName).then((cache) => {
