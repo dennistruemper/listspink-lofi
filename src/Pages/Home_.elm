@@ -99,14 +99,14 @@ view shared model =
         , div [ style "display" "flex", style "gap" "1rem" ]
             [ img
                 [ alt "Lando, the Elm Land Rainbow"
-                , src "https://elm.land/images/logo-480.png"
+                , src "/lando.png"
                 , style "width" "128px"
                 , style "margin-right" "2.5rem"
                 ]
                 []
             , img
                 [ alt "Laurie, the Lamdera Lambda Llamba"
-                , src "https://lamdera.com/images/llama/floaty.png"
+                , src "/llama.png"
                 , style "width" "81.4px"
                 , style "margin-right" "1.5rem"
                 , style "height" "108.4px"
