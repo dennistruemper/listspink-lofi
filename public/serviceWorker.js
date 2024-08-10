@@ -30,14 +30,20 @@ self.addEventListener("fetch", (event) => {
         }
 
         // Otherwise, hit the network
-        return fetch(event.request).then((fetchedResponse) => {
-          console.log(fetchedResponse.status);
-          // Add the network response to the cache for later visits
-          cache.put(event.request, fetchedResponse.clone());
+        return fetch(event.request)
+          .then((fetchedResponse) => {
+            console.log(fetchedResponse.status);
+            // Add the network response to the cache for later visits
+            cache.put(event.request, fetchedResponse.clone());
 
-          // Return the network response
-          return fetchedResponse;
-        });
+            // Return the network response
+            return fetchedResponse;
+          })
+          .catch((err) =>
+            cache.match("/").then((chached) => {
+              if (cached) return cached;
+            })
+          );
       });
     })
   );
