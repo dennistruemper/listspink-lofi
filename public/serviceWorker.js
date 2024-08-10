@@ -1,10 +1,5 @@
 const cacheName = "chache-v1";
-const assets = [
-  "https://lamdera.com/images/llama/floaty.png",
-  "https://elm.land/images/logo-480.png",
-  "/",
-  "/lists",
-];
+const assets = ["/", "/lists"];
 /*
 self.addEventListener("install", (installEvent) => {
   installEvent.waitUntil(
