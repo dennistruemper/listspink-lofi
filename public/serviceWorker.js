@@ -31,6 +31,7 @@ self.addEventListener("fetch", (event) => {
 
         // Otherwise, hit the network
         return fetch(event.request).then((fetchedResponse) => {
+          console.log(fetchedResponse.status);
           // Add the network response to the cache for later visits
           cache.put(event.request, fetchedResponse.clone());
 
