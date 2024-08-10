@@ -40,7 +40,7 @@ self.addEventListener("fetch", (event) => {
             return fetchedResponse;
           })
           .catch((err) =>
-            cache.match("/").then((chached) => {
+            cache.match("/").then((cached) => {
               if (cached) return cached;
             })
           );
