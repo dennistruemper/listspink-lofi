@@ -100,7 +100,7 @@ update route msg model =
                 | syncModel = newSyncModel
                 , state =
                     Event.project
-                        (SortedEventList.getEvents model.syncModel.events)
+                        (SortedEventList.getEvents newSyncModel.events)
                         Event.initialState
               }
             , Effect.batch [ Effect.generateIds, Effect.sendCmd <| Lamdera.sendToBackend <| Bridge.EventAdded event ]
