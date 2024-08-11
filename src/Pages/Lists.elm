@@ -10,6 +10,7 @@ import Html.Events
 import Page exposing (Page)
 import Route exposing (Route)
 import Shared
+import SortedEventList
 import Sync
 import Time
 import View exposing (View)
@@ -81,7 +82,7 @@ update shared msg model =
                                                 Just <|
                                                     Event.createListCreatedEvent
                                                         { eventId = nextIds.eventId, aggregateId = nextIds.listId, userId = userId, timestamp = Time.millisToPosix 0 }
-                                                        { listId = nextIds.listId, name = "Dummy List" }
+                                                        { listId = nextIds.listId, name = "Dummy List" ++ (SortedEventList.length shared.syncModel.events |> String.fromInt) }
                                     )
                                 |> Maybe.withDefault Nothing
 
@@ -115,7 +116,7 @@ view : Shared.Model -> Model -> View Msg
 view shared model =
     { title = "Pages.Lists"
     , body =
-        [ Html.button [ Html.Events.onClick CreateDummyList ] [ Html.text "Create New Dummy List" ]
+        [ Html.button [ Html.Events.onClick CreateDummyList ] [ Html.text "Create New Dummy List2" ]
         , viewLists shared
         ]
     }

@@ -1,4 +1,4 @@
-module SortedEventList exposing (Model, addEvent, findEvent, getEvents, init)
+module SortedEventList exposing (Model, addEvent, findEvent, getEvents, init, length)
 
 import Array exposing (Array)
 import Event exposing (EventDefinition)
@@ -134,3 +134,8 @@ findEventHelper eventId index model =
 getEvents : Model -> List EventDefinition
 getEvents model =
     Array.toList model
+
+
+length : Model -> Int
+length model =
+    Array.length model

@@ -1,5 +1,5 @@
-const cacheName = "chache-v1";
-const assets = ["/", "/lists"];
+const cacheName = "chache-v2";
+const assets = ["/"];
 self.addEventListener("install", (installEvent) => {
   installEvent.waitUntil(
     caches.open(cacheName).then((cache) => {
