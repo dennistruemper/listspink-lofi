@@ -11,6 +11,7 @@ type Path
     | Admin
     | Lists
     | Lists_Create
+    | Lists_ListId_ { listId : String }
     | Manual
     | Setup
     | Setup_Connect
@@ -46,6 +47,12 @@ fromString urlPath =
 
         "lists" :: "create" :: [] ->
             Just Lists_Create
+
+        "lists" :: listId_ :: [] ->
+            Lists_ListId_
+                { listId = listId_
+                }
+                |> Just
 
         "manual" :: [] ->
             Just Manual
@@ -88,6 +95,9 @@ toString path =
 
                 Lists_Create ->
                     [ "lists", "create" ]
+
+                Lists_ListId_ params ->
+                    [ "lists", params.listId ]
 
                 Manual ->
                     [ "manual" ]
