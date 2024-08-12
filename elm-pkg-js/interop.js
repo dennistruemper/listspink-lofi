@@ -52,6 +52,7 @@ exports.init = async function (app) {
 
     if (event.tag === "Logout") {
       localStorage.removeItem(userKey);
+      localStorage.removeItem(frontendSyncModelKey);
       document.cookie = "sid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
       app.ports.toElm.send(JSON.stringify({ tag: "LoggedOut" }));
       location.reload();
