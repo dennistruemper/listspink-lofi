@@ -6,6 +6,7 @@ module Event exposing
     , ListUpdatedData
     , State
     , createListCreatedEvent
+    , createListUpdatedEvent
     , getAggregateId
     , getEventId
     , getMetadata
@@ -39,8 +40,7 @@ type alias ListCreatedData =
 
 
 type alias ListUpdatedData =
-    { listId : String
-    , name : String
+    { name : String
     }
 
 
@@ -54,6 +54,14 @@ createListCreatedEvent :
     -> EventDefinition
 createListCreatedEvent metadata data =
     Event metadata (ListCreated data)
+
+
+createListUpdatedEvent :
+    EventMetadata
+    -> { name : String }
+    -> EventDefinition
+createListUpdatedEvent metadata data =
+    Event metadata (ListUpdated data)
 
 
 getMetadata : EventDefinition -> EventMetadata
@@ -124,7 +132,7 @@ projectEvent event state =
                     { state
                         | lists =
                             Dict.update
-                                listData.listId
+                                metadata.aggregateId
                                 (\maybeList ->
                                     case maybeList of
                                         Just list ->

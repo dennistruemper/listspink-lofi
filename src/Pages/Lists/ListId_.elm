@@ -2,18 +2,23 @@ module Pages.Lists.ListId_ exposing (Model, Msg, page)
 
 import Dict
 import Effect exposing (Effect)
+import Event
+import EventMetadataHelper
 import Html
+import Html.Attributes
+import Html.Events
 import Page exposing (Page)
 import Route exposing (Route)
 import Shared
+import Time
 import View exposing (View)
 
 
 page : Shared.Model -> Route { listId : String } -> Page Model Msg
 page shared route =
     Page.new
-        { init = init route.params.listId
-        , update = update
+        { init = init route.params.listId shared
+        , update = update shared
         , subscriptions = subscriptions
         , view = view shared
         }
@@ -24,12 +29,21 @@ page shared route =
 
 
 type alias Model =
-    { listId : String }
+    { listId : String
+    , listName : Maybe String
+    }
 
 
-init : String -> () -> ( Model, Effect Msg )
-init listId () =
-    ( { listId = listId }
+init : String -> Shared.Model -> () -> ( Model, Effect Msg )
+init listId shared () =
+    ( { listId = listId
+      , listName =
+            shared.state.lists
+                |> Dict.values
+                |> List.filter (\l -> l.listId == listId)
+                |> List.head
+                |> Maybe.map .name
+      }
     , Effect.none
     )
 
@@ -39,16 +53,44 @@ init listId () =
 
 
 type Msg
-    = NoOp
+    = ListNameChanged String
+    | UpdateListButtonClicked
+    | GotTimeForUpdateList Time.Posix
 
 
-update : Msg -> Model -> ( Model, Effect Msg )
-update msg model =
+update : Shared.Model -> Msg -> Model -> ( Model, Effect Msg )
+update shared msg model =
     case msg of
-        NoOp ->
-            ( model
-            , Effect.none
-            )
+        ListNameChanged listName ->
+            ( { model | listName = Just listName }, Effect.none )
+
+        UpdateListButtonClicked ->
+            ( model, Effect.getTime GotTimeForUpdateList )
+
+        GotTimeForUpdateList timestamp ->
+            let
+                eventResult : Result String Event.EventMetadata
+                eventResult =
+                    case EventMetadataHelper.createEventMetadata shared.nextIds (\ids -> model.listId) shared.user timestamp of
+                        Ok eventMetadata ->
+                            Ok eventMetadata
+
+                        Err error ->
+                            Err error
+            in
+            case eventResult of
+                Ok eventMetadata ->
+                    case model.listName of
+                        Just listName ->
+                            ( model, Effect.batch [ Effect.addEvent <| Event.createListUpdatedEvent eventMetadata { name = listName }, Effect.back ] )
+
+                        -- todo handle error
+                        Nothing ->
+                            ( model, Effect.batch [] )
+
+                Err error ->
+                    --TODO
+                    ( model, Effect.none )
 
 
 
@@ -77,7 +119,23 @@ view shared model =
     , body =
         [ case maybeList of
             Just list ->
-                Html.text list.name
+                Html.div []
+                    [ Html.input
+                        [ Html.Attributes.value
+                            (model.listName |> Maybe.withDefault list.name)
+                        , Html.Events.onInput ListNameChanged
+                        ]
+                        []
+                    , Html.button
+                        [ Html.Events.onClick UpdateListButtonClicked
+                        , Html.Attributes.disabled
+                            ((model.listName |> Maybe.withDefault "" |> String.isEmpty)
+                                && (model.listName |> Maybe.withDefault "")
+                                /= list.name
+                            )
+                        ]
+                        [ Html.text "Update List" ]
+                    ]
 
             Nothing ->
                 Html.text "List not found"

@@ -76,7 +76,6 @@ listCreatedCodec =
 
 listUpdatedCodec =
     S.record Event.ListUpdatedData
-        |> S.field .listId S.string
         |> S.field .name S.string
         |> S.finishRecord
 
