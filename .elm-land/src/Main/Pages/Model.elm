@@ -3,6 +3,7 @@ module Main.Pages.Model exposing (Model(..))
 import Pages.Home_
 import Pages.Admin
 import Pages.Lists
+import Pages.Lists.Create
 import Pages.Manual
 import Pages.Setup
 import Pages.Setup.Connect
@@ -16,6 +17,7 @@ type Model
     = Home_ Pages.Home_.Model
     | Admin Pages.Admin.Model
     | Lists Pages.Lists.Model
+    | Lists_Create Pages.Lists.Create.Model
     | Manual Pages.Manual.Model
     | Setup Pages.Setup.Model
     | Setup_Connect Pages.Setup.Connect.Model

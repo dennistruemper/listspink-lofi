@@ -5,6 +5,7 @@ module Effect exposing
     , back
     , batch
     , generateIds
+    , getTime
     , loadExternalUrl
     , loadFrontendSyncModel
     , loadUserData
@@ -36,6 +37,7 @@ import Shared.Model
 import Shared.Msg
 import Sync
 import Task
+import Time
 import Url exposing (Url)
 
 
@@ -125,6 +127,11 @@ accountCreated user =
 addEvent : EventDefinition -> Effect msg
 addEvent event =
     SendSharedMsg (Shared.Msg.AddEvent event)
+
+
+getTime : (Time.Posix -> msg) -> Effect msg
+getTime gotTimeMsg =
+    SendCmd (Time.now |> Task.perform gotTimeMsg)
 
 
 

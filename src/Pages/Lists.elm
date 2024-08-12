@@ -6,9 +6,11 @@ import Dict
 import Effect exposing (Effect)
 import Event exposing (EventDefinition)
 import Html
+import Html.Attributes
 import Html.Events
 import Page exposing (Page)
 import Route exposing (Route)
+import Route.Path
 import Shared
 import SortedEventList
 import Sync
@@ -117,6 +119,7 @@ view shared model =
     { title = "Pages.Lists"
     , body =
         [ Html.button [ Html.Events.onClick CreateDummyList ] [ Html.text "Create New Dummy List2" ]
+        , Html.a [ Html.Attributes.href (Route.Path.toString Route.Path.Lists_Create) ] [ Html.text "Create New List" ]
         , viewLists shared
         ]
     }
@@ -132,7 +135,7 @@ viewLists shared =
             Html.ul []
                 (List.map
                     (\list ->
-                        Html.li [] [ Html.text list.name, Html.text list.listId ]
+                        Html.li [] [ Html.text list.name ]
                     )
                     lists
                 )

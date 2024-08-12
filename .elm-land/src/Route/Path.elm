@@ -10,6 +10,7 @@ type Path
     = Home_
     | Admin
     | Lists
+    | Lists_Create
     | Manual
     | Setup
     | Setup_Connect
@@ -42,6 +43,9 @@ fromString urlPath =
 
         "lists" :: [] ->
             Just Lists
+
+        "lists" :: "create" :: [] ->
+            Just Lists_Create
 
         "manual" :: [] ->
             Just Manual
@@ -81,6 +85,9 @@ toString path =
 
                 Lists ->
                     [ "lists" ]
+
+                Lists_Create ->
+                    [ "lists", "create" ]
 
                 Manual ->
                     [ "manual" ]
