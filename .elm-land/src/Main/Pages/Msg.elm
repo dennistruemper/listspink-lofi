@@ -3,6 +3,7 @@ module Main.Pages.Msg exposing (Msg(..))
 import Pages.Home_
 import Pages.Admin
 import Pages.Lists
+import Pages.Lists.Create
 import Pages.Manual
 import Pages.Setup
 import Pages.Setup.Connect
@@ -15,6 +16,7 @@ type Msg
     = Home_ Pages.Home_.Msg
     | Admin Pages.Admin.Msg
     | Lists Pages.Lists.Msg
+    | Lists_Create Pages.Lists.Create.Msg
     | Manual Pages.Manual.Msg
     | Setup Pages.Setup.Msg
     | Setup_Connect Pages.Setup.Connect.Msg
