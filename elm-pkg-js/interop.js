@@ -3,8 +3,10 @@ port supermario_copy_to_clipboard_to_js : String -> Cmd msg
 */
 
 const userKey = "user";
+const frontendSyncModelKey = "frontendSyncModel";
 
 exports.init = async function (app) {
+  setupServiceworker();
   app.ports.toJs.subscribe(function (event) {
     console.log("fromElm", event);
 
@@ -32,6 +34,22 @@ exports.init = async function (app) {
       return;
     }
 
+    if (event.tag === "StoreFrontendSyncModel") {
+      localStorage.setItem(frontendSyncModelKey, JSON.stringify(event.data));
+      return;
+    }
+
+    if (event.tag === "LoadFrontendSyncModel") {
+      console.log("LoadFrontendSyncModel");
+      app.ports.toElm.send(
+        JSON.stringify({
+          tag: "FrontendSyncModelDataLoaded",
+          data: getFrontendSyncModel(),
+        })
+      );
+      return;
+    }
+
     if (event.tag === "Logout") {
       localStorage.removeItem(userKey);
       document.cookie = "sid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
@@ -48,6 +66,17 @@ exports.init = async function (app) {
     console.log(`fromElm event of tag ${event.tag} not handled`, event);
   });
 };
+
+function setupServiceworker() {
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () {
+      navigator.serviceWorker
+        .register("/serviceWorker.js")
+        .then((res) => console.log("service worker registered"))
+        .catch((err) => console.log("service worker not registered", err));
+    });
+  }
+}
 
 function generateIds() {
   return {
@@ -92,4 +121,10 @@ function storeUser(user) {
 function getUser() {
   const user = localStorage.getItem(userKey);
   return user ? JSON.parse(user) : {};
+}
+
+function getFrontendSyncModel() {
+  const model = localStorage.getItem(frontendSyncModelKey);
+  console.log("getFrontendSyncModel", model);
+  return model ? JSON.parse(model) : null;
 }

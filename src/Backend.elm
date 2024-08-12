@@ -2,9 +2,12 @@ module Backend exposing (..)
 
 import Bridge exposing (..)
 import Dict exposing (Dict)
+import Event
 import Html
 import Lamdera exposing (ClientId, SessionId)
 import Random
+import Subscriptions
+import Sync
 import Task
 import Time
 import Types exposing (BackendModel, BackendMsg(..), ToFrontend(..))
@@ -26,7 +29,10 @@ app =
 
 init : ( Model, Cmd BackendMsg )
 init =
-    ( { userManagement = UserManagement.init }
+    ( { userManagement = UserManagement.init
+      , subscriptions = Subscriptions.init
+      , syncModel = Sync.initBackend
+      }
     , Cmd.none
     )
 
@@ -68,15 +74,18 @@ update backendMsg model =
                                             Cmd.none
 
                                         Just resultUserData ->
-                                            Lamdera.sendToFrontend sessionId <|
-                                                SyncCodeUsed { name = resultUserData.name, userId = resultUserData.userId, deviceId = data.deviceId, deviceName = data.deviceName }
+                                            Cmd.batch
+                                                [ Lamdera.sendToFrontend sessionId <|
+                                                    SyncCodeUsed { name = resultUserData.name, userId = resultUserData.userId, deviceId = data.deviceId, deviceName = data.deviceName }
+                                                , Lamdera.sendToFrontend sessionId <| ConnectionEstablished
+                                                ]
                             in
                             ( { model | userManagement = result.newModel }
                             , cmd
                             )
 
                         ReconnectUser data ->
-                            ( { model | userManagement = UserManagement.reconnectUserOnDevice sessionId data now model.userManagement }, Cmd.none )
+                            ( { model | userManagement = UserManagement.reconnectUserOnDevice sessionId data now model.userManagement }, Lamdera.sendToFrontend sessionId <| ConnectionEstablished )
 
                         -- Do not handle other messages for unknown user session
                         _ ->
@@ -87,7 +96,7 @@ update backendMsg model =
                         RequestAdminData ->
                             ( model
                             , Lamdera.sendToFrontend sessionId <|
-                                AdminDataRequested { userManagement = model.userManagement }
+                                AdminDataRequested { userManagement = model.userManagement, backendSyncModel = model.syncModel, subscriptions = model.subscriptions }
                             )
 
                         NewUser newUserData ->
@@ -103,7 +112,32 @@ update backendMsg model =
                             ( model, Cmd.none )
 
                         ReconnectUser data ->
-                            ( model, Cmd.none )
+                            -- already connected, do nothing
+                            ( model, Lamdera.sendToFrontend sessionId <| ConnectionEstablished )
+
+                        RequestNewEvents lastSyncServerTime ->
+                            let
+                                events =
+                                    Sync.getNewEventsForUser sessionId lastSyncServerTime model.subscriptions model.userManagement model.syncModel
+                            in
+                            ( model, Lamdera.sendToFrontend sessionId <| EventSyncResult { events = events, lastSyncServerTime = now } )
+
+                        EventAdded event ->
+                            let
+                                newSubscriptions =
+                                    Subscriptions.addSubscription { userId = Event.getUserId event, aggregateId = Event.getAggregateId event } model.subscriptions
+
+                                newSyncModel =
+                                    Sync.addEventToBackend event now newSubscriptions model.userManagement model.syncModel
+
+                                commands =
+                                    newSyncModel.subscribedSessions
+                                        |> List.map .sessionId
+                                        |> List.map (\session -> Lamdera.sendToFrontend session <| EventSyncResult { events = [ event ], lastSyncServerTime = now })
+
+                                -- TODO "Send events to connected clients"
+                            in
+                            ( { model | syncModel = newSyncModel.newBackendModel, subscriptions = newSubscriptions }, Cmd.batch commands )
 
 
 updateFromFrontend : SessionId -> ClientId -> ToBackend -> Model -> ( Model, Cmd BackendMsg )
@@ -126,7 +160,7 @@ handleHello now user model sessionId =
                             UserManagement.addUser sessionId userData now model.userManagement
                     }
             in
-            ( newModel, Cmd.none )
+            ( newModel, Lamdera.sendToFrontend sessionId <| ConnectionEstablished )
 
 
 addDataToUser : Bridge.UserOnDeviceData -> Dict String UserData -> Dict String UserData

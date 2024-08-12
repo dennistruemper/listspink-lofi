@@ -1,10 +1,12 @@
 module Effect exposing
     ( Effect
     , accountCreated
+    , addEvent
     , back
     , batch
     , generateIds
     , loadExternalUrl
+    , loadFrontendSyncModel
     , loadUserData
     , log
     , logout
@@ -16,6 +18,7 @@ module Effect exposing
     , replaceRoutePath
     , sendCmd
     , sendMsg
+    , storeFrontendSyncModel
     , storeUserData
     , toCmd
     )
@@ -23,12 +26,15 @@ module Effect exposing
 import Bridge
 import Browser.Navigation
 import Dict exposing (Dict)
+import Event exposing (EventDefinition)
+import FrontendSyncModelSerializer
 import Json.Encode
 import Ports
 import Route exposing (Route)
 import Route.Path
 import Shared.Model
 import Shared.Msg
+import Sync
 import Task
 import Url exposing (Url)
 
@@ -87,6 +93,22 @@ loadUserData =
         }
 
 
+storeFrontendSyncModel : Sync.FrontendSyncModel -> Effect msg
+storeFrontendSyncModel model =
+    SendMessageToJavaScript
+        { tag = "StoreFrontendSyncModel"
+        , data = Json.Encode.string (FrontendSyncModelSerializer.serializeFrontendSyncModel model)
+        }
+
+
+loadFrontendSyncModel : Effect msg
+loadFrontendSyncModel =
+    SendMessageToJavaScript
+        { tag = "LoadFrontendSyncModel"
+        , data = Json.Encode.null
+        }
+
+
 logout : Effect msg
 logout =
     SendMessageToJavaScript
@@ -98,6 +120,11 @@ logout =
 accountCreated : Bridge.User -> Effect msg
 accountCreated user =
     batch [ SendSharedMsg (Shared.Msg.NewUserCreated user), generateIds ]
+
+
+addEvent : EventDefinition -> Effect msg
+addEvent event =
+    SendSharedMsg (Shared.Msg.AddEvent event)
 
 
 

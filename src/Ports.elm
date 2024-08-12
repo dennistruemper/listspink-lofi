@@ -1,9 +1,12 @@
 port module Ports exposing (ToElm(..), decodeMsg, toElm, toJs)
 
 import Bridge
+import FrontendSyncModelSerializer
 import Json.Decode
 import Json.Decode.Pipeline as Pipeline
 import Json.Encode
+import Serialize
+import Sync
 import UserManagement
 
 
@@ -12,6 +15,7 @@ type ToElm
     | UserDataLoaded Bridge.User
     | UserLoggedOut
     | UnknownMessage String
+    | FrontendSyncModelDataLoaded (Result String Sync.FrontendSyncModel)
 
 
 type alias IdsGeneratedData =
@@ -66,6 +70,18 @@ decodeMsg json =
 
                 Err message ->
                     UnknownMessage (formatError "data for UserDataLoaded" message)
+
+        Ok "FrontendSyncModelDataLoaded" ->
+            let
+                data =
+                    Json.Decode.decodeString (Json.Decode.field "data" Json.Decode.string) json
+            in
+            case data of
+                Ok jsonAsString ->
+                    FrontendSyncModelDataLoaded (FrontendSyncModelSerializer.deserializeFrontendSyncModel jsonAsString |> Result.mapError (\err -> "err deserializing sync model"))
+
+                Err message ->
+                    FrontendSyncModelDataLoaded (Err "error deserializing sync model")
 
         Ok "LoggedOut" ->
             UserLoggedOut

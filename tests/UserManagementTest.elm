@@ -2,7 +2,6 @@ module UserManagementTest exposing (..)
 
 import Dict exposing (Dict)
 import Expect exposing (..)
-import Primitives exposing (DeviceId)
 import Test exposing (..)
 import Time
 import UserManagement
@@ -13,7 +12,7 @@ defaultTime =
     Time.millisToPosix 123456789
 
 
-aliceDeviceId : DeviceId
+aliceDeviceId : String
 aliceDeviceId =
     "1"
 
@@ -33,7 +32,7 @@ charly =
     { userId = "30", deviceId = "30", userName = "Charly", deviceName = "Phone of Charly" }
 
 
-withDevice : DeviceId -> String -> UserManagement.UserOnDeviceData -> UserManagement.UserOnDeviceData
+withDevice : String -> String -> UserManagement.UserOnDeviceData -> UserManagement.UserOnDeviceData
 withDevice deviceId deviceName user =
     { user | deviceId = deviceId, deviceName = deviceName }
 

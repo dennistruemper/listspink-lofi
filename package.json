@@ -1,6 +1,7 @@
 {
   "scripts": {
     "test": "elm-test-rs --compiler `which lamdera`",
+    "test-watch": "elm-test-rs --watch --compiler `which lamdera`",
     "server": "lamdera live",
     "frontend": "elm-land server",
     "build": "rm -rf ./dist && elm-land build"

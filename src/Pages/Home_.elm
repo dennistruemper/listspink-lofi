@@ -45,15 +45,15 @@ init _ =
 
 
 type Msg
-    = NoOp
+    = LogoutClicked
 
 
 update : Msg -> Model -> ( Model, Effect Msg )
 update msg model =
     case msg of
-        NoOp ->
+        LogoutClicked ->
             ( model
-            , Effect.none
+            , Effect.logout
             )
 
 
@@ -99,14 +99,14 @@ view shared model =
         , div [ style "display" "flex", style "gap" "1rem" ]
             [ img
                 [ alt "Lando, the Elm Land Rainbow"
-                , src "https://elm.land/images/logo-480.png"
+                , src "/lando.png"
                 , style "width" "128px"
                 , style "margin-right" "2.5rem"
                 ]
                 []
             , img
                 [ alt "Laurie, the Lamdera Lambda Llamba"
-                , src "https://lamdera.com/images/llama/floaty.png"
+                , src "/llama.png"
                 , style "width" "81.4px"
                 , style "margin-right" "1.5rem"
                 , style "height" "108.4px"
@@ -114,10 +114,8 @@ view shared model =
                 []
             ]
         , h1 [] [ text "Elm Land ❤️ Lamdera" ]
-        , p
-            [ style "font-family" "Nunito Sans"
-            , style "opacity" "0.75"
-            ]
-            [ text "It's working, Mario!!" ]
+        , a [ Route.Path.href Route.Path.Lists ] [ text "Show Lists" ]
+        , a [ Route.Path.href Route.Path.SetupKnown ] [ text "Connect other device" ]
+        , button [ onClick LogoutClicked ] [ text "Logout" ]
         ]
     }
