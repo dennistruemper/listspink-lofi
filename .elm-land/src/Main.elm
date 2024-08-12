@@ -18,6 +18,7 @@ import Pages.Home_
 import Pages.Admin
 import Pages.Lists
 import Pages.Lists.Create
+import Pages.Lists.ListId_
 import Pages.Manual
 import Pages.Setup
 import Pages.Setup.Connect
@@ -164,6 +165,23 @@ initPageAndLayout model =
                 Tuple.mapBoth
                     Main.Pages.Model.Lists_Create
                     (Effect.map Main.Pages.Msg.Lists_Create >> fromPageEffect model)
+                    ( pageModel, pageEffect )
+            , layout = Nothing
+            }
+
+        Route.Path.Lists_ListId_ params ->
+            let
+                page : Page.Page Pages.Lists.ListId_.Model Pages.Lists.ListId_.Msg
+                page =
+                    Pages.Lists.ListId_.page model.shared (Route.fromUrl params model.url)
+
+                ( pageModel, pageEffect ) =
+                    Page.init page ()
+            in
+            { page = 
+                Tuple.mapBoth
+                    (Main.Pages.Model.Lists_ListId_ params)
+                    (Effect.map Main.Pages.Msg.Lists_ListId_ >> fromPageEffect model)
                     ( pageModel, pageEffect )
             , layout = Nothing
             }
@@ -516,6 +534,12 @@ updateFromPage msg model =
                 (Effect.map Main.Pages.Msg.Lists_Create >> fromPageEffect model)
                 (Page.update (Pages.Lists.Create.page model.shared (Route.fromUrl () model.url)) pageMsg pageModel)
 
+        ( Main.Pages.Msg.Lists_ListId_ pageMsg, Main.Pages.Model.Lists_ListId_ params pageModel ) ->
+            Tuple.mapBoth
+                (Main.Pages.Model.Lists_ListId_ params)
+                (Effect.map Main.Pages.Msg.Lists_ListId_ >> fromPageEffect model)
+                (Page.update (Pages.Lists.ListId_.page model.shared (Route.fromUrl params model.url)) pageMsg pageModel)
+
         ( Main.Pages.Msg.Manual pageMsg, Main.Pages.Model.Manual pageModel ) ->
             Tuple.mapBoth
                 Main.Pages.Model.Manual
@@ -598,6 +622,12 @@ toLayoutFromPage model =
                 |> Pages.Lists.Create.page model.shared
                 |> Page.layout pageModel
                 |> Maybe.map (Layouts.map (Main.Pages.Msg.Lists_Create >> Page))
+
+        Main.Pages.Model.Lists_ListId_ params pageModel ->
+            Route.fromUrl params model.url
+                |> Pages.Lists.ListId_.page model.shared
+                |> Page.layout pageModel
+                |> Maybe.map (Layouts.map (Main.Pages.Msg.Lists_ListId_ >> Page))
 
         Main.Pages.Model.Manual pageModel ->
             Route.fromUrl () model.url
@@ -710,6 +740,11 @@ subscriptions model =
                 Main.Pages.Model.Lists_Create pageModel ->
                     Page.subscriptions (Pages.Lists.Create.page model.shared (Route.fromUrl () model.url)) pageModel
                         |> Sub.map Main.Pages.Msg.Lists_Create
+                        |> Sub.map Page
+
+                Main.Pages.Model.Lists_ListId_ params pageModel ->
+                    Page.subscriptions (Pages.Lists.ListId_.page model.shared (Route.fromUrl params model.url)) pageModel
+                        |> Sub.map Main.Pages.Msg.Lists_ListId_
                         |> Sub.map Page
 
                 Main.Pages.Model.Manual pageModel ->
@@ -826,6 +861,11 @@ viewPage model =
         Main.Pages.Model.Lists_Create pageModel ->
             Page.view (Pages.Lists.Create.page model.shared (Route.fromUrl () model.url)) pageModel
                 |> View.map Main.Pages.Msg.Lists_Create
+                |> View.map Page
+
+        Main.Pages.Model.Lists_ListId_ params pageModel ->
+            Page.view (Pages.Lists.ListId_.page model.shared (Route.fromUrl params model.url)) pageModel
+                |> View.map Main.Pages.Msg.Lists_ListId_
                 |> View.map Page
 
         Main.Pages.Model.Manual pageModel ->
@@ -958,6 +998,12 @@ toPageUrlHookCmd model routes =
                 |> List.map Page
                 |> toCommands
 
+        Main.Pages.Model.Lists_ListId_ params pageModel ->
+            Page.toUrlMessages routes (Pages.Lists.ListId_.page model.shared (Route.fromUrl params model.url)) 
+                |> List.map Main.Pages.Msg.Lists_ListId_
+                |> List.map Page
+                |> toCommands
+
         Main.Pages.Model.Manual pageModel ->
             Page.toUrlMessages routes (Pages.Manual.page model.shared (Route.fromUrl () model.url)) 
                 |> List.map Main.Pages.Msg.Manual
@@ -1054,6 +1100,9 @@ isAuthProtected routePath =
             True
 
         Route.Path.Lists_Create ->
+            False
+
+        Route.Path.Lists_ListId_ _ ->
             False
 
         Route.Path.Manual ->

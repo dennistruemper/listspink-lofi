@@ -135,7 +135,7 @@ viewLists shared =
             Html.ul []
                 (List.map
                     (\list ->
-                        Html.li [] [ Html.text list.name ]
+                        Html.li [] [ Html.a [ Html.Attributes.href (Route.Path.Lists_ListId_ { listId = list.listId } |> Route.Path.toString) ] [ Html.text list.name ] ]
                     )
                     lists
                 )

@@ -4,6 +4,7 @@ import Pages.Home_
 import Pages.Admin
 import Pages.Lists
 import Pages.Lists.Create
+import Pages.Lists.ListId_
 import Pages.Manual
 import Pages.Setup
 import Pages.Setup.Connect
@@ -17,6 +18,7 @@ type Msg
     | Admin Pages.Admin.Msg
     | Lists Pages.Lists.Msg
     | Lists_Create Pages.Lists.Create.Msg
+    | Lists_ListId_ Pages.Lists.ListId_.Msg
     | Manual Pages.Manual.Msg
     | Setup Pages.Setup.Msg
     | Setup_Connect Pages.Setup.Connect.Msg
