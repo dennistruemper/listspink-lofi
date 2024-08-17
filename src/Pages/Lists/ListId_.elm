@@ -9,6 +9,7 @@ import Html.Attributes
 import Html.Events
 import Page exposing (Page)
 import Route exposing (Route)
+import Route.Path
 import Shared
 import Time
 import View exposing (View)
@@ -135,9 +136,46 @@ view shared model =
                             )
                         ]
                         [ Html.text "Update List" ]
+                    , Html.br [] []
+                    , Html.a
+                        [ Html.Attributes.href (Route.Path.toString (Route.Path.Lists_Id__CreateItem { id = model.listId })) ]
+                        [ Html.text "Add Item" ]
+                    , Html.br [] []
+                    , Html.br [] []
+                    , viewItems list
                     ]
 
             Nothing ->
                 Html.text "List not found"
         ]
     }
+
+
+viewItems : Event.PinkList -> Html.Html msg
+viewItems list =
+    case Dict.values list.items of
+        [] ->
+            Html.text "No items jet"
+
+        items ->
+            Html.ul []
+                (List.map
+                    (\item ->
+                        Html.li [] [ Html.text item.name ]
+                    )
+                    (items |> sortByTimestamp)
+                )
+
+
+posixCompare : Time.Posix -> Time.Posix -> Order
+posixCompare a b =
+    compare (Time.posixToMillis a) (Time.posixToMillis b)
+
+
+sortByTimestamp : List Event.PinkItem -> List Event.PinkItem
+sortByTimestamp items =
+    List.sortBy
+        (\a ->
+            (a.createdAt |> Time.posixToMillis) * -1
+        )
+        items
