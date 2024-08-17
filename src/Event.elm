@@ -3,12 +3,14 @@ module Event exposing
     , EventDefinition(..)
     , EventMetadata
     , ItemCreatedData
+    , ItemStateChangedData
     , ListCreatedData
     , ListUpdatedData
     , PinkItem
     , PinkList
     , State
     , createItemCreatedEvent
+    , createItemStateChangedEvent
     , createListCreatedEvent
     , createListUpdatedEvent
     , getAggregateId
@@ -36,6 +38,7 @@ type EventData
     = ListCreated ListCreatedData
     | ListUpdated ListUpdatedData
     | ItemCreated ItemCreatedData
+    | ItemStateChanged ItemStateChangedData
 
 
 type alias ListCreatedData =
@@ -51,6 +54,10 @@ type alias ListUpdatedData =
 
 type alias ItemCreatedData =
     { itemId : String, itemName : String, itemDescription : Maybe String }
+
+
+type alias ItemStateChangedData =
+    { itemId : String, newState : Bool }
 
 
 type EventDefinition
@@ -79,6 +86,14 @@ createItemCreatedEvent :
     -> EventDefinition
 createItemCreatedEvent metadata data =
     Event metadata (ItemCreated data)
+
+
+createItemStateChangedEvent :
+    EventMetadata
+    -> { itemId : String, newState : Bool }
+    -> EventDefinition
+createItemStateChangedEvent metadata data =
+    Event metadata (ItemStateChanged data)
 
 
 getMetadata : EventDefinition -> EventMetadata
@@ -134,6 +149,7 @@ type alias PinkItem =
     , itemId : String
     , description : Maybe String
     , createdAt : Time.Posix
+    , completedAt : Maybe Time.Posix
     }
 
 
@@ -197,8 +213,47 @@ projectEvent event state =
                                                                     , itemId = itemData.itemId
                                                                     , description = itemData.itemDescription
                                                                     , createdAt = metadata.timestamp
+                                                                    , completedAt = Nothing
                                                                     }
                                                                     list.items
+                                                }
+
+                                        Nothing ->
+                                            Nothing
+                                )
+                                state.lists
+                    }
+
+                ItemStateChanged itemData ->
+                    { state
+                        | lists =
+                            Dict.update
+                                metadata.aggregateId
+                                (\maybeList ->
+                                    case maybeList of
+                                        Just list ->
+                                            Just
+                                                { list
+                                                    | items =
+                                                        Dict.update
+                                                            itemData.itemId
+                                                            (\maybeItem ->
+                                                                case maybeItem of
+                                                                    Just item ->
+                                                                        Just
+                                                                            { item
+                                                                                | completedAt =
+                                                                                    if itemData.newState then
+                                                                                        Just metadata.timestamp
+
+                                                                                    else
+                                                                                        Nothing
+                                                                            }
+
+                                                                    Nothing ->
+                                                                        Nothing
+                                                            )
+                                                            list.items
                                                 }
 
                                         Nothing ->
