@@ -80,19 +80,31 @@ listUpdatedCodec =
         |> S.finishRecord
 
 
+itemCreatedCodec =
+    S.record Event.ItemCreatedData
+        |> S.field .itemId S.string
+        |> S.field .itemName S.string
+        |> S.field .itemDescription (S.maybe S.string)
+        |> S.finishRecord
+
+
 eventDataCodec : S.Codec e Event.EventData
 eventDataCodec =
     S.customType
-        (\listCreatedEncoder listUpdatedEncoder value ->
+        (\listCreatedEncoder listUpdatedEncoder itemCreatedEncoder value ->
             case value of
                 Event.ListCreated listCreatedData ->
                     listCreatedEncoder listCreatedData
 
                 Event.ListUpdated listUpdatedData ->
                     listUpdatedEncoder listUpdatedData
+
+                Event.ItemCreated itemCreatedData ->
+                    itemCreatedEncoder itemCreatedData
         )
         |> S.variant1 Event.ListCreated listCreatedCodec
         |> S.variant1 Event.ListUpdated listUpdatedCodec
+        |> S.variant1 Event.ItemCreated itemCreatedCodec
         |> S.finishCustomType
 
 

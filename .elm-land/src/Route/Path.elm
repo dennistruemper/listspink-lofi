@@ -11,6 +11,7 @@ type Path
     | Admin
     | Lists
     | Lists_Create
+    | Lists_Id__CreateItem { id : String }
     | Lists_ListId_ { listId : String }
     | Manual
     | Setup
@@ -47,6 +48,12 @@ fromString urlPath =
 
         "lists" :: "create" :: [] ->
             Just Lists_Create
+
+        "lists" :: id_ :: "create-item" :: [] ->
+            Lists_Id__CreateItem
+                { id = id_
+                }
+                |> Just
 
         "lists" :: listId_ :: [] ->
             Lists_ListId_
@@ -95,6 +102,9 @@ toString path =
 
                 Lists_Create ->
                     [ "lists", "create" ]
+
+                Lists_Id__CreateItem params ->
+                    [ "lists", params.id, "create-item" ]
 
                 Lists_ListId_ params ->
                     [ "lists", params.listId ]

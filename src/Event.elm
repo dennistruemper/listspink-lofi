@@ -2,9 +2,13 @@ module Event exposing
     ( EventData(..)
     , EventDefinition(..)
     , EventMetadata
+    , ItemCreatedData
     , ListCreatedData
     , ListUpdatedData
+    , PinkItem
+    , PinkList
     , State
+    , createItemCreatedEvent
     , createListCreatedEvent
     , createListUpdatedEvent
     , getAggregateId
@@ -31,6 +35,7 @@ type alias EventMetadata =
 type EventData
     = ListCreated ListCreatedData
     | ListUpdated ListUpdatedData
+    | ItemCreated ItemCreatedData
 
 
 type alias ListCreatedData =
@@ -42,6 +47,10 @@ type alias ListCreatedData =
 type alias ListUpdatedData =
     { name : String
     }
+
+
+type alias ItemCreatedData =
+    { itemId : String, itemName : String, itemDescription : Maybe String }
 
 
 type EventDefinition
@@ -62,6 +71,14 @@ createListUpdatedEvent :
     -> EventDefinition
 createListUpdatedEvent metadata data =
     Event metadata (ListUpdated data)
+
+
+createItemCreatedEvent :
+    EventMetadata
+    -> { itemId : String, itemName : String, itemDescription : Maybe String }
+    -> EventDefinition
+createItemCreatedEvent metadata data =
+    Event metadata (ItemCreated data)
 
 
 getMetadata : EventDefinition -> EventMetadata
@@ -107,6 +124,16 @@ type alias State =
 type alias PinkList =
     { name : String
     , listId : String
+    , items : Dict String PinkItem
+    , createdAt : Time.Posix
+    }
+
+
+type alias PinkItem =
+    { name : String
+    , itemId : String
+    , description : Maybe String
+    , createdAt : Time.Posix
     }
 
 
@@ -126,7 +153,12 @@ projectEvent event state =
         Event metadata data ->
             case data of
                 ListCreated listData ->
-                    { state | lists = Dict.insert listData.listId { name = listData.name, listId = listData.listId } state.lists }
+                    { state
+                        | lists =
+                            Dict.insert listData.listId
+                                { name = listData.name, listId = listData.listId, items = Dict.empty, createdAt = metadata.timestamp }
+                                state.lists
+                    }
 
                 ListUpdated listData ->
                     { state
@@ -137,6 +169,37 @@ projectEvent event state =
                                     case maybeList of
                                         Just list ->
                                             Just { list | name = listData.name }
+
+                                        Nothing ->
+                                            Nothing
+                                )
+                                state.lists
+                    }
+
+                ItemCreated itemData ->
+                    { state
+                        | lists =
+                            Dict.update
+                                metadata.aggregateId
+                                (\maybeList ->
+                                    case maybeList of
+                                        Just list ->
+                                            Just
+                                                { list
+                                                    | items =
+                                                        case Dict.get itemData.itemId list.items of
+                                                            Just _ ->
+                                                                list.items
+
+                                                            Nothing ->
+                                                                Dict.insert itemData.itemId
+                                                                    { name = itemData.itemName
+                                                                    , itemId = itemData.itemId
+                                                                    , description = itemData.itemDescription
+                                                                    , createdAt = metadata.timestamp
+                                                                    }
+                                                                    list.items
+                                                }
 
                                         Nothing ->
                                             Nothing

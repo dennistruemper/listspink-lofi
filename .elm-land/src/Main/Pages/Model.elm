@@ -4,6 +4,7 @@ import Pages.Home_
 import Pages.Admin
 import Pages.Lists
 import Pages.Lists.Create
+import Pages.Lists.Id_.CreateItem
 import Pages.Lists.ListId_
 import Pages.Manual
 import Pages.Setup
@@ -19,6 +20,7 @@ type Model
     | Admin Pages.Admin.Model
     | Lists Pages.Lists.Model
     | Lists_Create Pages.Lists.Create.Model
+    | Lists_Id__CreateItem { id : String } Pages.Lists.Id_.CreateItem.Model
     | Lists_ListId_ { listId : String } Pages.Lists.ListId_.Model
     | Manual Pages.Manual.Model
     | Setup Pages.Setup.Model
