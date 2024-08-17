@@ -57,6 +57,8 @@ type Msg
     = ListNameChanged String
     | UpdateListButtonClicked
     | GotTimeForUpdateList Time.Posix
+    | ItemCheckedToggled String Bool
+    | GotTimeForItemCheckedToggled String Bool Time.Posix
 
 
 update : Shared.Model -> Msg -> Model -> ( Model, Effect Msg )
@@ -88,6 +90,34 @@ update shared msg model =
                         -- todo handle error
                         Nothing ->
                             ( model, Effect.batch [] )
+
+                Err error ->
+                    --TODO
+                    ( model, Effect.none )
+
+        ItemCheckedToggled itemId checked ->
+            ( model, Effect.getTime (GotTimeForItemCheckedToggled itemId checked) )
+
+        GotTimeForItemCheckedToggled itemId checked timestamp ->
+            let
+                eventResult : Result String Event.EventMetadata
+                eventResult =
+                    case
+                        EventMetadataHelper.createEventMetadata
+                            shared.nextIds
+                            (\_ -> model.listId)
+                            shared.user
+                            timestamp
+                    of
+                        Ok eventMetadata ->
+                            Ok eventMetadata
+
+                        Err error ->
+                            Err error
+            in
+            case eventResult of
+                Ok eventMetadata ->
+                    ( model, Effect.addEvent <| Event.createItemStateChangedEvent eventMetadata { itemId = itemId, newState = checked } )
 
                 Err error ->
                     --TODO
@@ -151,7 +181,7 @@ view shared model =
     }
 
 
-viewItems : Event.PinkList -> Html.Html msg
+viewItems : Event.PinkList -> Html.Html Msg
 viewItems list =
     case Dict.values list.items of
         [] ->
@@ -160,11 +190,31 @@ viewItems list =
         items ->
             Html.ul []
                 (List.map
-                    (\item ->
-                        Html.li [] [ Html.text item.name ]
-                    )
+                    viewItem
                     (items |> sortByTimestamp)
                 )
+
+
+viewItem : Event.PinkItem -> Html.Html Msg
+viewItem item =
+    let
+        checked =
+            case item.completedAt of
+                Just _ ->
+                    True
+
+                Nothing ->
+                    False
+    in
+    Html.div []
+        [ Html.input
+            [ Html.Attributes.type_ "checkbox"
+            , Html.Attributes.checked checked
+            , Html.Events.onCheck (ItemCheckedToggled item.itemId)
+            ]
+            []
+        , Html.text item.name
+        ]
 
 
 posixCompare : Time.Posix -> Time.Posix -> Order

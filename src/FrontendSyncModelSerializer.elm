@@ -88,10 +88,17 @@ itemCreatedCodec =
         |> S.finishRecord
 
 
+itemStateChangedCodec =
+    S.record Event.ItemStateChangedData
+        |> S.field .itemId S.string
+        |> S.field .newState S.bool
+        |> S.finishRecord
+
+
 eventDataCodec : S.Codec e Event.EventData
 eventDataCodec =
     S.customType
-        (\listCreatedEncoder listUpdatedEncoder itemCreatedEncoder value ->
+        (\listCreatedEncoder listUpdatedEncoder itemCreatedEncoder itemStateChangedEncoder value ->
             case value of
                 Event.ListCreated listCreatedData ->
                     listCreatedEncoder listCreatedData
@@ -101,10 +108,14 @@ eventDataCodec =
 
                 Event.ItemCreated itemCreatedData ->
                     itemCreatedEncoder itemCreatedData
+
+                Event.ItemStateChanged itemStateChangedData ->
+                    itemStateChangedEncoder itemStateChangedData
         )
         |> S.variant1 Event.ListCreated listCreatedCodec
         |> S.variant1 Event.ListUpdated listUpdatedCodec
         |> S.variant1 Event.ItemCreated itemCreatedCodec
+        |> S.variant1 Event.ItemStateChanged itemStateChangedCodec
         |> S.finishCustomType
 
 
