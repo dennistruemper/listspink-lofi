@@ -2,6 +2,7 @@ module Pages.Home_ exposing (Model, Msg(..), page)
 
 import Auth
 import Bridge
+import Components.Button as Button
 import Effect exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -116,6 +117,6 @@ view shared model =
         , h1 [] [ text "Elm Land ❤️ Lamdera" ]
         , a [ Route.Path.href Route.Path.Lists ] [ text "Show Lists" ]
         , a [ Route.Path.href Route.Path.SetupKnown ] [ text "Connect other device" ]
-        , button [ onClick LogoutClicked ] [ text "Logout" ]
+        , Button.button "Logout" LogoutClicked |> Button.view
         ]
     }

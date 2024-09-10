@@ -1,6 +1,7 @@
 module Pages.Manual exposing (Model, Msg, page)
 
 import Bridge
+import Components.Button as Button
 import Effect exposing (Effect)
 import Html
 import Html.Attributes
@@ -158,10 +159,10 @@ view shared model =
             , Html.Events.onInput NewDeviceNameChanged
             ]
             []
-        , Html.button [ Html.Events.onClick CreateUserButtonClicked ] [ Html.text "Create" ]
-        , Html.button [ Html.Events.onClick ReconnectUser ] [ Html.text "Reconnect" ]
+        , Button.button "Create" CreateUserButtonClicked |> Button.view
+        , Button.button "Reconnect" ReconnectUser |> Button.view
         , Html.br [] []
-        , Html.button [ Html.Events.onClick AdminDataRequested ] [ Html.text "Request Admin Data" ]
+        , Button.button "Request Admin Data" AdminDataRequested |> Button.view
         , Html.text "TODO AdminData" -- shared.adminData
         , Html.br [] []
         , Html.text ("Code:" ++ (shared.syncCode |> Maybe.map String.fromInt |> Maybe.withDefault "No code"))

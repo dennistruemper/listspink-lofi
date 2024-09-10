@@ -2,6 +2,8 @@ module Pages.Lists exposing (Model, Msg, page)
 
 import Auth
 import Bridge
+import Components.Button as Button
+import Components.Column as Column
 import Dict
 import Effect exposing (Effect)
 import Event exposing (EventDefinition)
@@ -49,6 +51,7 @@ init () =
 
 type Msg
     = CreateDummyList
+    | CreatNewListClicked
 
 
 update : Shared.Model -> Msg -> Model -> ( Model, Effect Msg )
@@ -100,6 +103,11 @@ update shared msg model =
                     , Effect.batch [ Effect.generateIds, effect ]
                     )
 
+        CreatNewListClicked ->
+            ( model
+            , Effect.pushRoutePath Route.Path.Lists_Create
+            )
+
 
 
 -- SUBSCRIPTIONS
@@ -118,9 +126,12 @@ view : Shared.Model -> Model -> View Msg
 view shared model =
     { title = "Pages.Lists"
     , body =
-        [ Html.button [ Html.Events.onClick CreateDummyList ] [ Html.text "Create New Dummy List2" ]
-        , Html.a [ Html.Attributes.href (Route.Path.toString Route.Path.Lists_Create) ] [ Html.text "Create New List" ]
-        , viewLists shared
+        [ Column.column
+            [ Button.button "Create New Dummy List" CreateDummyList |> Button.view
+            , Button.button "Create New List" CreatNewListClicked |> Button.view
+            , viewLists shared
+            ]
+            |> Column.view
         ]
     }
 
@@ -132,10 +143,13 @@ viewLists shared =
             Html.text "No lists jet"
 
         lists ->
-            Html.ul []
-                (List.map
-                    (\list ->
-                        Html.li [] [ Html.a [ Html.Attributes.href (Route.Path.Lists_ListId_ { listId = list.listId } |> Route.Path.toString) ] [ Html.text list.name ] ]
+            Html.div []
+                [ Html.text "Lists:"
+                , Html.ul []
+                    (List.map
+                        (\list ->
+                            Html.li [] [ Html.a [ Html.Attributes.href (Route.Path.Lists_ListId_ { listId = list.listId } |> Route.Path.toString) ] [ Html.text list.name ] ]
+                        )
+                        lists
                     )
-                    lists
-                )
+                ]
