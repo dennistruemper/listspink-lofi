@@ -1,6 +1,8 @@
 module Pages.Setup exposing (Model, Msg, page)
 
 import Bridge
+import Components.Button as Button
+import Components.Column as Column
 import Dict
 import Effect exposing (Effect)
 import Html
@@ -136,11 +138,9 @@ view shared model =
 
 viewUnknownUser : Html.Html Msg
 viewUnknownUser =
-    Html.div []
-        [ Html.button [ Html.Events.onClick CreateNewAccount ] [ Html.text "Create New Account" ]
-        , Html.br [] []
-        , Html.br [] []
-        , Html.button [ Html.Events.onClick ConnectExistingAccount ] [ Html.text "Connect Existing Account" ]
+    Html.div [ Html.Attributes.class "flex flex-col items-start gap-4 p-8" ]
+        [ Button.button "Create New Account" CreateNewAccount |> Button.view
+        , Button.button "Connect Existing Account" ConnectExistingAccount |> Button.view
         ]
 
 
@@ -152,7 +152,10 @@ viewNoUser =
 viewKnownUser : Bridge.UserOnDeviceData -> Html.Html Msg
 viewKnownUser user =
     Html.div []
-        [ Html.text <| "Logged in as " ++ user.userName
-        , Html.button [ Html.Events.onClick Logout ] [ Html.text "Logout" ]
-        , Html.button [ Html.Events.onClick ShowNewConnectionInfo ] [ Html.text "Connect Another Device" ]
+        [ Column.column
+            [ Html.text <| "Logged in as " ++ user.userName
+            , Button.button "Logout" Logout |> Button.view
+            , Button.button "Connect Another Device" ShowNewConnectionInfo |> Button.view
+            ]
+            |> Column.view
         ]

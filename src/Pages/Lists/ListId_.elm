@@ -1,5 +1,6 @@
 module Pages.Lists.ListId_ exposing (Model, Msg, page)
 
+import Components.Button as Button
 import Dict
 import Effect exposing (Effect)
 import Event
@@ -59,6 +60,8 @@ type Msg
     | GotTimeForUpdateList Time.Posix
     | ItemCheckedToggled String Bool
     | GotTimeForItemCheckedToggled String Bool Time.Posix
+    | AddItemClicked
+    | BackClicked
 
 
 update : Shared.Model -> Msg -> Model -> ( Model, Effect Msg )
@@ -123,6 +126,12 @@ update shared msg model =
                     --TODO
                     ( model, Effect.none )
 
+        AddItemClicked ->
+            ( model, Effect.pushRoutePath (Route.Path.Lists_Id__CreateItem { id = model.listId }) )
+
+        BackClicked ->
+            ( model, Effect.back )
+
 
 
 -- SUBSCRIPTIONS
@@ -146,7 +155,7 @@ view shared model =
                 |> List.filter (\l -> l.listId == model.listId)
                 |> List.head
     in
-    { title = "Pages.Lists.ListId_"
+    { title = "List"
     , body =
         [ case maybeList of
             Just list ->
@@ -157,21 +166,15 @@ view shared model =
                         , Html.Events.onInput ListNameChanged
                         ]
                         []
-                    , Html.button
-                        [ Html.Events.onClick UpdateListButtonClicked
-                        , Html.Attributes.disabled
+                    , Button.button "Update List" UpdateListButtonClicked
+                        |> Button.withDisabled
                             ((model.listName |> Maybe.withDefault "" |> String.isEmpty)
-                                && (model.listName |> Maybe.withDefault "")
-                                /= list.name
+                                || (model.listName |> Maybe.withDefault "")
+                                == list.name
                             )
-                        ]
-                        [ Html.text "Update List" ]
-                    , Html.br [] []
-                    , Html.a
-                        [ Html.Attributes.href (Route.Path.toString (Route.Path.Lists_Id__CreateItem { id = model.listId })) ]
-                        [ Html.text "Add Item" ]
-                    , Html.br [] []
-                    , Html.br [] []
+                        |> Button.view
+                    , Button.button "Add Item" AddItemClicked |> Button.view
+                    , Button.button "Back" BackClicked |> Button.view
                     , viewItems list
                     ]
 

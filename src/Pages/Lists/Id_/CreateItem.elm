@@ -1,5 +1,6 @@
 module Pages.Lists.Id_.CreateItem exposing (Model, Msg, page)
 
+import Components.Button as Button
 import Effect exposing (Effect)
 import Event
 import EventMetadataHelper
@@ -143,7 +144,7 @@ viewCreateItemForm shared model =
     Html.div []
         [ Html.input [ Html.Events.onInput ItemNameChanged, Html.Attributes.value model.itemName, Html.Attributes.placeholder "Name" ] []
         , Html.input [ Html.Events.onInput ItemDescriptionChanged, Html.Attributes.value model.itemDescription, Html.Attributes.placeholder "Description" ] []
-        , Html.button [ Html.Events.onClick CreateItemButtonClicked ] [ Html.text "Create" ]
+        , Button.button "Create" CreateItemButtonClicked |> Button.view
         , Html.br [] []
         , case model.error of
             Just error ->
