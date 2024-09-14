@@ -2,6 +2,7 @@ module Pages.Setup exposing (Model, Msg, page)
 
 import Bridge
 import Components.Button as Button
+import Components.Caption as Caption
 import Components.Column as Column
 import Dict
 import Effect exposing (Effect)
@@ -138,8 +139,10 @@ view shared model =
 
 viewUnknownUser : Html.Html Msg
 viewUnknownUser =
-    Html.div [ Html.Attributes.class "flex flex-col items-start gap-4 p-8" ]
-        [ Button.button "Create New Account" CreateNewAccount |> Button.view
+    Html.div [ Html.Attributes.class "flex flex-col items-start gap-4 p-8 lg:justify-around" ]
+        [ Caption.caption1 "Welcome to Listspink" |> Caption.view
+        , Html.p [] [ Html.text "Please choose one of the following options:" ]
+        , Button.button "Create New Account" CreateNewAccount |> Button.view
         , Button.button "Connect Existing Account" ConnectExistingAccount |> Button.view
         ]
 

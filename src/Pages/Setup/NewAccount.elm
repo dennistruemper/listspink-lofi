@@ -1,6 +1,9 @@
 module Pages.Setup.NewAccount exposing (Model, Msg, page)
 
 import Bridge
+import Components.Button as Button
+import Components.Caption as Caption
+import Components.Input as Input
 import Effect exposing (Effect)
 import Html
 import Html.Attributes
@@ -19,7 +22,7 @@ page shared route =
         { init = init
         , update = update shared
         , subscriptions = subscriptions
-        , view = view
+        , view = view shared
         }
 
 
@@ -31,6 +34,7 @@ type alias Model =
     { userName : String
     , deviceName : String
     , validation : Maybe String
+    , initialState : Bool
     }
 
 
@@ -39,6 +43,7 @@ init () =
     ( { userName = ""
       , deviceName = ""
       , validation = Nothing
+      , initialState = True
       }
     , Effect.none
     )
@@ -55,7 +60,11 @@ type Msg
 
 
 update : Shared.Model -> Msg -> Model -> ( Model, Effect Msg )
-update shared msg model =
+update shared msg incomingModel =
+    let
+        model =
+            { incomingModel | initialState = False }
+    in
     case msg of
         Create ->
             let
@@ -105,14 +114,32 @@ update shared msg model =
 
 validate : Shared.Model -> Model -> Maybe String
 validate shared model =
-    if String.isEmpty model.userName then
+    case
+        [ validateUsername shared model
+        , validateDeviceName shared model
+        ]
+            |> List.filterMap identity
+    of
+        [] ->
+            Nothing
+
+        errors ->
+            Just <| String.join ", " errors
+
+
+validateUsername : Shared.Model -> Model -> Maybe String
+validateUsername shared model =
+    if String.isEmpty model.userName && not model.initialState then
         Just "Username is required"
 
-    else if String.isEmpty model.deviceName then
-        Just "Device Name is required"
+    else
+        Nothing
 
-    else if shared.nextIds == Nothing then
-        Just "No new ids available"
+
+validateDeviceName : Shared.Model -> Model -> Maybe String
+validateDeviceName shared model =
+    if String.isEmpty model.deviceName && not model.initialState then
+        Just "Device Name is required"
 
     else
         Nothing
@@ -131,27 +158,24 @@ subscriptions model =
 -- VIEW
 
 
-view : Model -> View Msg
-view model =
+view : Shared.Model -> Model -> View Msg
+view shared model =
+    let
+        isCreateButtonDisabled =
+            case model.validation of
+                Just _ ->
+                    True
+
+                Nothing ->
+                    False || model.initialState
+    in
     { title = "Pages.Setup.NewAccount"
     , body =
-        [ Html.h3 [] [ Html.text "Create new Account" ]
-        , Html.input [ Html.Attributes.placeholder "Username", Html.Events.onInput UsernameChanged, Html.Attributes.value model.userName ] []
-        , Html.input [ Html.Attributes.placeholder "Device Name", Html.Events.onInput DeviceNameChanged, Html.Attributes.value model.deviceName ] []
-        , Html.button
-            [ Html.Events.onClick Create
-            , Html.Attributes.disabled
-                (case model.validation of
-                    Just _ ->
-                        True
-
-                    Nothing ->
-                        False
-                )
+        [ Html.div [ Html.Attributes.class "p-2 flex flex-col gap-2 max-w-lg lg:p-16 " ]
+            [ Caption.caption1 "Create new Account" |> Caption.view
+            , Input.text "Username" UsernameChanged (validateUsername shared model) model.userName |> Input.view
+            , Input.text "Device Name" DeviceNameChanged (validateDeviceName shared model) model.deviceName |> Input.view
+            , Button.button "Create" Create |> Button.withDisabled isCreateButtonDisabled |> Button.view
             ]
-            [ Html.text "Create"
-            ]
-        , Html.br [] []
-        , Html.text <| Maybe.withDefault "" model.validation
         ]
     }
