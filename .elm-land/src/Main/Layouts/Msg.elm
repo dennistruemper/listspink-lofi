@@ -1,5 +1,7 @@
 module Main.Layouts.Msg exposing (..)
 
+import Layouts.Scaffold
 
-type alias Msg =
-    Never
+
+type Msg
+    = Scaffold Layouts.Scaffold.Msg

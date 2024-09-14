@@ -10,6 +10,7 @@ import Event exposing (EventDefinition)
 import Html
 import Html.Attributes
 import Html.Events
+import Layouts
 import Page exposing (Page)
 import Route exposing (Route)
 import Route.Path
@@ -28,6 +29,14 @@ page user shared route =
         , subscriptions = subscriptions
         , view = view shared
         }
+        |> Page.withLayout (toLayout user)
+
+
+{-| Use the sidebar layout on this page
+-}
+toLayout : Auth.User -> Model -> Layouts.Layout Msg
+toLayout user model =
+    Layouts.Scaffold {}
 
 
 

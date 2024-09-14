@@ -8,6 +8,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Lamdera
+import Layouts
 import Page exposing (Page)
 import Ports
 import Route exposing (Route)
@@ -24,6 +25,14 @@ page user shared route =
         , subscriptions = subscriptions
         , view = view shared
         }
+        |> Page.withLayout (toLayout user)
+
+
+{-| Use the sidebar layout on this page
+-}
+toLayout : Auth.User -> Model -> Layouts.Layout Msg
+toLayout user model =
+    Layouts.Scaffold {}
 
 
 
@@ -75,29 +84,7 @@ view : Shared.Model -> Model -> View Msg
 view shared model =
     { title = "Elm Land ❤️ Lamdera"
     , body =
-        [ node "style" [] [ text """
-            @import url('https://fonts.googleapis.com/css2?family=Lora:wght@600&family=Nunito+Sans&display=swap');
-
-            html {
-                height: 100%;
-                color: white;
-                background: linear-gradient(dodgerblue, #339);
-            }
-            body {
-                display: flex;
-                flex-direction: column;
-                margin: 0;
-                justify-content: center;
-                align-items: center;
-                height: 90vh;
-                font-family: 'Lora';
-            }
-            h1 {
-                margin: 0;
-                font-weight: 600 !important;
-            }
-            """ ]
-        , div [ style "display" "flex", style "gap" "1rem" ]
+        [ div [ style "display" "flex", style "gap" "1rem" ]
             [ img
                 [ alt "Lando, the Elm Land Rainbow"
                 , src "/lando.png"
@@ -115,7 +102,6 @@ view shared model =
                 []
             ]
         , h1 [] [ text "Elm Land ❤️ Lamdera" ]
-        , a [ Route.Path.href Route.Path.Lists ] [ text "Show Lists" ]
         , a [ Route.Path.href Route.Path.SetupKnown ] [ text "Connect other device" ]
         , Button.button "Logout" LogoutClicked |> Button.view
         ]

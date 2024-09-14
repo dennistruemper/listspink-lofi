@@ -1,5 +1,6 @@
 module Pages.Lists.Create exposing (Model, Msg, page)
 
+import Auth
 import Bridge
 import Effect exposing (Effect)
 import Event exposing (EventDefinition)
@@ -7,6 +8,7 @@ import EventMetadataHelper
 import Html
 import Html.Attributes
 import Html.Events
+import Layouts
 import Page exposing (Page)
 import Route exposing (Route)
 import Shared
@@ -17,14 +19,22 @@ import Time
 import View exposing (View)
 
 
-page : Shared.Model -> Route () -> Page Model Msg
-page shared route =
+page : Auth.User -> Shared.Model -> Route () -> Page Model Msg
+page user shared route =
     Page.new
         { init = init
         , update = update shared
         , subscriptions = subscriptions
         , view = view
         }
+        |> Page.withLayout (toLayout user)
+
+
+{-| Use the sidebar layout on this page
+-}
+toLayout : Auth.User -> Model -> Layouts.Layout Msg
+toLayout user model =
+    Layouts.Scaffold {}
 
 
 

@@ -25,3 +25,4 @@ type Msg
     | GotMessageFromJs String
     | ConnectionEstablished
     | GotSyncResult { events : List EventDefinition, lastSyncServerTime : Time.Posix }
+    | SidebarToggled Bool

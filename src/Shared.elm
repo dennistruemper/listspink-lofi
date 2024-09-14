@@ -59,6 +59,7 @@ init flagsResult route =
       , nextIds = Nothing
       , syncModel = Sync.initFrontend
       , state = Event.initialState
+      , menuOpen = False
       }
     , Effect.batch [ Effect.generateIds, Effect.loadUserData, Effect.loadFrontendSyncModel ]
     )
@@ -169,6 +170,9 @@ update route msg model =
 
                 Ports.UserLoggedOut ->
                     ( { model | user = Just Bridge.Unknown }, Effect.pushRoutePath Route.Path.Home_ )
+
+        Shared.Msg.SidebarToggled newValue ->
+            ( { model | menuOpen = newValue }, Effect.none )
 
 
 
