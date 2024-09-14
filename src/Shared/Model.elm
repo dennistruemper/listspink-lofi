@@ -31,4 +31,5 @@ type alias Model =
     , nextIds : Maybe NextIds
     , syncModel : Sync.FrontendSyncModel
     , state : Event.State
+    , menuOpen : Bool
     }

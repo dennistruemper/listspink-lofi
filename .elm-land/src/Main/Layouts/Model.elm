@@ -1,5 +1,7 @@
 module Main.Layouts.Model exposing (..)
 
+import Layouts.Scaffold
 
-type alias Model =
-    Never
+
+type Model
+    = Scaffold { scaffold : Layouts.Scaffold.Model }

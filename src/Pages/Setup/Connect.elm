@@ -1,11 +1,13 @@
 module Pages.Setup.Connect exposing (Model, Msg, page)
 
+import Auth
 import Bridge
 import Effect exposing (Effect)
 import Html
 import Html.Attributes
 import Html.Events
 import Lamdera
+import Layouts
 import Page exposing (Page)
 import Route exposing (Route)
 import Shared

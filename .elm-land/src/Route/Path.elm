@@ -8,12 +8,14 @@ import Url.Parser exposing ((</>))
 
 type Path
     = Home_
+    | Account
     | Admin
     | Lists
     | Lists_Create
     | Lists_Id__CreateItem { id : String }
     | Lists_ListId_ { listId : String }
     | Manual
+    | Settings
     | Setup
     | Setup_Connect
     | Setup_NewAccount
@@ -40,6 +42,9 @@ fromString urlPath =
         [] ->
             Just Home_
 
+        "account" :: [] ->
+            Just Account
+
         "admin" :: [] ->
             Just Admin
 
@@ -63,6 +68,9 @@ fromString urlPath =
 
         "manual" :: [] ->
             Just Manual
+
+        "settings" :: [] ->
+            Just Settings
 
         "setup" :: [] ->
             Just Setup
@@ -94,6 +102,9 @@ toString path =
                 Home_ ->
                     []
 
+                Account ->
+                    [ "account" ]
+
                 Admin ->
                     [ "admin" ]
 
@@ -111,6 +122,9 @@ toString path =
 
                 Manual ->
                     [ "manual" ]
+
+                Settings ->
+                    [ "settings" ]
 
                 Setup ->
                     [ "setup" ]

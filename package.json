@@ -9,6 +9,7 @@
     "build": "rm -rf ./dist && elm-land build && "
   },
   "devDependencies": {
+    "@tailwindcss/forms": "0.5.9",
     "elm-land": "0.20.1",
     "elm-test-rs": "3.0.0-5",
     "lamdera": "0.19.1-1.2.1-1",

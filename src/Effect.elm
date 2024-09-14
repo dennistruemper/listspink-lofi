@@ -22,6 +22,7 @@ module Effect exposing
     , storeFrontendSyncModel
     , storeUserData
     , toCmd
+    , toggleSidebar
     )
 
 import Bridge
@@ -129,6 +130,11 @@ addEvent event =
     SendSharedMsg (Shared.Msg.AddEvent event)
 
 
+toggleSidebar : Bool -> Effect msg
+toggleSidebar open =
+    SendSharedMsg (Shared.Msg.SidebarToggled open)
+
+
 getTime : (Time.Posix -> msg) -> Effect msg
 getTime gotTimeMsg =
     SendCmd (Time.now |> Task.perform gotTimeMsg)
@@ -188,7 +194,7 @@ pushRoute route =
 -}
 pushRoutePath : Route.Path.Path -> Effect msg
 pushRoutePath path =
-    PushUrl (Route.Path.toString path)
+    batch [ PushUrl (Route.Path.toString path), toggleSidebar False ]
 
 
 {-| Set the new route, but replace the previous one, so clicking the back
