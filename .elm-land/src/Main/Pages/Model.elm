@@ -3,6 +3,7 @@ module Main.Pages.Model exposing (Model(..))
 import Pages.Home_
 import Pages.Account
 import Pages.Admin
+import Pages.Credits
 import Pages.Lists
 import Pages.Lists.Create
 import Pages.Lists.Id_.CreateItem
@@ -21,6 +22,7 @@ type Model
     = Home_ Pages.Home_.Model
     | Account Pages.Account.Model
     | Admin Pages.Admin.Model
+    | Credits Pages.Credits.Model
     | Lists Pages.Lists.Model
     | Lists_Create Pages.Lists.Create.Model
     | Lists_Id__CreateItem { id : String } Pages.Lists.Id_.CreateItem.Model

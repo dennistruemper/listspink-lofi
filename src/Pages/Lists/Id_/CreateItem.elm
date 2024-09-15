@@ -31,7 +31,7 @@ page user shared route =
 -}
 toLayout : Auth.User -> Model -> Layouts.Layout Msg
 toLayout user model =
-    Layouts.Scaffold {}
+    Layouts.Scaffold { caption = Just "Create Item" }
 
 
 

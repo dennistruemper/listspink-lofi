@@ -18,6 +18,10 @@ import Time
 import View exposing (View)
 
 
+title =
+    "List Details"
+
+
 page : Auth.User -> Shared.Model -> Route { listId : String } -> Page Model Msg
 page user shared route =
     Page.new
@@ -33,7 +37,7 @@ page user shared route =
 -}
 toLayout : Auth.User -> Model -> Layouts.Layout Msg
 toLayout user model =
-    Layouts.Scaffold {}
+    Layouts.Scaffold { caption = Just title }
 
 
 
@@ -165,7 +169,7 @@ view shared model =
                 |> List.filter (\l -> l.listId == model.listId)
                 |> List.head
     in
-    { title = "List"
+    { title = title
     , body =
         [ case maybeList of
             Just list ->

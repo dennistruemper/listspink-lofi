@@ -66,7 +66,7 @@ view data =
         style =
             case data.level of
                 H1 ->
-                    "text-3xl font-bold"
+                    "text-2xl lg:text-3xl font-bold"
 
                 H2 ->
                     "text-2xl font-bold"

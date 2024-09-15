@@ -2,6 +2,7 @@ module Layouts.Scaffold exposing (Model, Msg, Props, layout)
 
 import Auth
 import Bridge
+import Components.Caption as Caption
 import Effect exposing (Effect)
 import Html exposing (..)
 import Html.Attributes as Attr exposing (class)
@@ -16,7 +17,7 @@ import View exposing (View)
 
 
 type alias Props =
-    {}
+    { caption : Maybe String }
 
 
 layout : Props -> Shared.Model -> Route () -> Layout () Model Msg contentMsg
@@ -24,7 +25,7 @@ layout props shared route =
     Layout.new
         { init = init (shared.user |> Maybe.withDefault Bridge.Unknown)
         , update = update
-        , view = view shared
+        , view = view shared props.caption
         , subscriptions = subscriptions
         }
 
@@ -80,17 +81,17 @@ subscriptions model =
 -- VIEW
 
 
-view : Shared.Model -> { toContentMsg : Msg -> contentMsg, content : View contentMsg, model : Model } -> View contentMsg
-view shared { toContentMsg, model, content } =
+view : Shared.Model -> Maybe String -> { toContentMsg : Msg -> contentMsg, content : View contentMsg, model : Model } -> View contentMsg
+view shared caption { toContentMsg, model, content } =
     { title = content.title
     , body =
-        [ scaffold shared toContentMsg content.body
+        [ scaffold shared caption toContentMsg content.body
         ]
     }
 
 
-scaffold : Shared.Model -> (Msg -> contentMsg) -> List (Html contentMsg) -> Html contentMsg
-scaffold shared toContentMsg content =
+scaffold : Shared.Model -> Maybe String -> (Msg -> contentMsg) -> List (Html contentMsg) -> Html contentMsg
+scaffold shared caption toContentMsg content =
     let
         mobileMenuHidden =
             case shared.menuOpen of
@@ -147,14 +148,16 @@ scaffold shared toContentMsg content =
                     , div [ Attr.class "hidden lg:block" ] [ horizontalDevider ]
                     , menuEntry toContentMsg Route.Path.Account "Account"
                     , horizontalDevider
+                    , menuEntry toContentMsg Route.Path.Credits "Credits"
+                    , horizontalDevider
                     , menuEntry
                         toContentMsg
                         Route.Path.Settings
                         "Settings"
                     ]
-               , div [ Attr.class "w-full" ]
-                    [ appBar toContentMsg
-                    , div [] content
+               , div [ Attr.class "w-full h-full flex flex-col" ]
+                    [ appBar caption toContentMsg
+                    , div [ Attr.class "flex-1" ] content
                     ]
                ]
         )
@@ -194,7 +197,16 @@ spacer content =
         [ content ]
 
 
-appBar toContentMsg =
+appBar captionInput toContentMsg =
+    let
+        caption =
+            case captionInput of
+                Just captionText ->
+                    Caption.caption1 captionText |> Caption.view
+
+                Nothing ->
+                    div [] []
+    in
     div
         [ Attr.class "sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8"
         ]
@@ -229,6 +241,7 @@ appBar toContentMsg =
             , Attr.attribute "aria-hidden" "true"
             ]
             []
+        , caption
         , div
             [ Attr.class "flex flex-1 gap-x-4 self-stretch lg:gap-x-6"
             ]

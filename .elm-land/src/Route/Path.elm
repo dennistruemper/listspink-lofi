@@ -10,6 +10,7 @@ type Path
     = Home_
     | Account
     | Admin
+    | Credits
     | Lists
     | Lists_Create
     | Lists_Id__CreateItem { id : String }
@@ -47,6 +48,9 @@ fromString urlPath =
 
         "admin" :: [] ->
             Just Admin
+
+        "credits" :: [] ->
+            Just Credits
 
         "lists" :: [] ->
             Just Lists
@@ -107,6 +111,9 @@ toString path =
 
                 Admin ->
                     [ "admin" ]
+
+                Credits ->
+                    [ "credits" ]
 
                 Lists ->
                     [ "lists" ]

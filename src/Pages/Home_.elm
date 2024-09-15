@@ -17,6 +17,10 @@ import Shared
 import View exposing (View)
 
 
+title =
+    "Dashboard"
+
+
 page : Auth.User -> Shared.Model -> Route () -> Page Model Msg
 page user shared route =
     Page.new
@@ -32,7 +36,7 @@ page user shared route =
 -}
 toLayout : Auth.User -> Model -> Layouts.Layout Msg
 toLayout user model =
-    Layouts.Scaffold {}
+    Layouts.Scaffold { caption = Just title }
 
 
 
@@ -82,27 +86,7 @@ subscriptions model =
 
 view : Shared.Model -> Model -> View Msg
 view shared model =
-    { title = "Elm Land ❤️ Lamdera"
+    { title = title
     , body =
-        [ div [ style "display" "flex", style "gap" "1rem" ]
-            [ img
-                [ alt "Lando, the Elm Land Rainbow"
-                , src "/lando.png"
-                , style "width" "128px"
-                , style "margin-right" "2.5rem"
-                ]
-                []
-            , img
-                [ alt "Laurie, the Lamdera Lambda Llamba"
-                , src "/llama.png"
-                , style "width" "81.4px"
-                , style "margin-right" "1.5rem"
-                , style "height" "108.4px"
-                ]
-                []
-            ]
-        , h1 [] [ text "Elm Land ❤️ Lamdera" ]
-        , a [ Route.Path.href Route.Path.SetupKnown ] [ text "Connect other device" ]
-        , Button.button "Logout" LogoutClicked |> Button.view
-        ]
+        [ text "Welcome to Listspink" ]
     }

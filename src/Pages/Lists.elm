@@ -21,6 +21,10 @@ import Time
 import View exposing (View)
 
 
+title =
+    "Show Lists"
+
+
 page : Auth.User -> Shared.Model -> Route () -> Page Model Msg
 page user shared route =
     Page.new
@@ -36,7 +40,7 @@ page user shared route =
 -}
 toLayout : Auth.User -> Model -> Layouts.Layout Msg
 toLayout user model =
-    Layouts.Scaffold {}
+    Layouts.Scaffold { caption = Just title }
 
 
 
@@ -133,7 +137,7 @@ subscriptions model =
 
 view : Shared.Model -> Model -> View Msg
 view shared model =
-    { title = "Pages.Lists"
+    { title = title
     , body =
         [ Column.column
             [ Button.button "Create New Dummy List" CreateDummyList |> Button.view
