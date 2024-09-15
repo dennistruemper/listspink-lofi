@@ -3,6 +3,7 @@ module Main.Pages.Msg exposing (Msg(..))
 import Pages.Home_
 import Pages.Account
 import Pages.Admin
+import Pages.Credits
 import Pages.Lists
 import Pages.Lists.Create
 import Pages.Lists.Id_.CreateItem
@@ -20,6 +21,7 @@ type Msg
     = Home_ Pages.Home_.Msg
     | Account Pages.Account.Msg
     | Admin Pages.Admin.Msg
+    | Credits Pages.Credits.Msg
     | Lists Pages.Lists.Msg
     | Lists_Create Pages.Lists.Create.Msg
     | Lists_Id__CreateItem Pages.Lists.Id_.CreateItem.Msg

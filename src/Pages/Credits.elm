@@ -1,21 +1,19 @@
-module Pages.Account exposing (Model, Msg, page)
+module Pages.Credits exposing (Model, Msg, page)
 
 import Auth
-import Components.Button as Button
-import Components.Column as Column
+import Components.Caption as Caption
 import Effect exposing (Effect)
-import Html
-import Html.Attributes
+import Html exposing (..)
+import Html.Attributes exposing (..)
 import Layouts
 import Page exposing (Page)
 import Route exposing (Route)
-import Route.Path
 import Shared
 import View exposing (View)
 
 
 title =
-    "Account"
+    "Credits"
 
 
 page : Auth.User -> Shared.Model -> Route () -> Page Model Msg
@@ -57,8 +55,6 @@ init () =
 
 type Msg
     = NoOp
-    | LogoutClicked
-    | ConnectDeviceClicked
 
 
 update : Msg -> Model -> ( Model, Effect Msg )
@@ -67,16 +63,6 @@ update msg model =
         NoOp ->
             ( model
             , Effect.none
-            )
-
-        LogoutClicked ->
-            ( model
-            , Effect.logout
-            )
-
-        ConnectDeviceClicked ->
-            ( model
-            , Effect.pushRoutePath Route.Path.SetupKnown
             )
 
 
@@ -97,12 +83,26 @@ view : Model -> View Msg
 view model =
     { title = title
     , body =
-        [ Column.column
-            [ Button.button "Connect other Device" ConnectDeviceClicked |> Button.view
-            , Html.div [ Html.Attributes.class "grow" ] []
-            , Button.button "Logout" LogoutClicked |> Button.view
+        [ div [ Html.Attributes.class "bg-fuchsia-200 grid lg:grid-cols-3 justify-items-center h-full items-center" ]
+            [ a [ href "https://elm.land" ]
+                [ Caption.caption2 "Elm Land" |> Caption.view
+                , img
+                    [ alt "Lando, the Elm Land Rainbow"
+                    , src "/llama.png"
+                    , class "max-w-48 max-h-48"
+                    ]
+                    []
+                ]
+            , Caption.caption2 "❤️" |> Caption.view
+            , a [ href "https://lamdera.com" ]
+                [ Caption.caption2 "Lamdera" |> Caption.view
+                , img
+                    [ alt "Laurie, the Lamdera Lambda Llamba"
+                    , src "/lando.png"
+                    , class "max-w-48 max-h-48"
+                    ]
+                    []
+                ]
             ]
-            |> Column.withPadding Column.LargePadding
-            |> Column.view
         ]
     }

@@ -18,6 +18,7 @@ import Page
 import Pages.Home_
 import Pages.Account
 import Pages.Admin
+import Pages.Credits
 import Pages.Lists
 import Pages.Lists.Create
 import Pages.Lists.Id_.CreateItem
@@ -143,24 +144,28 @@ initPageAndLayout model =
                 )
 
         Route.Path.Account ->
-            let
-                page : Page.Page Pages.Account.Model Pages.Account.Msg
-                page =
-                    Pages.Account.page model.shared (Route.fromUrl () model.url)
+            runWhenAuthenticatedWithLayout
+                model
+                (\user ->
+                    let
+                        page : Page.Page Pages.Account.Model Pages.Account.Msg
+                        page =
+                            Pages.Account.page user model.shared (Route.fromUrl () model.url)
 
-                ( pageModel, pageEffect ) =
-                    Page.init page ()
-            in
-            { page = 
-                Tuple.mapBoth
-                    Main.Pages.Model.Account
-                    (Effect.map Main.Pages.Msg.Account >> fromPageEffect model)
-                    ( pageModel, pageEffect )
-            , layout = 
-                Page.layout pageModel page
-                    |> Maybe.map (Layouts.map (Main.Pages.Msg.Account >> Page))
-                    |> Maybe.map (initLayout model)
-            }
+                        ( pageModel, pageEffect ) =
+                            Page.init page ()
+                    in
+                    { page = 
+                        Tuple.mapBoth
+                            Main.Pages.Model.Account
+                            (Effect.map Main.Pages.Msg.Account >> fromPageEffect model)
+                            ( pageModel, pageEffect )
+                    , layout = 
+                        Page.layout pageModel page
+                            |> Maybe.map (Layouts.map (Main.Pages.Msg.Account >> Page))
+                            |> Maybe.map (initLayout model)
+                    }
+                )
 
         Route.Path.Admin ->
             runWhenAuthenticatedWithLayout
@@ -182,6 +187,30 @@ initPageAndLayout model =
                     , layout = 
                         Page.layout pageModel page
                             |> Maybe.map (Layouts.map (Main.Pages.Msg.Admin >> Page))
+                            |> Maybe.map (initLayout model)
+                    }
+                )
+
+        Route.Path.Credits ->
+            runWhenAuthenticatedWithLayout
+                model
+                (\user ->
+                    let
+                        page : Page.Page Pages.Credits.Model Pages.Credits.Msg
+                        page =
+                            Pages.Credits.page user model.shared (Route.fromUrl () model.url)
+
+                        ( pageModel, pageEffect ) =
+                            Page.init page ()
+                    in
+                    { page = 
+                        Tuple.mapBoth
+                            Main.Pages.Model.Credits
+                            (Effect.map Main.Pages.Msg.Credits >> fromPageEffect model)
+                            ( pageModel, pageEffect )
+                    , layout = 
+                        Page.layout pageModel page
+                            |> Maybe.map (Layouts.map (Main.Pages.Msg.Credits >> Page))
                             |> Maybe.map (initLayout model)
                     }
                 )
@@ -303,24 +332,28 @@ initPageAndLayout model =
             }
 
         Route.Path.Settings ->
-            let
-                page : Page.Page Pages.Settings.Model Pages.Settings.Msg
-                page =
-                    Pages.Settings.page model.shared (Route.fromUrl () model.url)
+            runWhenAuthenticatedWithLayout
+                model
+                (\user ->
+                    let
+                        page : Page.Page Pages.Settings.Model Pages.Settings.Msg
+                        page =
+                            Pages.Settings.page user model.shared (Route.fromUrl () model.url)
 
-                ( pageModel, pageEffect ) =
-                    Page.init page ()
-            in
-            { page = 
-                Tuple.mapBoth
-                    Main.Pages.Model.Settings
-                    (Effect.map Main.Pages.Msg.Settings >> fromPageEffect model)
-                    ( pageModel, pageEffect )
-            , layout = 
-                Page.layout pageModel page
-                    |> Maybe.map (Layouts.map (Main.Pages.Msg.Settings >> Page))
-                    |> Maybe.map (initLayout model)
-            }
+                        ( pageModel, pageEffect ) =
+                            Page.init page ()
+                    in
+                    { page = 
+                        Tuple.mapBoth
+                            Main.Pages.Model.Settings
+                            (Effect.map Main.Pages.Msg.Settings >> fromPageEffect model)
+                            ( pageModel, pageEffect )
+                    , layout = 
+                        Page.layout pageModel page
+                            |> Maybe.map (Layouts.map (Main.Pages.Msg.Settings >> Page))
+                            |> Maybe.map (initLayout model)
+                    }
+                )
 
         Route.Path.Setup ->
             let
@@ -383,24 +416,28 @@ initPageAndLayout model =
             }
 
         Route.Path.SetupKnown ->
-            let
-                page : Page.Page Pages.SetupKnown.Model Pages.SetupKnown.Msg
-                page =
-                    Pages.SetupKnown.page model.shared (Route.fromUrl () model.url)
+            runWhenAuthenticatedWithLayout
+                model
+                (\user ->
+                    let
+                        page : Page.Page Pages.SetupKnown.Model Pages.SetupKnown.Msg
+                        page =
+                            Pages.SetupKnown.page user model.shared (Route.fromUrl () model.url)
 
-                ( pageModel, pageEffect ) =
-                    Page.init page ()
-            in
-            { page = 
-                Tuple.mapBoth
-                    Main.Pages.Model.SetupKnown
-                    (Effect.map Main.Pages.Msg.SetupKnown >> fromPageEffect model)
-                    ( pageModel, pageEffect )
-            , layout = 
-                Page.layout pageModel page
-                    |> Maybe.map (Layouts.map (Main.Pages.Msg.SetupKnown >> Page))
-                    |> Maybe.map (initLayout model)
-            }
+                        ( pageModel, pageEffect ) =
+                            Page.init page ()
+                    in
+                    { page = 
+                        Tuple.mapBoth
+                            Main.Pages.Model.SetupKnown
+                            (Effect.map Main.Pages.Msg.SetupKnown >> fromPageEffect model)
+                            ( pageModel, pageEffect )
+                    , layout = 
+                        Page.layout pageModel page
+                            |> Maybe.map (Layouts.map (Main.Pages.Msg.SetupKnown >> Page))
+                            |> Maybe.map (initLayout model)
+                    }
+                )
 
         Route.Path.NotFound_ ->
             let
@@ -643,10 +680,14 @@ updateFromPage msg model =
                 )
 
         ( Main.Pages.Msg.Account pageMsg, Main.Pages.Model.Account pageModel ) ->
-            Tuple.mapBoth
-                Main.Pages.Model.Account
-                (Effect.map Main.Pages.Msg.Account >> fromPageEffect model)
-                (Page.update (Pages.Account.page model.shared (Route.fromUrl () model.url)) pageMsg pageModel)
+            runWhenAuthenticated
+                model
+                (\user ->
+                    Tuple.mapBoth
+                        Main.Pages.Model.Account
+                        (Effect.map Main.Pages.Msg.Account >> fromPageEffect model)
+                        (Page.update (Pages.Account.page user model.shared (Route.fromUrl () model.url)) pageMsg pageModel)
+                )
 
         ( Main.Pages.Msg.Admin pageMsg, Main.Pages.Model.Admin pageModel ) ->
             runWhenAuthenticated
@@ -656,6 +697,16 @@ updateFromPage msg model =
                         Main.Pages.Model.Admin
                         (Effect.map Main.Pages.Msg.Admin >> fromPageEffect model)
                         (Page.update (Pages.Admin.page user model.shared (Route.fromUrl () model.url)) pageMsg pageModel)
+                )
+
+        ( Main.Pages.Msg.Credits pageMsg, Main.Pages.Model.Credits pageModel ) ->
+            runWhenAuthenticated
+                model
+                (\user ->
+                    Tuple.mapBoth
+                        Main.Pages.Model.Credits
+                        (Effect.map Main.Pages.Msg.Credits >> fromPageEffect model)
+                        (Page.update (Pages.Credits.page user model.shared (Route.fromUrl () model.url)) pageMsg pageModel)
                 )
 
         ( Main.Pages.Msg.Lists pageMsg, Main.Pages.Model.Lists pageModel ) ->
@@ -705,10 +756,14 @@ updateFromPage msg model =
                 (Page.update (Pages.Manual.page model.shared (Route.fromUrl () model.url)) pageMsg pageModel)
 
         ( Main.Pages.Msg.Settings pageMsg, Main.Pages.Model.Settings pageModel ) ->
-            Tuple.mapBoth
-                Main.Pages.Model.Settings
-                (Effect.map Main.Pages.Msg.Settings >> fromPageEffect model)
-                (Page.update (Pages.Settings.page model.shared (Route.fromUrl () model.url)) pageMsg pageModel)
+            runWhenAuthenticated
+                model
+                (\user ->
+                    Tuple.mapBoth
+                        Main.Pages.Model.Settings
+                        (Effect.map Main.Pages.Msg.Settings >> fromPageEffect model)
+                        (Page.update (Pages.Settings.page user model.shared (Route.fromUrl () model.url)) pageMsg pageModel)
+                )
 
         ( Main.Pages.Msg.Setup pageMsg, Main.Pages.Model.Setup pageModel ) ->
             Tuple.mapBoth
@@ -729,10 +784,14 @@ updateFromPage msg model =
                 (Page.update (Pages.Setup.NewAccount.page model.shared (Route.fromUrl () model.url)) pageMsg pageModel)
 
         ( Main.Pages.Msg.SetupKnown pageMsg, Main.Pages.Model.SetupKnown pageModel ) ->
-            Tuple.mapBoth
-                Main.Pages.Model.SetupKnown
-                (Effect.map Main.Pages.Msg.SetupKnown >> fromPageEffect model)
-                (Page.update (Pages.SetupKnown.page model.shared (Route.fromUrl () model.url)) pageMsg pageModel)
+            runWhenAuthenticated
+                model
+                (\user ->
+                    Tuple.mapBoth
+                        Main.Pages.Model.SetupKnown
+                        (Effect.map Main.Pages.Msg.SetupKnown >> fromPageEffect model)
+                        (Page.update (Pages.SetupKnown.page user model.shared (Route.fromUrl () model.url)) pageMsg pageModel)
+                )
 
         ( Main.Pages.Msg.NotFound_ pageMsg, Main.Pages.Model.NotFound_ pageModel ) ->
             Tuple.mapBoth
@@ -777,8 +836,8 @@ toLayoutFromPage model =
 
         Main.Pages.Model.Account pageModel ->
             Route.fromUrl () model.url
-                |> Pages.Account.page model.shared
-                |> Page.layout pageModel
+                |> toAuthProtectedPage model Pages.Account.page
+                |> Maybe.andThen (Page.layout pageModel)
                 |> Maybe.map (Layouts.map (Main.Pages.Msg.Account >> Page))
 
         Main.Pages.Model.Admin pageModel ->
@@ -786,6 +845,12 @@ toLayoutFromPage model =
                 |> toAuthProtectedPage model Pages.Admin.page
                 |> Maybe.andThen (Page.layout pageModel)
                 |> Maybe.map (Layouts.map (Main.Pages.Msg.Admin >> Page))
+
+        Main.Pages.Model.Credits pageModel ->
+            Route.fromUrl () model.url
+                |> toAuthProtectedPage model Pages.Credits.page
+                |> Maybe.andThen (Page.layout pageModel)
+                |> Maybe.map (Layouts.map (Main.Pages.Msg.Credits >> Page))
 
         Main.Pages.Model.Lists pageModel ->
             Route.fromUrl () model.url
@@ -819,8 +884,8 @@ toLayoutFromPage model =
 
         Main.Pages.Model.Settings pageModel ->
             Route.fromUrl () model.url
-                |> Pages.Settings.page model.shared
-                |> Page.layout pageModel
+                |> toAuthProtectedPage model Pages.Settings.page
+                |> Maybe.andThen (Page.layout pageModel)
                 |> Maybe.map (Layouts.map (Main.Pages.Msg.Settings >> Page))
 
         Main.Pages.Model.Setup pageModel ->
@@ -843,8 +908,8 @@ toLayoutFromPage model =
 
         Main.Pages.Model.SetupKnown pageModel ->
             Route.fromUrl () model.url
-                |> Pages.SetupKnown.page model.shared
-                |> Page.layout pageModel
+                |> toAuthProtectedPage model Pages.SetupKnown.page
+                |> Maybe.andThen (Page.layout pageModel)
                 |> Maybe.map (Layouts.map (Main.Pages.Msg.SetupKnown >> Page))
 
         Main.Pages.Model.NotFound_ pageModel ->
@@ -908,15 +973,28 @@ subscriptions model =
                         (Auth.onPageLoad model.shared (Route.fromUrl () model.url))
 
                 Main.Pages.Model.Account pageModel ->
-                    Page.subscriptions (Pages.Account.page model.shared (Route.fromUrl () model.url)) pageModel
-                        |> Sub.map Main.Pages.Msg.Account
-                        |> Sub.map Page
+                    Auth.Action.subscriptions
+                        (\user ->
+                            Page.subscriptions (Pages.Account.page user model.shared (Route.fromUrl () model.url)) pageModel
+                                |> Sub.map Main.Pages.Msg.Account
+                                |> Sub.map Page
+                        )
+                        (Auth.onPageLoad model.shared (Route.fromUrl () model.url))
 
                 Main.Pages.Model.Admin pageModel ->
                     Auth.Action.subscriptions
                         (\user ->
                             Page.subscriptions (Pages.Admin.page user model.shared (Route.fromUrl () model.url)) pageModel
                                 |> Sub.map Main.Pages.Msg.Admin
+                                |> Sub.map Page
+                        )
+                        (Auth.onPageLoad model.shared (Route.fromUrl () model.url))
+
+                Main.Pages.Model.Credits pageModel ->
+                    Auth.Action.subscriptions
+                        (\user ->
+                            Page.subscriptions (Pages.Credits.page user model.shared (Route.fromUrl () model.url)) pageModel
+                                |> Sub.map Main.Pages.Msg.Credits
                                 |> Sub.map Page
                         )
                         (Auth.onPageLoad model.shared (Route.fromUrl () model.url))
@@ -963,9 +1041,13 @@ subscriptions model =
                         |> Sub.map Page
 
                 Main.Pages.Model.Settings pageModel ->
-                    Page.subscriptions (Pages.Settings.page model.shared (Route.fromUrl () model.url)) pageModel
-                        |> Sub.map Main.Pages.Msg.Settings
-                        |> Sub.map Page
+                    Auth.Action.subscriptions
+                        (\user ->
+                            Page.subscriptions (Pages.Settings.page user model.shared (Route.fromUrl () model.url)) pageModel
+                                |> Sub.map Main.Pages.Msg.Settings
+                                |> Sub.map Page
+                        )
+                        (Auth.onPageLoad model.shared (Route.fromUrl () model.url))
 
                 Main.Pages.Model.Setup pageModel ->
                     Page.subscriptions (Pages.Setup.page model.shared (Route.fromUrl () model.url)) pageModel
@@ -983,9 +1065,13 @@ subscriptions model =
                         |> Sub.map Page
 
                 Main.Pages.Model.SetupKnown pageModel ->
-                    Page.subscriptions (Pages.SetupKnown.page model.shared (Route.fromUrl () model.url)) pageModel
-                        |> Sub.map Main.Pages.Msg.SetupKnown
-                        |> Sub.map Page
+                    Auth.Action.subscriptions
+                        (\user ->
+                            Page.subscriptions (Pages.SetupKnown.page user model.shared (Route.fromUrl () model.url)) pageModel
+                                |> Sub.map Main.Pages.Msg.SetupKnown
+                                |> Sub.map Page
+                        )
+                        (Auth.onPageLoad model.shared (Route.fromUrl () model.url))
 
                 Main.Pages.Model.NotFound_ pageModel ->
                     Page.subscriptions (Pages.NotFound_.page model.shared (Route.fromUrl () model.url)) pageModel
@@ -1076,15 +1162,28 @@ viewPage model =
                 (Auth.onPageLoad model.shared (Route.fromUrl () model.url))
 
         Main.Pages.Model.Account pageModel ->
-            Page.view (Pages.Account.page model.shared (Route.fromUrl () model.url)) pageModel
-                |> View.map Main.Pages.Msg.Account
-                |> View.map Page
+            Auth.Action.view (View.map never (Auth.viewCustomPage model.shared (Route.fromUrl () model.url)))
+                (\user ->
+                    Page.view (Pages.Account.page user model.shared (Route.fromUrl () model.url)) pageModel
+                        |> View.map Main.Pages.Msg.Account
+                        |> View.map Page
+                )
+                (Auth.onPageLoad model.shared (Route.fromUrl () model.url))
 
         Main.Pages.Model.Admin pageModel ->
             Auth.Action.view (View.map never (Auth.viewCustomPage model.shared (Route.fromUrl () model.url)))
                 (\user ->
                     Page.view (Pages.Admin.page user model.shared (Route.fromUrl () model.url)) pageModel
                         |> View.map Main.Pages.Msg.Admin
+                        |> View.map Page
+                )
+                (Auth.onPageLoad model.shared (Route.fromUrl () model.url))
+
+        Main.Pages.Model.Credits pageModel ->
+            Auth.Action.view (View.map never (Auth.viewCustomPage model.shared (Route.fromUrl () model.url)))
+                (\user ->
+                    Page.view (Pages.Credits.page user model.shared (Route.fromUrl () model.url)) pageModel
+                        |> View.map Main.Pages.Msg.Credits
                         |> View.map Page
                 )
                 (Auth.onPageLoad model.shared (Route.fromUrl () model.url))
@@ -1131,9 +1230,13 @@ viewPage model =
                 |> View.map Page
 
         Main.Pages.Model.Settings pageModel ->
-            Page.view (Pages.Settings.page model.shared (Route.fromUrl () model.url)) pageModel
-                |> View.map Main.Pages.Msg.Settings
-                |> View.map Page
+            Auth.Action.view (View.map never (Auth.viewCustomPage model.shared (Route.fromUrl () model.url)))
+                (\user ->
+                    Page.view (Pages.Settings.page user model.shared (Route.fromUrl () model.url)) pageModel
+                        |> View.map Main.Pages.Msg.Settings
+                        |> View.map Page
+                )
+                (Auth.onPageLoad model.shared (Route.fromUrl () model.url))
 
         Main.Pages.Model.Setup pageModel ->
             Page.view (Pages.Setup.page model.shared (Route.fromUrl () model.url)) pageModel
@@ -1151,9 +1254,13 @@ viewPage model =
                 |> View.map Page
 
         Main.Pages.Model.SetupKnown pageModel ->
-            Page.view (Pages.SetupKnown.page model.shared (Route.fromUrl () model.url)) pageModel
-                |> View.map Main.Pages.Msg.SetupKnown
-                |> View.map Page
+            Auth.Action.view (View.map never (Auth.viewCustomPage model.shared (Route.fromUrl () model.url)))
+                (\user ->
+                    Page.view (Pages.SetupKnown.page user model.shared (Route.fromUrl () model.url)) pageModel
+                        |> View.map Main.Pages.Msg.SetupKnown
+                        |> View.map Page
+                )
+                (Auth.onPageLoad model.shared (Route.fromUrl () model.url))
 
         Main.Pages.Model.NotFound_ pageModel ->
             Page.view (Pages.NotFound_.page model.shared (Route.fromUrl () model.url)) pageModel
@@ -1235,16 +1342,30 @@ toPageUrlHookCmd model routes =
                 (Auth.onPageLoad model.shared (Route.fromUrl () model.url))
 
         Main.Pages.Model.Account pageModel ->
-            Page.toUrlMessages routes (Pages.Account.page model.shared (Route.fromUrl () model.url)) 
-                |> List.map Main.Pages.Msg.Account
-                |> List.map Page
-                |> toCommands
+            Auth.Action.command
+                (\user ->
+                    Page.toUrlMessages routes (Pages.Account.page user model.shared (Route.fromUrl () model.url)) 
+                        |> List.map Main.Pages.Msg.Account
+                        |> List.map Page
+                        |> toCommands
+                )
+                (Auth.onPageLoad model.shared (Route.fromUrl () model.url))
 
         Main.Pages.Model.Admin pageModel ->
             Auth.Action.command
                 (\user ->
                     Page.toUrlMessages routes (Pages.Admin.page user model.shared (Route.fromUrl () model.url)) 
                         |> List.map Main.Pages.Msg.Admin
+                        |> List.map Page
+                        |> toCommands
+                )
+                (Auth.onPageLoad model.shared (Route.fromUrl () model.url))
+
+        Main.Pages.Model.Credits pageModel ->
+            Auth.Action.command
+                (\user ->
+                    Page.toUrlMessages routes (Pages.Credits.page user model.shared (Route.fromUrl () model.url)) 
+                        |> List.map Main.Pages.Msg.Credits
                         |> List.map Page
                         |> toCommands
                 )
@@ -1297,10 +1418,14 @@ toPageUrlHookCmd model routes =
                 |> toCommands
 
         Main.Pages.Model.Settings pageModel ->
-            Page.toUrlMessages routes (Pages.Settings.page model.shared (Route.fromUrl () model.url)) 
-                |> List.map Main.Pages.Msg.Settings
-                |> List.map Page
-                |> toCommands
+            Auth.Action.command
+                (\user ->
+                    Page.toUrlMessages routes (Pages.Settings.page user model.shared (Route.fromUrl () model.url)) 
+                        |> List.map Main.Pages.Msg.Settings
+                        |> List.map Page
+                        |> toCommands
+                )
+                (Auth.onPageLoad model.shared (Route.fromUrl () model.url))
 
         Main.Pages.Model.Setup pageModel ->
             Page.toUrlMessages routes (Pages.Setup.page model.shared (Route.fromUrl () model.url)) 
@@ -1321,10 +1446,14 @@ toPageUrlHookCmd model routes =
                 |> toCommands
 
         Main.Pages.Model.SetupKnown pageModel ->
-            Page.toUrlMessages routes (Pages.SetupKnown.page model.shared (Route.fromUrl () model.url)) 
-                |> List.map Main.Pages.Msg.SetupKnown
-                |> List.map Page
-                |> toCommands
+            Auth.Action.command
+                (\user ->
+                    Page.toUrlMessages routes (Pages.SetupKnown.page user model.shared (Route.fromUrl () model.url)) 
+                        |> List.map Main.Pages.Msg.SetupKnown
+                        |> List.map Page
+                        |> toCommands
+                )
+                (Auth.onPageLoad model.shared (Route.fromUrl () model.url))
 
         Main.Pages.Model.NotFound_ pageModel ->
             Page.toUrlMessages routes (Pages.NotFound_.page model.shared (Route.fromUrl () model.url)) 
@@ -1395,9 +1524,12 @@ isAuthProtected routePath =
             True
 
         Route.Path.Account ->
-            False
+            True
 
         Route.Path.Admin ->
+            True
+
+        Route.Path.Credits ->
             True
 
         Route.Path.Lists ->
@@ -1416,7 +1548,7 @@ isAuthProtected routePath =
             False
 
         Route.Path.Settings ->
-            False
+            True
 
         Route.Path.Setup ->
             False
@@ -1428,7 +1560,7 @@ isAuthProtected routePath =
             False
 
         Route.Path.SetupKnown ->
-            False
+            True
 
         Route.Path.NotFound_ ->
             False

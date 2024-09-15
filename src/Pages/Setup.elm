@@ -139,12 +139,13 @@ view shared model =
 
 viewUnknownUser : Html.Html Msg
 viewUnknownUser =
-    Html.div [ Html.Attributes.class "flex flex-col items-start gap-4 p-8 lg:justify-around" ]
-        [ Caption.caption1 "Welcome to Listspink" |> Caption.view
-        , Html.p [] [ Html.text "Please choose one of the following options:" ]
+    Column.column
+        [ Html.p [] [ Html.text "Please choose one of the following options:" ]
         , Button.button "Create New Account" CreateNewAccount |> Button.view
         , Button.button "Connect Existing Account" ConnectExistingAccount |> Button.view
         ]
+        |> Column.withPadding Column.LargePadding
+        |> Column.view
 
 
 viewNoUser : Html.Html Msg

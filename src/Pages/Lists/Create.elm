@@ -17,7 +17,7 @@ import SortedEventList
 import Task
 import Time
 import View exposing (View)
-
+ title = "Create List"
 
 page : Auth.User -> Shared.Model -> Route () -> Page Model Msg
 page user shared route =
@@ -34,7 +34,7 @@ page user shared route =
 -}
 toLayout : Auth.User -> Model -> Layouts.Layout Msg
 toLayout user model =
-    Layouts.Scaffold {}
+    Layouts.Scaffold { caption = Just title }
 
 
 
@@ -110,7 +110,7 @@ subscriptions model =
 
 view : Model -> View Msg
 view model =
-    { title = "Pages.Lists.Create"
+    { title = title
     , body =
         [ Html.input
             [ Html.Events.onInput ListNameChanged, Html.Attributes.placeholder "List name", Html.Attributes.value model.listName ]

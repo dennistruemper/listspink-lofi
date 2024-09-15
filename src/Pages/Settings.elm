@@ -1,21 +1,35 @@
 module Pages.Settings exposing (Model, Msg, page)
 
+import Auth
 import Effect exposing (Effect)
-import Route exposing (Route)
 import Html
+import Layouts
 import Page exposing (Page)
+import Route exposing (Route)
 import Shared
 import View exposing (View)
 
 
-page : Shared.Model -> Route () -> Page Model Msg
-page shared route =
+title =
+    "Settings"
+
+
+page : Auth.User -> Shared.Model -> Route () -> Page Model Msg
+page user shared route =
     Page.new
         { init = init
         , update = update
         , subscriptions = subscriptions
         , view = view
         }
+        |> Page.withLayout (toLayout user)
+
+
+{-| Use the sidebar layout on this page
+-}
+toLayout : Auth.User -> Model -> Layouts.Layout Msg
+toLayout user model =
+    Layouts.Scaffold { caption = Just title }
 
 
 
@@ -65,6 +79,6 @@ subscriptions model =
 
 view : Model -> View Msg
 view model =
-    { title = "Pages.Settings"
+    { title = title
     , body = [ Html.text "/settings" ]
     }
