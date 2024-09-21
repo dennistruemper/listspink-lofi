@@ -13,8 +13,10 @@ type Path
     | Credits
     | Lists
     | Lists_Create
+    | Lists_Edit_ListId_ { listId : String }
     | Lists_Id__CreateItem { id : String }
     | Lists_ListId_ { listId : String }
+    | Lists_ListId__Edit_ItemId_ { listId : String, itemId : String }
     | Manual
     | Settings
     | Setup
@@ -58,6 +60,12 @@ fromString urlPath =
         "lists" :: "create" :: [] ->
             Just Lists_Create
 
+        "lists" :: "edit" :: listId_ :: [] ->
+            Lists_Edit_ListId_
+                { listId = listId_
+                }
+                |> Just
+
         "lists" :: id_ :: "create-item" :: [] ->
             Lists_Id__CreateItem
                 { id = id_
@@ -67,6 +75,13 @@ fromString urlPath =
         "lists" :: listId_ :: [] ->
             Lists_ListId_
                 { listId = listId_
+                }
+                |> Just
+
+        "lists" :: listId_ :: "edit" :: itemId_ :: [] ->
+            Lists_ListId__Edit_ItemId_
+                { listId = listId_
+                , itemId = itemId_
                 }
                 |> Just
 
@@ -121,11 +136,17 @@ toString path =
                 Lists_Create ->
                     [ "lists", "create" ]
 
+                Lists_Edit_ListId_ params ->
+                    [ "lists", "edit", params.listId ]
+
                 Lists_Id__CreateItem params ->
                     [ "lists", params.id, "create-item" ]
 
                 Lists_ListId_ params ->
                     [ "lists", params.listId ]
+
+                Lists_ListId__Edit_ItemId_ params ->
+                    [ "lists", params.listId, "edit", params.itemId ]
 
                 Manual ->
                     [ "manual" ]

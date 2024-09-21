@@ -6,8 +6,10 @@ import Pages.Admin
 import Pages.Credits
 import Pages.Lists
 import Pages.Lists.Create
+import Pages.Lists.Edit.ListId_
 import Pages.Lists.Id_.CreateItem
 import Pages.Lists.ListId_
+import Pages.Lists.ListId_.Edit.ItemId_
 import Pages.Manual
 import Pages.Settings
 import Pages.Setup
@@ -25,8 +27,10 @@ type Model
     | Credits Pages.Credits.Model
     | Lists Pages.Lists.Model
     | Lists_Create Pages.Lists.Create.Model
+    | Lists_Edit_ListId_ { listId : String } Pages.Lists.Edit.ListId_.Model
     | Lists_Id__CreateItem { id : String } Pages.Lists.Id_.CreateItem.Model
     | Lists_ListId_ { listId : String } Pages.Lists.ListId_.Model
+    | Lists_ListId__Edit_ItemId_ { listId : String, itemId : String } Pages.Lists.ListId_.Edit.ItemId_.Model
     | Manual Pages.Manual.Model
     | Settings Pages.Settings.Model
     | Setup Pages.Setup.Model
