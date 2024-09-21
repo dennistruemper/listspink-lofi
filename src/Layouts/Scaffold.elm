@@ -17,7 +17,8 @@ import View exposing (View)
 
 
 type alias Props =
-    { caption : Maybe String }
+    { caption : Maybe String
+    }
 
 
 layout : Props -> Shared.Model -> Route () -> Layout () Model Msg contentMsg
@@ -85,8 +86,7 @@ view : Shared.Model -> Maybe String -> { toContentMsg : Msg -> contentMsg, conte
 view shared caption { toContentMsg, model, content } =
     { title = content.title
     , body =
-        [ scaffold shared caption toContentMsg content.body
-        ]
+        [ scaffold shared caption toContentMsg content.body ]
     }
 
 
@@ -96,7 +96,7 @@ scaffold shared caption toContentMsg content =
         mobileMenuHidden =
             case shared.menuOpen of
                 True ->
-                    ""
+                    "z-10 lg:z-0"
 
                 False ->
                     "hidden"
@@ -113,9 +113,9 @@ scaffold shared caption toContentMsg content =
             else
                 []
     in
-    div [ Attr.class " h-screen w-full flex flex-row" ]
+    main_ [ Attr.class " h-screen w-full flex flex-row" ]
         (blur
-            ++ [ div [ Attr.class (mobileMenuHidden ++ " lg:block absolute top-0 left-0 lg:static h-full bg-fuchsia-300 z-50 p-4 flex flex-col content-start") ]
+            ++ [ div [ Attr.class (mobileMenuHidden ++ " lg:block absolute top-0 left-0 lg:static h-full bg-fuchsia-300 p-4 flex flex-col content-start") ]
                     [ button
                         [ Attr.type_ "button"
                         , Attr.class "lg:hidden"
@@ -157,7 +157,7 @@ scaffold shared caption toContentMsg content =
                     ]
                , div [ Attr.class "w-full h-full flex flex-col" ]
                     [ appBar caption toContentMsg
-                    , div [ Attr.class "flex-1" ] content
+                    , div [ Attr.class "grow overflow-y-scroll" ] content
                     ]
                ]
         )
@@ -207,8 +207,8 @@ appBar captionInput toContentMsg =
                 Nothing ->
                     div [] []
     in
-    div
-        [ Attr.class "sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8"
+    header
+        [ Attr.class "flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8"
         ]
         [ button
             [ Attr.type_ "button"

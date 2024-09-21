@@ -2,6 +2,7 @@ module Pages.Lists exposing (Model, Msg, page)
 
 import Auth
 import Bridge
+import Components.AppBar as AppBar
 import Components.Button as Button
 import Components.Center as Center
 import Components.Column as Column
@@ -144,22 +145,19 @@ view : Shared.Model -> Model -> View Msg
 view shared model =
     { title = title
     , body =
-        [ Html.div [ Html.Attributes.class "overflow-y-auto h-full" ]
-            [ Column.column
-                [ viewLists shared
-                , Html.div [ Html.Attributes.class "h-16" ] []
+        [ AppBar.appBar
+            |> AppBar.withContent
+                [ Column.column
+                    [ viewLists shared
 
-                -- buttom action bar
+                    -- buttom action bar
+                    ]
+                    |> Column.view
                 ]
-                |> Column.view
-            ]
-        , Html.div [ Html.Attributes.class "fixed bottom-0 left-0 z-50 w-full h-12 bg-white border-t p-2 border-gray-200 dark:bg-gray-700 dark:border-gray-600" ]
-            [ Row.row
+            |> AppBar.withActions
                 [ Button.button "Create New List" CreatNewListClicked |> Button.view
                 ]
-                |> Row.withAlignment Row.Center
-                |> Row.view
-            ]
+            |> AppBar.view
         ]
     }
 
@@ -205,10 +203,7 @@ viewList list =
                     ]
                     [ Html.div
                         []
-                        [ Html.span
-                            [--Html.Attributes.class "absolute inset-x-0 -top-px bottom-0"
-                            ]
-                            []
+                        [ Html.span [] []
                         , Html.text list.name
                         ]
                     ]
