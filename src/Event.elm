@@ -141,6 +141,8 @@ type alias PinkList =
     , listId : String
     , items : Dict String PinkItem
     , createdAt : Time.Posix
+    , lastUpdatedAt : Time.Posix
+    , numberOfUpdates : Int
     }
 
 
@@ -172,7 +174,13 @@ projectEvent event state =
                     { state
                         | lists =
                             Dict.insert listData.listId
-                                { name = listData.name, listId = listData.listId, items = Dict.empty, createdAt = metadata.timestamp }
+                                { name = listData.name
+                                , listId = listData.listId
+                                , items = Dict.empty
+                                , createdAt = metadata.timestamp
+                                , lastUpdatedAt = metadata.timestamp
+                                , numberOfUpdates = 0
+                                }
                                 state.lists
                     }
 
@@ -184,7 +192,12 @@ projectEvent event state =
                                 (\maybeList ->
                                     case maybeList of
                                         Just list ->
-                                            Just { list | name = listData.name }
+                                            Just
+                                                { list
+                                                    | name = listData.name
+                                                    , lastUpdatedAt = metadata.timestamp
+                                                    , numberOfUpdates = list.numberOfUpdates + 1
+                                                }
 
                                         Nothing ->
                                             Nothing
@@ -216,6 +229,8 @@ projectEvent event state =
                                                                     , completedAt = Nothing
                                                                     }
                                                                     list.items
+                                                    , lastUpdatedAt = metadata.timestamp
+                                                    , numberOfUpdates = list.numberOfUpdates + 1
                                                 }
 
                                         Nothing ->
@@ -254,6 +269,8 @@ projectEvent event state =
                                                                         Nothing
                                                             )
                                                             list.items
+                                                    , lastUpdatedAt = metadata.timestamp
+                                                    , numberOfUpdates = list.numberOfUpdates + 1
                                                 }
 
                                         Nothing ->

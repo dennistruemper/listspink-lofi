@@ -6,8 +6,10 @@ import Pages.Admin
 import Pages.Credits
 import Pages.Lists
 import Pages.Lists.Create
+import Pages.Lists.Edit.ListId_
 import Pages.Lists.Id_.CreateItem
 import Pages.Lists.ListId_
+import Pages.Lists.ListId_.Edit.ItemId_
 import Pages.Manual
 import Pages.Settings
 import Pages.Setup
@@ -24,8 +26,10 @@ type Msg
     | Credits Pages.Credits.Msg
     | Lists Pages.Lists.Msg
     | Lists_Create Pages.Lists.Create.Msg
+    | Lists_Edit_ListId_ Pages.Lists.Edit.ListId_.Msg
     | Lists_Id__CreateItem Pages.Lists.Id_.CreateItem.Msg
     | Lists_ListId_ Pages.Lists.ListId_.Msg
+    | Lists_ListId__Edit_ItemId_ Pages.Lists.ListId_.Edit.ItemId_.Msg
     | Manual Pages.Manual.Msg
     | Settings Pages.Settings.Msg
     | Setup Pages.Setup.Msg
