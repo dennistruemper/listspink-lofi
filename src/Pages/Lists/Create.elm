@@ -17,7 +17,11 @@ import SortedEventList
 import Task
 import Time
 import View exposing (View)
- title = "Create List"
+
+
+title =
+    "Create List"
+
 
 page : Auth.User -> Shared.Model -> Route () -> Page Model Msg
 page user shared route =
