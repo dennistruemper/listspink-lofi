@@ -1,7 +1,9 @@
 module Pages.Lists.Create exposing (Model, Msg, page)
 
 import Auth
-import Bridge
+import Components.AppBar as AppBar
+import Components.Button as Button
+import Components.Input as Input
 import Effect exposing (Effect)
 import Event exposing (EventDefinition)
 import EventMetadataHelper
@@ -12,9 +14,6 @@ import Layouts
 import Page exposing (Page)
 import Route exposing (Route)
 import Shared
-import Shared.Model
-import SortedEventList
-import Task
 import Time
 import View exposing (View)
 
@@ -112,15 +111,28 @@ subscriptions model =
 -- VIEW
 
 
+validateListName : Model -> Maybe String
+validateListName model =
+    if String.isEmpty model.listName then
+        Just "List name cannot be empty"
+
+    else
+        Nothing
+
+
 view : Model -> View Msg
 view model =
     { title = title
     , body =
-        [ Html.input
-            [ Html.Events.onInput ListNameChanged, Html.Attributes.placeholder "List name", Html.Attributes.value model.listName ]
-            []
-        , Html.button
-            [ Html.Events.onClick CreateListButtonClicked, Html.Attributes.disabled (String.isEmpty model.listName) ]
-            [ Html.text "Create List" ]
+        [ AppBar.appBar
+            |> AppBar.withContent
+                [ Input.text "List name" ListNameChanged (validateListName model) model.listName |> Input.view
+                ]
+            |> AppBar.withActions
+                [ Button.button "Create List" CreateListButtonClicked
+                    |> Button.withDisabled (validateListName model /= Nothing)
+                    |> Button.view
+                ]
+            |> AppBar.view
         ]
     }

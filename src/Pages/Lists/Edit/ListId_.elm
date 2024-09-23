@@ -5,6 +5,8 @@ import Components.AppBar as AppBar
 import Components.Button as Button
 import Components.Caption as Caption
 import Components.Input as Input
+import Components.Padding as Padding
+import Components.Text as Text
 import Dict
 import Effect exposing (Effect)
 import Event
@@ -12,7 +14,6 @@ import EventMetadataHelper
 import Format
 import Html
 import Html.Attributes
-import Html.Events
 import Layouts
 import Page exposing (Page)
 import Route exposing (Route)
@@ -59,9 +60,7 @@ init listId shared () =
     ( { listId = listId
       , listName =
             shared.state.lists
-                |> Dict.values
-                |> List.filter (\l -> l.listId == listId)
-                |> List.head
+                |> Dict.get listId
                 |> Maybe.map .name
       }
     , Effect.none
@@ -160,27 +159,27 @@ view shared model =
             Just list ->
                 AppBar.appBar
                     |> AppBar.withContent
-                        [ Html.div [ Html.Attributes.class "p-2 lg:p-4 flex flex-col gap-2" ]
-                            [ Caption.caption2 "Editable"
-                                |> Caption.withLine True
-                                |> Caption.view
-                            , Html.div [ Html.Attributes.class "pl-2 lg:pl-4" ]
-                                [ Input.text
-                                    "List Name"
-                                    ListNameChanged
-                                    (validateListName model.listName)
-                                    (model.listName |> Maybe.withDefault list.name)
-                                    |> Input.view
-                                ]
-                            , Caption.caption2 "Fun facts"
-                                |> Caption.withLine True
-                                |> Caption.view
-                            , Html.div [ Html.Attributes.class "pl-2 lg:pl-4" ]
-                                [ Html.p [ Html.Attributes.class " flex flex-row w-full justify-between" ] [ Html.p [ Html.Attributes.class "font-semibold" ] [ Html.text "Created at:" ], Html.text (list.createdAt |> Format.time) ]
-                                , Html.p [ Html.Attributes.class " flex flex-row w-full justify-between" ] [ Html.p [ Html.Attributes.class "font-semibold" ] [ Html.text "Last update at:" ], Html.text (list.lastUpdatedAt |> Format.time) ]
-                                , Html.p [ Html.Attributes.class " flex flex-row w-full justify-between" ] [ Html.p [ Html.Attributes.class "font-semibold" ] [ Html.text "Number of updates:" ], Html.text (list.numberOfUpdates |> String.fromInt) ]
-                                ]
+                        [ Caption.caption2 "Editable"
+                            |> Caption.withLine True
+                            |> Caption.view
+                        , Padding.left
+                            [ Input.text
+                                "List Name"
+                                ListNameChanged
+                                (validateListName model.listName)
+                                (model.listName |> Maybe.withDefault list.name)
+                                |> Input.view
                             ]
+                            |> Padding.view
+                        , Caption.caption2 "Fun facts"
+                            |> Caption.withLine True
+                            |> Caption.view
+                        , Padding.left
+                            [ Text.keyValue "Created at" (list.createdAt |> Format.time) |> Text.view
+                            , Text.keyValue "Last update at" (list.lastUpdatedAt |> Format.time) |> Text.view
+                            , Text.keyValue "Number of updates" (list.numberOfUpdates |> String.fromInt) |> Text.view
+                            ]
+                            |> Padding.view
                         ]
                     |> AppBar.withActions
                         [ Button.button "Update List" UpdateListButtonClicked

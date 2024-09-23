@@ -50,7 +50,7 @@ view data =
                 Nothing ->
                     ""
     in
-    Html.div []
+    Html.div [ Attr.class "pt-2" ]
         [ Html.div
             [ Attr.class "relative"
             ]

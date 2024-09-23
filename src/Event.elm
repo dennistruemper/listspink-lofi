@@ -4,6 +4,7 @@ module Event exposing
     , EventMetadata
     , ItemCreatedData
     , ItemStateChangedData
+    , ItemUpdatedData
     , ListCreatedData
     , ListUpdatedData
     , PinkItem
@@ -11,6 +12,7 @@ module Event exposing
     , State
     , createItemCreatedEvent
     , createItemStateChangedEvent
+    , createItemUpdatedEvent
     , createListCreatedEvent
     , createListUpdatedEvent
     , getAggregateId
@@ -39,6 +41,7 @@ type EventData
     | ListUpdated ListUpdatedData
     | ItemCreated ItemCreatedData
     | ItemStateChanged ItemStateChangedData
+    | ItemUpdated ItemUpdatedData
 
 
 type alias ListCreatedData =
@@ -50,6 +53,10 @@ type alias ListCreatedData =
 type alias ListUpdatedData =
     { name : String
     }
+
+
+type alias ItemUpdatedData =
+    { itemId : String, listId : String, name : Maybe String, completed : Maybe (Maybe Time.Posix) }
 
 
 type alias ItemCreatedData =
@@ -78,6 +85,14 @@ createListUpdatedEvent :
     -> EventDefinition
 createListUpdatedEvent metadata data =
     Event metadata (ListUpdated data)
+
+
+createItemUpdatedEvent :
+    EventMetadata
+    -> { itemId : String, listId : String, name : Maybe String, completed : Maybe (Maybe Time.Posix) }
+    -> EventDefinition
+createItemUpdatedEvent metadata data =
+    Event metadata (ItemUpdated data)
 
 
 createItemCreatedEvent :
@@ -152,6 +167,8 @@ type alias PinkItem =
     , description : Maybe String
     , createdAt : Time.Posix
     , completedAt : Maybe Time.Posix
+    , lastUpdatedAt : Time.Posix
+    , numberOfUpdates : Int
     }
 
 
@@ -227,6 +244,8 @@ projectEvent event state =
                                                                     , description = itemData.itemDescription
                                                                     , createdAt = metadata.timestamp
                                                                     , completedAt = Nothing
+                                                                    , lastUpdatedAt = metadata.timestamp
+                                                                    , numberOfUpdates = 0
                                                                     }
                                                                     list.items
                                                     , lastUpdatedAt = metadata.timestamp
@@ -263,6 +282,8 @@ projectEvent event state =
 
                                                                                     else
                                                                                         Nothing
+                                                                                , lastUpdatedAt = metadata.timestamp
+                                                                                , numberOfUpdates = item.numberOfUpdates + 1
                                                                             }
 
                                                                     Nothing ->
@@ -275,6 +296,50 @@ projectEvent event state =
 
                                         Nothing ->
                                             Nothing
+                                )
+                                state.lists
+                    }
+
+                ItemUpdated itemData ->
+                    { state
+                        | lists =
+                            Dict.update metadata.aggregateId
+                                (\maybeList ->
+                                    Maybe.map
+                                        (\list ->
+                                            { list
+                                                | items =
+                                                    Dict.update itemData.itemId
+                                                        (\maybeItem ->
+                                                            Maybe.map
+                                                                (\item ->
+                                                                    let
+                                                                        newCompletedAt =
+                                                                            case itemData.completed of
+                                                                                Just (Just time) ->
+                                                                                    Just time
+
+                                                                                Just Nothing ->
+                                                                                    Nothing
+
+                                                                                Nothing ->
+                                                                                    item.completedAt
+                                                                    in
+                                                                    { item
+                                                                        | name = itemData.name |> Maybe.withDefault item.name
+                                                                        , completedAt = newCompletedAt
+                                                                        , lastUpdatedAt = metadata.timestamp
+                                                                        , numberOfUpdates = item.numberOfUpdates + 1
+                                                                    }
+                                                                )
+                                                                maybeItem
+                                                        )
+                                                        list.items
+                                                , lastUpdatedAt = metadata.timestamp
+                                                , numberOfUpdates = list.numberOfUpdates + 1
+                                            }
+                                        )
+                                        maybeList
                                 )
                                 state.lists
                     }

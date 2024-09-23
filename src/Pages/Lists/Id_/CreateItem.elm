@@ -1,7 +1,9 @@
 module Pages.Lists.Id_.CreateItem exposing (Model, Msg, page)
 
 import Auth
+import Components.AppBar as AppBar
 import Components.Button as Button
+import Components.Input as Input
 import Effect exposing (Effect)
 import Event
 import EventMetadataHelper
@@ -11,6 +13,7 @@ import Html.Events
 import Layouts
 import Page exposing (Page)
 import Route exposing (Route)
+import Route.Path
 import Shared
 import Time
 import View exposing (View)
@@ -120,7 +123,7 @@ update shared msg model =
                                     else
                                         Just model.itemDescription
                                 }
-                        , Effect.back
+                        , Effect.pushRoutePath (Route.Path.Lists_ListId_ { listId = model.listId })
                         ]
                     )
 
@@ -149,17 +152,57 @@ view shared model =
     }
 
 
+validateName : Model -> Maybe String
+validateName model =
+    if String.isEmpty model.itemName then
+        Just "Name is required"
+
+    else
+        Nothing
+
+
+validateDescription : Model -> Maybe String
+validateDescription model =
+    Nothing
+
+
+validate : Model -> Maybe String
+validate model =
+    case validateName model of
+        Just error ->
+            Just error
+
+        Nothing ->
+            case validateDescription model of
+                Just error ->
+                    Just error
+
+                Nothing ->
+                    Nothing
+
+
 viewCreateItemForm : Shared.Model -> Model -> Html.Html Msg
 viewCreateItemForm shared model =
-    Html.div []
-        [ Html.input [ Html.Events.onInput ItemNameChanged, Html.Attributes.value model.itemName, Html.Attributes.placeholder "Name" ] []
-        , Html.input [ Html.Events.onInput ItemDescriptionChanged, Html.Attributes.value model.itemDescription, Html.Attributes.placeholder "Description" ] []
-        , Button.button "Create" CreateItemButtonClicked |> Button.view
-        , Html.br [] []
-        , case model.error of
-            Just error ->
-                Html.text error
+    let
+        buttonDisabled =
+            case validate model of
+                Just _ ->
+                    True
 
-            Nothing ->
-                Html.text ""
-        ]
+                Nothing ->
+                    False
+    in
+    AppBar.appBar
+        |> AppBar.withContent
+            [ Input.text "Name" ItemNameChanged (validateName model) model.itemName |> Input.view
+            , Input.text "Description" ItemDescriptionChanged (validateDescription model) model.itemDescription |> Input.view
+            , Html.br [] []
+            , case model.error of
+                Just error ->
+                    Html.text error
+
+                Nothing ->
+                    Html.text ""
+            ]
+        |> AppBar.withActions [ Button.button "Create" CreateItemButtonClicked |> Button.withDisabled buttonDisabled |> Button.view ]
+        |> AppBar.view

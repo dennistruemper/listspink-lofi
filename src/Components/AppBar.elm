@@ -31,7 +31,7 @@ withActions actions model =
 view : Model msg -> Html msg
 view data =
     Html.div [ Html.Attributes.class "h-full flex flex-col" ]
-        [ Html.div [ Html.Attributes.class "h-full overflow-y-scroll" ]
+        [ Html.div [ Html.Attributes.class "h-full overflow-y-scroll px-2 lg:px-4" ]
             data.content
         , Html.div [ Html.Attributes.class "w-full h-12 bg-white border-t p-2 border-gray-200 dark:bg-gray-700 dark:border-gray-600" ]
             [ Row.row
