@@ -5,6 +5,8 @@ import Components.AppBar as AppBar
 import Components.Button as Button
 import Components.Caption as Caption
 import Components.Input as Input
+import Components.Padding as Padding
+import Components.Text as Text
 import Dict
 import Effect exposing (Effect)
 import Event
@@ -160,7 +162,7 @@ view shared model =
                         [ Caption.caption2 "Editable"
                             |> Caption.withLine True
                             |> Caption.view
-                        , Html.div [ Html.Attributes.class "pl-2 lg:pl-4" ]
+                        , Padding.left
                             [ Input.text
                                 "List Name"
                                 ListNameChanged
@@ -168,14 +170,16 @@ view shared model =
                                 (model.listName |> Maybe.withDefault list.name)
                                 |> Input.view
                             ]
+                            |> Padding.view
                         , Caption.caption2 "Fun facts"
                             |> Caption.withLine True
                             |> Caption.view
-                        , Html.div [ Html.Attributes.class "pl-2 lg:pl-4" ]
-                            [ Html.p [ Html.Attributes.class " flex flex-row w-full justify-between" ] [ Html.p [ Html.Attributes.class "font-semibold" ] [ Html.text "Created at:" ], Html.text (list.createdAt |> Format.time) ]
-                            , Html.p [ Html.Attributes.class " flex flex-row w-full justify-between" ] [ Html.p [ Html.Attributes.class "font-semibold" ] [ Html.text "Last update at:" ], Html.text (list.lastUpdatedAt |> Format.time) ]
-                            , Html.p [ Html.Attributes.class " flex flex-row w-full justify-between" ] [ Html.p [ Html.Attributes.class "font-semibold" ] [ Html.text "Number of updates:" ], Html.text (list.numberOfUpdates |> String.fromInt) ]
+                        , Padding.left
+                            [ Text.keyValue "Created at" (list.createdAt |> Format.time) |> Text.view
+                            , Text.keyValue "Last update at" (list.lastUpdatedAt |> Format.time) |> Text.view
+                            , Text.keyValue "Number of updates" (list.numberOfUpdates |> String.fromInt) |> Text.view
                             ]
+                            |> Padding.view
                         ]
                     |> AppBar.withActions
                         [ Button.button "Update List" UpdateListButtonClicked

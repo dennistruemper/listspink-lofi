@@ -5,6 +5,8 @@ import Components.AppBar as AppBar
 import Components.Button as Button
 import Components.Caption as Caption
 import Components.Input as Input
+import Components.Padding as Padding
+import Components.Text as Text
 import Components.Toggle as Toggle
 import Dict
 import Effect exposing (Effect)
@@ -239,16 +241,18 @@ view model =
         [ AppBar.appBar
             |> AppBar.withContent
                 [ Caption.caption2 "Editable" |> Caption.withLine True |> Caption.view
-                , Html.div [ Html.Attributes.class "pl-2 lg:pl-4" ]
+                , Padding.left
                     [ Input.text "Name" NameChanged Nothing model.itemName |> Input.view
                     , Toggle.toggle "Completed" DoneClicked model.itemChecked |> Toggle.view
                     ]
+                    |> Padding.view
                 , Caption.caption2 "Fun facts" |> Caption.withLine True |> Caption.view
-                , Html.div [ Html.Attributes.class "pl-2 lg:pl-4" ]
-                    [ Html.p [ Html.Attributes.class " flex flex-row w-full justify-between" ] [ Html.p [ Html.Attributes.class "font-semibold" ] [ Html.text "Created at:" ], Html.text (model.createdAt |> Format.time) ]
-                    , Html.p [ Html.Attributes.class " flex flex-row w-full justify-between" ] [ Html.p [ Html.Attributes.class "font-semibold" ] [ Html.text "Last update at:" ], Html.text (model.lastUpdatedAt |> Format.time) ]
-                    , Html.p [ Html.Attributes.class " flex flex-row w-full justify-between" ] [ Html.p [ Html.Attributes.class "font-semibold" ] [ Html.text "Number of updates:" ], Html.text (model.numberOfUpdates |> String.fromInt) ]
+                , Padding.left
+                    [ Text.keyValue "Created at" (model.createdAt |> Format.time) |> Text.view
+                    , Text.keyValue "Last update at" (model.lastUpdatedAt |> Format.time) |> Text.view
+                    , Text.keyValue "Number of updates" (model.numberOfUpdates |> String.fromInt) |> Text.view
                     ]
+                    |> Padding.view
                 ]
             |> AppBar.withActions
                 [ Button.button "Update Item" SaveClicked
