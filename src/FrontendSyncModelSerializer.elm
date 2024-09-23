@@ -95,10 +95,19 @@ itemStateChangedCodec =
         |> S.finishRecord
 
 
+itemUpdatedCodec =
+    S.record Event.ItemUpdatedData
+        |> S.field .itemId S.string
+        |> S.field .listId S.string
+        |> S.field .name (S.maybe S.string)
+        |> S.field .completed (S.maybe (S.maybe timeCodec))
+        |> S.finishRecord
+
+
 eventDataCodec : S.Codec e Event.EventData
 eventDataCodec =
     S.customType
-        (\listCreatedEncoder listUpdatedEncoder itemCreatedEncoder itemStateChangedEncoder value ->
+        (\listCreatedEncoder listUpdatedEncoder itemCreatedEncoder itemStateChangedEncoder itemUpdatedEncoder value ->
             case value of
                 Event.ListCreated listCreatedData ->
                     listCreatedEncoder listCreatedData
@@ -111,11 +120,15 @@ eventDataCodec =
 
                 Event.ItemStateChanged itemStateChangedData ->
                     itemStateChangedEncoder itemStateChangedData
+
+                Event.ItemUpdated itemUpdatedData ->
+                    itemUpdatedEncoder itemUpdatedData
         )
         |> S.variant1 Event.ListCreated listCreatedCodec
         |> S.variant1 Event.ListUpdated listUpdatedCodec
         |> S.variant1 Event.ItemCreated itemCreatedCodec
         |> S.variant1 Event.ItemStateChanged itemStateChangedCodec
+        |> S.variant1 Event.ItemUpdated itemUpdatedCodec
         |> S.finishCustomType
 
 

@@ -251,6 +251,6 @@ sortByTimestamp : List Event.PinkItem -> List Event.PinkItem
 sortByTimestamp items =
     List.sortBy
         (\a ->
-            a.createdAt |> Time.posixToMillis
+            (a.createdAt |> Time.posixToMillis) * -1
         )
         items
