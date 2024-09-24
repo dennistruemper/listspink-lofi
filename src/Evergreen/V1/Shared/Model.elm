@@ -27,4 +27,5 @@ type alias Model =
     , nextIds : Maybe NextIds
     , syncModel : Evergreen.V1.Sync.FrontendSyncModel
     , state : Evergreen.V1.Event.State
+    , menuOpen : Bool
     }

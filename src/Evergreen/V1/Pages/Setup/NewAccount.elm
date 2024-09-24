@@ -5,6 +5,7 @@ type alias Model =
     { userName : String
     , deviceName : String
     , validation : Maybe String
+    , initialState : Bool
     }
 
 

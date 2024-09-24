@@ -7,3 +7,4 @@ type alias Model =
 
 type Msg
     = CreateDummyList
+    | CreatNewListClicked

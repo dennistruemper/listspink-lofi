@@ -4,6 +4,7 @@ import Array
 import Dict
 import Evergreen.V1.Event
 import Evergreen.V1.SortedEventList
+import Set
 import Time
 
 
@@ -23,4 +24,5 @@ type alias BackendSyncModel =
 type alias FrontendSyncModel =
     { events : Evergreen.V1.SortedEventList.Model
     , lastSyncServerTime : Time.Posix
+    , unsyncedEventIds : Set.Set String
     }

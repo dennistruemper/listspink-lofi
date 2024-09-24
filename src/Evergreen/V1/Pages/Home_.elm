@@ -6,4 +6,4 @@ type alias Model =
 
 
 type Msg
-    = NoOp
+    = LogoutClicked

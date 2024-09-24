@@ -29,3 +29,4 @@ type Msg
         { events : List Evergreen.V1.Event.EventDefinition
         , lastSyncServerTime : Time.Posix
         }
+    | SidebarToggled Bool

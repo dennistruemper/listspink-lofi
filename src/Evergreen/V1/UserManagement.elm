@@ -4,6 +4,14 @@ import Dict
 import Time
 
 
+type alias UserOnDeviceData =
+    { userId : String
+    , deviceId : String
+    , deviceName : String
+    , userName : String
+    }
+
+
 type alias SessionData =
     { userId : String
     , deviceId : String
@@ -33,12 +41,4 @@ type alias UserData =
 type alias Model =
     { userSessions : Dict.Dict String SessionData
     , users : Dict.Dict String UserData
-    }
-
-
-type alias UserOnDeviceData =
-    { userId : String
-    , deviceId : String
-    , deviceName : String
-    , userName : String
     }
