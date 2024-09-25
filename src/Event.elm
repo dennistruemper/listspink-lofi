@@ -25,6 +25,7 @@ module Event exposing
     )
 
 import Dict exposing (Dict)
+import ItemPriority exposing (ItemPriority)
 import Time
 
 
@@ -56,11 +57,11 @@ type alias ListUpdatedData =
 
 
 type alias ItemUpdatedData =
-    { itemId : String, listId : String, name : Maybe String, completed : Maybe (Maybe Time.Posix) }
+    { itemId : String, listId : String, name : Maybe String, completed : Maybe (Maybe Time.Posix), itemPriority : Maybe ItemPriority }
 
 
 type alias ItemCreatedData =
-    { itemId : String, itemName : String, itemDescription : Maybe String }
+    { itemId : String, itemName : String, itemDescription : Maybe String, itemPriority : Maybe ItemPriority }
 
 
 type alias ItemStateChangedData =
@@ -89,7 +90,7 @@ createListUpdatedEvent metadata data =
 
 createItemUpdatedEvent :
     EventMetadata
-    -> { itemId : String, listId : String, name : Maybe String, completed : Maybe (Maybe Time.Posix) }
+    -> { itemId : String, listId : String, name : Maybe String, completed : Maybe (Maybe Time.Posix), itemPriority : Maybe ItemPriority }
     -> EventDefinition
 createItemUpdatedEvent metadata data =
     Event metadata (ItemUpdated data)
@@ -97,7 +98,7 @@ createItemUpdatedEvent metadata data =
 
 createItemCreatedEvent :
     EventMetadata
-    -> { itemId : String, itemName : String, itemDescription : Maybe String }
+    -> { itemId : String, itemName : String, itemDescription : Maybe String, itemPriority : Maybe ItemPriority }
     -> EventDefinition
 createItemCreatedEvent metadata data =
     Event metadata (ItemCreated data)
@@ -169,6 +170,7 @@ type alias PinkItem =
     , completedAt : Maybe Time.Posix
     , lastUpdatedAt : Time.Posix
     , numberOfUpdates : Int
+    , priority : ItemPriority
     }
 
 
@@ -246,6 +248,7 @@ projectEvent event state =
                                                                     , completedAt = Nothing
                                                                     , lastUpdatedAt = metadata.timestamp
                                                                     , numberOfUpdates = 0
+                                                                    , priority = Maybe.withDefault ItemPriority.MediumItemPriority itemData.itemPriority
                                                                     }
                                                                     list.items
                                                     , lastUpdatedAt = metadata.timestamp
@@ -330,6 +333,7 @@ projectEvent event state =
                                                                         , completedAt = newCompletedAt
                                                                         , lastUpdatedAt = metadata.timestamp
                                                                         , numberOfUpdates = item.numberOfUpdates + 1
+                                                                        , priority = Maybe.withDefault ItemPriority.MediumItemPriority itemData.itemPriority
                                                                     }
                                                                 )
                                                                 maybeItem

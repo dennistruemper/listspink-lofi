@@ -4,12 +4,14 @@ import Auth
 import Components.AppBar as AppBar
 import Components.Button as Button
 import Components.Input as Input
+import Components.Select as Select
 import Effect exposing (Effect)
 import Event
 import EventMetadataHelper
 import Html
 import Html.Attributes
 import Html.Events
+import ItemPriority exposing (ItemPriority, itemPriorityFromString, itemPriorityToString)
 import Layouts
 import Page exposing (Page)
 import Route exposing (Route)
@@ -45,6 +47,7 @@ type alias Model =
     { listId : String
     , itemName : String
     , itemDescription : String
+    , itemPriority : ItemPriority
     , error : Maybe String
     }
 
@@ -54,6 +57,7 @@ init route () =
     ( { listId = route.params.id
       , itemName = ""
       , itemDescription = ""
+      , itemPriority = ItemPriority.MediumItemPriority
       , error = Nothing
       }
     , Effect.generateIds
@@ -69,11 +73,15 @@ type Msg
     | ItemDescriptionChanged String
     | CreateItemButtonClicked
     | GotTimeForCreateItem Time.Posix
+    | ItemPriorityChanged String
 
 
 update : Shared.Model -> Msg -> Model -> ( Model, Effect Msg )
 update shared msg model =
     case msg of
+        ItemPriorityChanged newPriority ->
+            ( { model | itemPriority = itemPriorityFromString newPriority }, Effect.none )
+
         ItemNameChanged itemName ->
             ( { model | itemName = itemName }, Effect.none )
 
@@ -122,6 +130,7 @@ update shared msg model =
 
                                     else
                                         Just model.itemDescription
+                                , itemPriority = Just model.itemPriority
                                 }
                         , Effect.pushRoutePath (Route.Path.Lists_ListId_ { listId = model.listId })
                         ]
@@ -196,6 +205,12 @@ viewCreateItemForm shared model =
         |> AppBar.withContent
             [ Input.text "Name" ItemNameChanged (validateName model) model.itemName |> Input.view
             , Input.text "Description" ItemDescriptionChanged (validateDescription model) model.itemDescription |> Input.view
+            , Select.select "Priority"
+                ItemPriorityChanged
+                ItemPriority.all
+                itemPriorityToString
+                model.itemPriority
+                |> Select.view
             , Html.br [] []
             , case model.error of
                 Just error ->

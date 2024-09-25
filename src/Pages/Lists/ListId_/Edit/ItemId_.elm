@@ -6,6 +6,7 @@ import Components.Button as Button
 import Components.Caption as Caption
 import Components.Input as Input
 import Components.Padding as Padding
+import Components.Select as Select
 import Components.Text as Text
 import Components.Toggle as Toggle
 import Dict
@@ -16,6 +17,7 @@ import Format
 import Html
 import Html.Attributes
 import Html.Events
+import ItemPriority exposing (ItemPriority, itemPriorityFromString, itemPriorityToString)
 import Layouts
 import Page exposing (Page)
 import Route exposing (Route)
@@ -44,7 +46,7 @@ page user shared route =
 -}
 toLayout : Auth.User -> Model -> Layouts.Layout Msg
 toLayout user model =
-    Layouts.Scaffold { caption = Just "Create Item" }
+    Layouts.Scaffold { caption = Just title }
 
 
 
@@ -56,6 +58,8 @@ type alias Model =
     , initialItemName : String
     , itemChecked : Bool
     , initialItemChecked : Bool
+    , itemPriority : ItemPriority
+    , initialItemPriority : ItemPriority
     , listId : String
     , itemId : String
     , createdAt : Time.Posix
@@ -105,11 +109,18 @@ init shared params () =
             item
                 |> Maybe.map .numberOfUpdates
                 |> Maybe.withDefault 0
+
+        priority =
+            item
+                |> Maybe.map .priority
+                |> Maybe.withDefault ItemPriority.MediumItemPriority
     in
     ( { itemName = itemName
       , initialItemName = itemName
       , itemChecked = itemChecked
       , initialItemChecked = itemChecked
+      , itemPriority = priority
+      , initialItemPriority = priority
       , listId = params.listId
       , itemId = params.itemId
       , createdAt = createdAt
@@ -138,6 +149,8 @@ hasChanged model =
         /= model.initialItemName
         || model.itemChecked
         /= model.initialItemChecked
+        || model.itemPriority
+        /= model.initialItemPriority
 
 
 
@@ -149,6 +162,7 @@ type Msg
     | NameChanged String
     | DoneClicked Bool
     | GotTimeForUpdatedItem Time.Posix
+    | ItemPriorityChanged String
 
 
 update : Shared.Model -> Msg -> Model -> ( Model, Effect Msg )
@@ -162,6 +176,9 @@ update shared msg model =
 
         DoneClicked checked ->
             ( { model | itemChecked = checked }, Effect.none )
+
+        ItemPriorityChanged value ->
+            ( { model | itemPriority = itemPriorityFromString value }, Effect.none )
 
         GotTimeForUpdatedItem timestamp ->
             let
@@ -191,6 +208,13 @@ update shared msg model =
                     else
                         -- Unchecked
                         Just Nothing
+
+                newPriority =
+                    if model.itemPriority == model.initialItemPriority then
+                        Nothing
+
+                    else
+                        Just model.itemPriority
             in
             case eventResult of
                 Ok eventMetadata ->
@@ -202,6 +226,7 @@ update shared msg model =
                                 , listId = model.listId
                                 , name = newName
                                 , completed = newCompleted
+                                , itemPriority = newPriority
                                 }
                         , Effect.replaceRoutePath (Route.Path.Lists_ListId_ { listId = model.listId })
                         ]
@@ -244,6 +269,12 @@ view model =
                 , Padding.left
                     [ Input.text "Name" NameChanged Nothing model.itemName |> Input.view
                     , Toggle.toggle "Completed" DoneClicked model.itemChecked |> Toggle.view
+                    , Select.select "Priority"
+                        ItemPriorityChanged
+                        ItemPriority.all
+                        itemPriorityToString
+                        model.itemPriority
+                        |> Select.view
                     ]
                     |> Padding.view
                 , Caption.caption2 "Fun facts" |> Caption.withLine True |> Caption.view
