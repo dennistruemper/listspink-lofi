@@ -8,6 +8,7 @@ module FrontendSyncModelSerializer exposing
 
 import Array exposing (Array)
 import Event exposing (EventDefinition)
+import ItemPriority exposing (ItemPriority)
 import Json.Decode
 import Json.Encode
 import Serialize as S
@@ -85,7 +86,31 @@ itemCreatedCodec =
         |> S.field .itemId S.string
         |> S.field .itemName S.string
         |> S.field .itemDescription (S.maybe S.string)
+        |> S.field .itemPriority (S.maybe itemPriorityCodec)
         |> S.finishRecord
+
+
+itemPriorityCodec =
+    S.customType
+        (\lowencoder mediumencoder highencoder highestencoder value ->
+            case value of
+                ItemPriority.LowItemPriority ->
+                    lowencoder
+
+                ItemPriority.MediumItemPriority ->
+                    mediumencoder
+
+                ItemPriority.HighItemPriority ->
+                    highencoder
+
+                ItemPriority.HighestItemPriority ->
+                    highestencoder
+        )
+        |> S.variant0 ItemPriority.LowItemPriority
+        |> S.variant0 ItemPriority.MediumItemPriority
+        |> S.variant0 ItemPriority.HighItemPriority
+        |> S.variant0 ItemPriority.HighestItemPriority
+        |> S.finishCustomType
 
 
 itemStateChangedCodec =
@@ -101,6 +126,7 @@ itemUpdatedCodec =
         |> S.field .listId S.string
         |> S.field .name (S.maybe S.string)
         |> S.field .completed (S.maybe (S.maybe timeCodec))
+        |> S.field .itemPriority (S.maybe itemPriorityCodec)
         |> S.finishRecord
 
 

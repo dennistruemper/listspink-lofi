@@ -3,7 +3,7 @@ module Pages.Lists.ListId_ exposing (Model, Msg, page)
 import Auth
 import Components.AppBar as AppBar
 import Components.Button as Button
-import Dict
+import Dict exposing (Dict)
 import Effect exposing (Effect)
 import Event
 import EventMetadataHelper
@@ -11,6 +11,7 @@ import Format
 import Html
 import Html.Attributes
 import Html.Events
+import ItemPriority
 import Layouts
 import Page exposing (Page)
 import Route exposing (Route)
@@ -140,7 +141,8 @@ view shared model =
         [ case maybeList of
             Just list ->
                 AppBar.appBar
-                    |> AppBar.withContent [ viewItems list ]
+                    |> AppBar.withContent
+                        (list.items |> Dict.values |> toPriorityBuckets |> viewPriorityBuckets model.listId)
                     |> AppBar.withActions
                         [ Button.button "Add Item" AddItemClicked |> Button.view ]
                     |> AppBar.view
@@ -151,18 +153,61 @@ view shared model =
     }
 
 
-viewItems : Event.PinkList -> Html.Html Msg
-viewItems list =
-    case Dict.values list.items of
-        [] ->
-            Html.text "No items jet"
+toPriorityBuckets : List Event.PinkItem -> Dict String (List Event.PinkItem)
+toPriorityBuckets items =
+    items
+        |> List.foldl
+            (\item buckets ->
+                Dict.update
+                    (ItemPriority.itemPriorityToString item.priority)
+                    (\maybeItems ->
+                        case maybeItems of
+                            Just i ->
+                                Just (item :: i)
 
-        items ->
-            Html.ul []
-                (List.map
-                    (viewItem list.listId)
-                    (items |> sortByTimestamp)
+                            Nothing ->
+                                Just [ item ]
+                    )
+                    buckets
+            )
+            Dict.empty
+
+
+viewPriorityBuckets : String -> Dict String (List Event.PinkItem) -> List (Html.Html Msg)
+viewPriorityBuckets listId buckets =
+    if Dict.isEmpty buckets then
+        [ Html.text "No items jet" ]
+
+    else
+        ItemPriority.all
+            |> List.reverse
+            |> List.map
+                (\priority ->
+                    case Dict.get (ItemPriority.itemPriorityToString priority) buckets of
+                        Just items ->
+                            Just
+                                (([ viewStickyHeader (ItemPriority.itemPriorityToString priority) ]
+                                    ++ (items
+                                            |> List.map (\item -> viewItem listId item)
+                                       )
+                                 )
+                                    |> Html.div []
+                                )
+
+                        Nothing ->
+                            Nothing
                 )
+            |> List.filterMap identity
+
+
+viewStickyHeader : String -> Html.Html msg
+viewStickyHeader caption =
+    Html.div
+        [ Html.Attributes.class "sticky top-0 z-10 border-y border-b-gray-200 border-t-gray-100 bg-gray-50 px-3 py-1.5 text-xs font-semibold text-gray-900"
+        ]
+        [ Html.h3 []
+            [ Html.text (caption ++ " Priority") ]
+        ]
 
 
 viewItem : String -> Event.PinkItem -> Html.Html Msg
@@ -254,3 +299,8 @@ sortByTimestamp items =
             (a.createdAt |> Time.posixToMillis) * -1
         )
         items
+
+
+sortByPriority : List Event.PinkItem -> List Event.PinkItem
+sortByPriority items =
+    List.sortWith (\a b -> ItemPriority.compare_ a.priority b.priority) items
