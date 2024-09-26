@@ -127,6 +127,7 @@ itemUpdatedCodec =
         |> S.field .name (S.maybe S.string)
         |> S.field .completed (S.maybe (S.maybe timeCodec))
         |> S.field .itemPriority (S.maybe itemPriorityCodec)
+        |> S.field .description (S.maybe S.string)
         |> S.finishRecord
 
 

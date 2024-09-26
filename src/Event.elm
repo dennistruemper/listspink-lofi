@@ -57,7 +57,7 @@ type alias ListUpdatedData =
 
 
 type alias ItemUpdatedData =
-    { itemId : String, listId : String, name : Maybe String, completed : Maybe (Maybe Time.Posix), itemPriority : Maybe ItemPriority }
+    { itemId : String, listId : String, name : Maybe String, completed : Maybe (Maybe Time.Posix), itemPriority : Maybe ItemPriority, description : Maybe String }
 
 
 type alias ItemCreatedData =
@@ -90,7 +90,7 @@ createListUpdatedEvent metadata data =
 
 createItemUpdatedEvent :
     EventMetadata
-    -> { itemId : String, listId : String, name : Maybe String, completed : Maybe (Maybe Time.Posix), itemPriority : Maybe ItemPriority }
+    -> { itemId : String, listId : String, name : Maybe String, completed : Maybe (Maybe Time.Posix), itemPriority : Maybe ItemPriority, description : Maybe String }
     -> EventDefinition
 createItemUpdatedEvent metadata data =
     Event metadata (ItemUpdated data)
@@ -334,6 +334,7 @@ projectEvent event state =
                                                                         , lastUpdatedAt = metadata.timestamp
                                                                         , numberOfUpdates = item.numberOfUpdates + 1
                                                                         , priority = Maybe.withDefault ItemPriority.MediumItemPriority itemData.itemPriority
+                                                                        , description = itemData.description
                                                                     }
                                                                 )
                                                                 maybeItem

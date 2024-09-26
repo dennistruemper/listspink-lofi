@@ -60,6 +60,8 @@ type alias Model =
     , initialItemChecked : Bool
     , itemPriority : ItemPriority
     , initialItemPriority : ItemPriority
+    , itemDescription : String
+    , initialItemDescription : String
     , listId : String
     , itemId : String
     , createdAt : Time.Posix
@@ -114,6 +116,12 @@ init shared params () =
             item
                 |> Maybe.map .priority
                 |> Maybe.withDefault ItemPriority.MediumItemPriority
+
+        itemDescription =
+            item
+                |> Maybe.map .description
+                |> Maybe.withDefault (Just "")
+                |> Maybe.withDefault ""
     in
     ( { itemName = itemName
       , initialItemName = itemName
@@ -121,6 +129,8 @@ init shared params () =
       , initialItemChecked = itemChecked
       , itemPriority = priority
       , initialItemPriority = priority
+      , itemDescription = itemDescription
+      , initialItemDescription = itemDescription
       , listId = params.listId
       , itemId = params.itemId
       , createdAt = createdAt
@@ -151,6 +161,8 @@ hasChanged model =
         /= model.initialItemChecked
         || model.itemPriority
         /= model.initialItemPriority
+        || model.itemDescription
+        /= model.initialItemDescription
 
 
 
@@ -163,6 +175,7 @@ type Msg
     | DoneClicked Bool
     | GotTimeForUpdatedItem Time.Posix
     | ItemPriorityChanged String
+    | ItemDescriptionChanged String
 
 
 update : Shared.Model -> Msg -> Model -> ( Model, Effect Msg )
@@ -179,6 +192,9 @@ update shared msg model =
 
         ItemPriorityChanged value ->
             ( { model | itemPriority = itemPriorityFromString value }, Effect.none )
+
+        ItemDescriptionChanged description ->
+            ( { model | itemDescription = description }, Effect.none )
 
         GotTimeForUpdatedItem timestamp ->
             let
@@ -215,6 +231,13 @@ update shared msg model =
 
                     else
                         Just model.itemPriority
+
+                newDescription =
+                    if model.itemDescription == model.initialItemDescription then
+                        Nothing
+
+                    else
+                        Just model.itemDescription
             in
             case eventResult of
                 Ok eventMetadata ->
@@ -227,6 +250,7 @@ update shared msg model =
                                 , name = newName
                                 , completed = newCompleted
                                 , itemPriority = newPriority
+                                , description = newDescription
                                 }
                         , Effect.replaceRoutePath (Route.Path.Lists_ListId_ { listId = model.listId })
                         ]
@@ -269,6 +293,7 @@ view model =
                 , Padding.left
                     [ Input.text "Name" NameChanged Nothing model.itemName |> Input.view
                     , Toggle.toggle "Completed" DoneClicked model.itemChecked |> Toggle.view
+                    , Input.text "Description" ItemDescriptionChanged Nothing model.itemDescription |> Input.view
                     , Select.select "Priority"
                         ItemPriorityChanged
                         ItemPriority.all
