@@ -1,4 +1,4 @@
-module Pages.Settings exposing (Model, Msg, page)
+module Pages.Settings exposing (Model, Msg(..), page)
 
 import Auth
 import Effect exposing (Effect)

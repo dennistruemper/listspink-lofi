@@ -1,4 +1,4 @@
-module Pages.Manual exposing (Model, Msg, page)
+module Pages.Manual exposing (Model, Msg(..), page)
 
 import Bridge
 import Components.Button as Button

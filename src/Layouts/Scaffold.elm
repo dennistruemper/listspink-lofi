@@ -1,4 +1,4 @@
-module Layouts.Scaffold exposing (Model, Msg, Props, layout)
+module Layouts.Scaffold exposing (Model, Msg(..), Props, layout)
 
 import Auth
 import Bridge

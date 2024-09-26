@@ -1,4 +1,4 @@
-module Pages.SetupKnown exposing (Model, Msg, page)
+module Pages.SetupKnown exposing (Model, Msg(..), page)
 
 import Auth
 import Bridge

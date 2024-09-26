@@ -1,4 +1,4 @@
-module Pages.Account exposing (Model, Msg, page)
+module Pages.Account exposing (Model, Msg(..), page)
 
 import Auth
 import Components.Button as Button

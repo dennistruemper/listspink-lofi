@@ -1,4 +1,4 @@
-module Pages.Lists.Create exposing (Model, Msg, page)
+module Pages.Lists.Create exposing (Model, Msg(..), page)
 
 import Auth
 import Components.AppBar as AppBar

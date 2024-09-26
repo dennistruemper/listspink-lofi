@@ -1,4 +1,4 @@
-module Pages.Setup.Connect exposing (Model, Msg, page)
+module Pages.Setup.Connect exposing (Model, Msg(..), page)
 
 import Auth
 import Bridge

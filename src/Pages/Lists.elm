@@ -1,4 +1,4 @@
-module Pages.Lists exposing (Model, Msg, page)
+module Pages.Lists exposing (Model, Msg(..), page)
 
 import Auth
 import Bridge

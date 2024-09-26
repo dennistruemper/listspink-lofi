@@ -1,4 +1,4 @@
-module Pages.Credits exposing (Model, Msg, page)
+module Pages.Credits exposing (Model, Msg(..), page)
 
 import Auth
 import Components.Caption as Caption

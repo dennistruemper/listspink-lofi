@@ -1,4 +1,4 @@
-module Pages.Lists.ListId_ exposing (Model, Msg, page)
+module Pages.Lists.ListId_ exposing (Model, Msg(..), page)
 
 import Auth
 import Components.AppBar as AppBar
