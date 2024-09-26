@@ -36,7 +36,8 @@ view data =
         , Html.div [ Html.Attributes.class "w-full h-12 bg-white border-t p-2 border-gray-200 dark:bg-gray-700 dark:border-gray-600" ]
             [ Row.row
                 data.actions
-                |> Row.withAlignment Row.Center
+                |> Row.withAlignment Row.NoneAlingment
+                |> Row.withSpacing Row.Between
                 |> Row.view
             ]
         ]

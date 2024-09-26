@@ -52,7 +52,19 @@ toLayout user model =
 type alias Model =
     { listId : String
     , listName : Maybe String
+    , currentTime : Time.Posix
+    , showDoneAfter : Int
     }
+
+
+showDoneAfter2h : Int
+showDoneAfter2h =
+    1000 * 60 * 60 * 2
+
+
+showDoneAfterForever : Int
+showDoneAfterForever =
+    1000 * 60 * 60 * 24 * 365 * 100
 
 
 init : String -> Shared.Model -> () -> ( Model, Effect Msg )
@@ -64,8 +76,10 @@ init listId shared () =
                 |> List.filter (\l -> l.listId == listId)
                 |> List.head
                 |> Maybe.map .name
+      , currentTime = Time.millisToPosix 0
+      , showDoneAfter = showDoneAfter2h
       }
-    , Effect.none
+    , Effect.getTime GotCurrentTime
     )
 
 
@@ -77,6 +91,8 @@ type Msg
     = ItemCheckedToggled String Bool
     | GotTimeForItemCheckedToggled String Bool Time.Posix
     | AddItemClicked
+    | GotCurrentTime Time.Posix
+    | ToggleArchiveClicked
 
 
 update : Shared.Model -> Msg -> Model -> ( Model, Effect Msg )
@@ -84,6 +100,13 @@ update shared msg model =
     case msg of
         ItemCheckedToggled itemId checked ->
             ( model, Effect.getTime (GotTimeForItemCheckedToggled itemId checked) )
+
+        GotCurrentTime timestamp ->
+            let
+                _ =
+                    Debug.log "GotCurrentTime" timestamp
+            in
+            ( { model | currentTime = timestamp }, Effect.none )
 
         GotTimeForItemCheckedToggled itemId checked timestamp ->
             let
@@ -113,6 +136,18 @@ update shared msg model =
         AddItemClicked ->
             ( model, Effect.pushRoutePath (Route.Path.Lists_Id__CreateItem { id = model.listId }) )
 
+        ToggleArchiveClicked ->
+            ( { model
+                | showDoneAfter =
+                    if model.showDoneAfter == showDoneAfterForever then
+                        showDoneAfter2h
+
+                    else
+                        showDoneAfterForever
+              }
+            , Effect.none
+            )
+
 
 
 -- SUBSCRIPTIONS
@@ -120,7 +155,7 @@ update shared msg model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    Time.every 60000 GotCurrentTime
 
 
 
@@ -140,11 +175,26 @@ view shared model =
     , body =
         [ case maybeList of
             Just list ->
+                let
+                    toggleArchiveButtonCaption =
+                        if model.showDoneAfter == showDoneAfterForever then
+                            "Hide Archived"
+
+                        else
+                            "Show Archived"
+                in
                 AppBar.appBar
                     |> AppBar.withContent
-                        (list.items |> Dict.values |> toPriorityBuckets |> viewPriorityBuckets model.listId)
+                        (list.items
+                            |> Dict.values
+                            |> withoutItemsDoneForMoreThanOneHour model.currentTime model.showDoneAfter
+                            |> toPriorityBuckets
+                            |> viewPriorityBuckets model.listId
+                        )
                     |> AppBar.withActions
-                        [ Button.button "Add Item" AddItemClicked |> Button.view ]
+                        [ Button.button toggleArchiveButtonCaption ToggleArchiveClicked |> Button.view
+                        , Button.button "Add Item" AddItemClicked |> Button.view
+                        ]
                     |> AppBar.view
 
             Nothing ->
@@ -299,6 +349,20 @@ sortByTimestamp items =
             (a.createdAt |> Time.posixToMillis) * -1
         )
         items
+
+
+withoutItemsDoneForMoreThanOneHour : Time.Posix -> Int -> List Event.PinkItem -> List Event.PinkItem
+withoutItemsDoneForMoreThanOneHour currentTime showDoneAfter items =
+    items
+        |> List.filter
+            (\item ->
+                case item.completedAt of
+                    Just completedAt ->
+                        (Time.posixToMillis (item.completedAt |> Maybe.withDefault currentTime) + showDoneAfter) - Time.posixToMillis currentTime > 0
+
+                    Nothing ->
+                        True
+            )
 
 
 sortByPriority : List Event.PinkItem -> List Event.PinkItem
