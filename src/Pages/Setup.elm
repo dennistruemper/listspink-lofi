@@ -57,6 +57,7 @@ type Msg
     | Logout
     | ShowNewConnectionInfo
     | GotTime Time.Posix
+    | NoOp
 
 
 update : Shared.Model -> Msg -> Model -> ( Model, Effect Msg )
@@ -101,6 +102,9 @@ update shared msg model =
 
         Logout ->
             ( model, Effect.logout )
+
+        NoOp ->
+            ( model, Effect.none )
 
 
 
