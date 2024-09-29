@@ -2,6 +2,9 @@ module Pages.Setup.Connect exposing (Model, Msg(..), page)
 
 import Auth
 import Bridge
+import Components.AppBar as AppBar
+import Components.Button as Button
+import Components.Input as Input
 import Effect exposing (Effect)
 import Html
 import Html.Attributes
@@ -12,6 +15,10 @@ import Page exposing (Page)
 import Route exposing (Route)
 import Shared
 import View exposing (View)
+
+
+title =
+    "Connect Device"
 
 
 page : Shared.Model -> Route () -> Page Model Msg
@@ -39,7 +46,7 @@ init : () -> ( Model, Effect Msg )
 init () =
     ( { codeInput = ""
       , deviceName = ""
-      , validation = Nothing
+      , validation = Just ""
       }
     , Effect.none
     )
@@ -119,34 +126,21 @@ subscriptions model =
 
 view : Shared.Model -> Model -> View Msg
 view shared model =
-    { title = "Pages.Setup.Connect"
+    { title = title
     , body =
-        [ Html.input
-            [ Html.Attributes.placeholder "Code"
-            , Html.Attributes.value model.codeInput
-            , Html.Events.onInput CodeInputChanged
-            ]
-            []
-        , Html.input
-            [ Html.Attributes.placeholder "Device Name"
-            , Html.Attributes.value model.deviceName
-            , Html.Events.onInput DeviceNameChanged
-            ]
-            []
-        , Html.br [] []
-        , Html.button
-            [ Html.Events.onClick OkButtonClicked
-            , Html.Attributes.disabled
-                (case model.validation of
-                    Just _ ->
-                        True
-
-                    Nothing ->
-                        False
-                )
-            ]
-            [ Html.text "OK" ]
-        , Html.br [] []
-        , Html.text (Maybe.withDefault "" model.validation)
+        [ AppBar.appBar
+            |> AppBar.withContent
+                [ Input.text "Code" CodeInputChanged Nothing model.codeInput
+                    |> Input.view
+                , Input.text "Device Name" DeviceNameChanged Nothing model.deviceName
+                    |> Input.view
+                , Html.text (Maybe.withDefault "" model.validation)
+                ]
+            |> AppBar.withActions
+                [ Button.button "OK" OkButtonClicked
+                    |> Button.withDisabled (model.validation /= Nothing)
+                    |> Button.view
+                ]
+            |> AppBar.view
         ]
     }
