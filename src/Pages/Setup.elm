@@ -4,6 +4,7 @@ import Bridge
 import Components.Button as Button
 import Components.Caption as Caption
 import Components.Column as Column
+import Components.LoadingSpinner as LoadingSpinner
 import Dict
 import Effect exposing (Effect)
 import Html
@@ -15,13 +16,14 @@ import Ports
 import Route exposing (Route)
 import Route.Path
 import Shared
+import Time
 import View exposing (View)
 
 
 page : Shared.Model -> Route () -> Page Model Msg
 page shared route =
     Page.new
-        { init = init route
+        { init = init shared route
         , update = update shared
         , subscriptions = subscriptions
         , view = view shared
@@ -34,12 +36,13 @@ page shared route =
 
 type alias Model =
     { redirect : Maybe String
+    , initialUserdata : Maybe Bridge.User
     }
 
 
-init : Route () -> () -> ( Model, Effect Msg )
-init route () =
-    ( { redirect = Dict.get "from" route.query }
+init : Shared.Model -> Route () -> () -> ( Model, Effect Msg )
+init shared route () =
+    ( { redirect = Dict.get "from" route.query, initialUserdata = Nothing }
     , Effect.none
     )
 
@@ -53,12 +56,34 @@ type Msg
     | ConnectExistingAccount
     | Logout
     | ShowNewConnectionInfo
-    | GotMessageFromJs String
+    | GotTime Time.Posix
 
 
 update : Shared.Model -> Msg -> Model -> ( Model, Effect Msg )
 update shared msg model =
     case msg of
+        GotTime time ->
+            case ( model.initialUserdata, shared.user ) of
+                ( Nothing, Just (Bridge.UserOnDevice _) ) ->
+                    let
+                        redirect =
+                            case model.redirect of
+                                Just from ->
+                                    case Route.Path.fromString from of
+                                        Just route ->
+                                            Effect.replaceRoutePath route
+
+                                        Nothing ->
+                                            Effect.none
+
+                                Nothing ->
+                                    Effect.none
+                    in
+                    ( model, redirect )
+
+                _ ->
+                    ( model, Effect.none )
+
         CreateNewAccount ->
             ( model
             , Effect.pushRoutePath Route.Path.Setup_NewAccount
@@ -77,33 +102,6 @@ update shared msg model =
         Logout ->
             ( model, Effect.logout )
 
-        GotMessageFromJs msgFromJs ->
-            case Ports.decodeMsg msgFromJs of
-                Ports.UserDataLoaded userData ->
-                    let
-                        redirectEffect =
-                            case userData of
-                                Bridge.Unknown ->
-                                    Effect.none
-
-                                Bridge.UserOnDevice user ->
-                                    case model.redirect of
-                                        Just from ->
-                                            case Route.Path.fromString from of
-                                                Just route ->
-                                                    Effect.replaceRoutePath route
-
-                                                Nothing ->
-                                                    Effect.none
-
-                                        Nothing ->
-                                            Effect.none
-                    in
-                    ( model, redirectEffect )
-
-                _ ->
-                    ( model, Effect.none )
-
 
 
 -- SUBSCRIPTIONS
@@ -111,11 +109,7 @@ update shared msg model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.batch [ Ports.toElm GotMessageFromJs ]
-
-
-
--- VIEW
+    Sub.batch [ Time.every 500 GotTime ]
 
 
 view : Shared.Model -> Model -> View Msg
@@ -123,13 +117,15 @@ view shared model =
     { title = "Setup Device"
     , body =
         [ case shared.user of
-            Just user ->
-                case user of
-                    Bridge.UserOnDevice data ->
-                        viewKnownUser data
+            Just (Bridge.UserOnDevice data) ->
+                if model.initialUserdata == Nothing then
+                    LoadingSpinner.view
 
-                    Bridge.Unknown ->
-                        viewUnknownUser
+                else
+                    viewKnownUser data
+
+            Just Bridge.Unknown ->
+                viewUnknownUser
 
             Nothing ->
                 viewNoUser

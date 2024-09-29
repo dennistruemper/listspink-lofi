@@ -102,10 +102,6 @@ update shared msg model =
             ( model, Effect.getTime (GotTimeForItemCheckedToggled itemId checked) )
 
         GotCurrentTime timestamp ->
-            let
-                _ =
-                    Debug.log "GotCurrentTime" timestamp
-            in
             ( { model | currentTime = timestamp }, Effect.none )
 
         GotTimeForItemCheckedToggled itemId checked timestamp ->

@@ -4,10 +4,42 @@ port supermario_copy_to_clipboard_to_js : String -> Cmd msg
 
 const userKey = "user";
 const frontendSyncModelKey = "frontendSyncModel";
+const dbName = "AppDatabase";
+const dbVersion = 1;
+
+let globalDB;
+let setupIndexedDBPromise;
+
+async function getDb() {
+  await setupIndexedDBPromise;
+  return globalDB;
+}
+
+function setupIndexedDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(dbName, dbVersion);
+
+    request.onerror = (event) => {
+      console.error("IndexedDB error:", event.target.error);
+      reject(event.target.error);
+    };
+
+    request.onsuccess = (event) => {
+      globalDB = event.target.result;
+      resolve();
+    };
+
+    request.onupgradeneeded = (event) => {
+      globalDB = event.target.result;
+      globalDB.createObjectStore("userData", { keyPath: "key" });
+      globalDB.createObjectStore("frontendSyncModel", { keyPath: "key" });
+    };
+  });
+}
 
 exports.init = async function (app) {
-  setupServiceworker();
-  app.ports.toJs.subscribe(function (event) {
+  setupIndexedDBPromise = setupIndexedDB();
+  app.ports.toJs.subscribe(async function (event) {
     console.log("fromElm", event);
 
     if (event.tag === undefined || event.tag === null) {
@@ -15,57 +47,61 @@ exports.init = async function (app) {
       return;
     }
 
-    if (event.tag === "GenerateIds") {
-      app.ports.toElm.send(
-        JSON.stringify({ tag: "IdsGenerated", data: generateIds() })
-      );
-      return;
-    }
+    switch (event.tag) {
+      case "GenerateIds":
+        app.ports.toElm.send(
+          JSON.stringify({ tag: "IdsGenerated", data: generateIds() })
+        );
+        break;
 
-    if (event.tag === "StoreUserData") {
-      storeUser(event.data);
-      return;
-    }
+      case "StoreUserData":
+        await storeUser(event.data);
+        break;
 
-    if (event.tag === "LoadUserData") {
-      app.ports.toElm.send(
-        JSON.stringify({ tag: "UserDataLoaded", data: getUser() })
-      );
-      return;
-    }
+      case "LoadUserData":
+        const userData = await getUser();
+        console.log("getUserData", userData);
+        app.ports.toElm.send(
+          JSON.stringify({ tag: "UserDataLoaded", data: userData })
+        );
 
-    if (event.tag === "StoreFrontendSyncModel") {
-      localStorage.setItem(frontendSyncModelKey, JSON.stringify(event.data));
-      return;
-    }
+        break;
 
-    if (event.tag === "LoadFrontendSyncModel") {
-      console.log("LoadFrontendSyncModel");
-      app.ports.toElm.send(
-        JSON.stringify({
-          tag: "FrontendSyncModelDataLoaded",
-          data: getFrontendSyncModel(),
-        })
-      );
-      return;
-    }
+      case "StoreFrontendSyncModel":
+        await storeFrontendSyncModel(event.data);
+        break;
 
-    if (event.tag === "Logout") {
-      localStorage.removeItem(userKey);
-      localStorage.removeItem(frontendSyncModelKey);
-      document.cookie = "sid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-      app.ports.toElm.send(JSON.stringify({ tag: "LoggedOut" }));
-      location.reload();
-      return;
-    }
+      case "LoadFrontendSyncModel":
+        console.log("LoadFrontendSyncModel");
+        const frontendSyncModel = await getFrontendSyncModel();
+        app.ports.toElm.send(
+          JSON.stringify({
+            tag: "FrontendSyncModelDataLoaded",
+            data: frontendSyncModel,
+          })
+        );
 
-    if (event.tag === "Log") {
-      console.log(event.data);
-      return;
-    }
+        break;
 
-    console.log(`fromElm event of tag ${event.tag} not handled`, event);
+      case "Logout":
+        await clearData();
+        document.cookie =
+          "sid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        app.ports.toElm.send(JSON.stringify({ tag: "LoggedOut" }));
+        location.reload();
+
+        break;
+
+      case "Log":
+        console.log(event.data);
+        break;
+
+      default:
+        console.log(`fromElm event of tag ${event.tag} not handled`, event);
+    }
   });
+  setupServiceworker();
+  await setupIndexedDBPromise;
 };
 
 function setupServiceworker() {
@@ -115,17 +151,98 @@ function getRadomCharacter() {
   return characters.charAt(Math.floor(Math.random() * charactersLength));
 }
 
-function storeUser(user) {
-  localStorage.setItem(userKey, JSON.stringify(user));
+async function storeUser(user) {
+  const db = await getDb();
+  const transaction = db.transaction(["userData"], "readwrite");
+  const store = transaction.objectStore("userData");
+  return store.put({ key: userKey, value: user });
 }
 
-function getUser() {
-  const user = localStorage.getItem(userKey);
-  return user ? JSON.parse(user) : {};
+async function getUser() {
+  try {
+    const db = await getDb();
+    const transaction = db.transaction(["userData"], "readonly");
+    const store = transaction.objectStore("userData");
+    const request = await store.get(userKey);
+
+    const result = await new Promise((resolve, reject) => {
+      request.onsuccess = (event) => resolve(event.target.result);
+      request.onerror = (event) => reject(event.target.error);
+    });
+
+    console.log("getUser result", result);
+
+    if (result && result.value) {
+      return result.value;
+    } else {
+      const localStorageUser = localStorage.getItem(userKey);
+      return localStorageUser ? JSON.parse(localStorageUser) : {};
+    }
+  } catch (error) {
+    const localStorageUser = localStorage.getItem(userKey);
+    return localStorageUser ? JSON.parse(localStorageUser) : {};
+  }
 }
 
-function getFrontendSyncModel() {
-  const model = localStorage.getItem(frontendSyncModelKey);
-  console.log("getFrontendSyncModel", model);
-  return model ? JSON.parse(model) : null;
+async function storeFrontendSyncModel(model) {
+  const db = await getDb();
+  const transaction = db.transaction(["frontendSyncModel"], "readwrite");
+  const store = transaction.objectStore("frontendSyncModel");
+  return store.put({ key: frontendSyncModelKey, value: model });
+}
+
+async function getFrontendSyncModel() {
+  try {
+    const db = await getDb();
+    const transaction = db.transaction(["frontendSyncModel"], "readonly");
+    const store = transaction.objectStore("frontendSyncModel");
+    const request = store.get(frontendSyncModelKey);
+
+    const result = await new Promise((resolve, reject) => {
+      request.onsuccess = (event) => resolve(event.target.result);
+      request.onerror = (event) => reject(event.target.error);
+    });
+
+    console.log("getFrontendSyncModel result", result);
+
+    if (result && result.value) {
+      console.log("getFrontendSyncModel from IndexedDB", result);
+      return result.value;
+    } else {
+      const localStorageModel = localStorage.getItem(frontendSyncModelKey);
+      console.log("getFrontendSyncModel from localStorage", localStorageModel);
+      return localStorageModel ? JSON.parse(localStorageModel) : null;
+    }
+  } catch (error) {
+    console.error("Error in getFrontendSyncModel:", error);
+    const localStorageModel = localStorage.getItem(frontendSyncModelKey);
+    console.log(
+      "getFrontendSyncModel from localStorage (on error)",
+      localStorageModel
+    );
+    return localStorageModel ? JSON.parse(localStorageModel) : null;
+  }
+}
+
+async function clearData() {
+  const db = await getDb();
+  const transaction = db.transaction(
+    ["userData", "frontendSyncModel"],
+    "readwrite"
+  );
+  const userDataStore = transaction.objectStore("userData");
+  const frontendSyncModelStore = transaction.objectStore("frontendSyncModel");
+
+  try {
+    await Promise.all([
+      userDataStore.delete(userKey),
+      frontendSyncModelStore.delete(frontendSyncModelKey),
+    ]);
+
+    localStorage.removeItem(userKey);
+    localStorage.removeItem(frontendSyncModelKey);
+  } catch (error) {
+    console.error("Error clearing data:", error);
+    throw error;
+  }
 }
