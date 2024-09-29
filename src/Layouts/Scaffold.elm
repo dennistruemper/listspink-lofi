@@ -104,8 +104,9 @@ scaffold shared caption toContentMsg content =
         blur =
             if shared.menuOpen then
                 [ div
-                    [ Attr.class "fixed inset-0 bg-gray-900/80"
+                    [ Attr.class "z-10 fixed inset-0 bg-gray-900/80"
                     , Attr.attribute "aria-hidden" "true"
+                    , Html.Events.onClick (toContentMsg CloseSidebarClicked)
                     ]
                     []
                 ]
