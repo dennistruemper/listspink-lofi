@@ -6,6 +6,11 @@ const userKey = "user";
 const frontendSyncModelKey = "frontendSyncModel";
 const dbName = "AppDatabase";
 const dbVersion = 1;
+const USER_DATA_STORE = "userData";
+const FRONTEND_SYNC_MODEL_STORE = "frontendSyncModel";
+const TO_JS_PORT = "toJs";
+const TO_ELM_PORT = "toElm";
+const SERVICE_WORKER_PATH = "/serviceWorker.js";
 
 let globalDB;
 let setupIndexedDBPromise;
@@ -39,7 +44,7 @@ function setupIndexedDB() {
 
 exports.init = async function (app) {
   setupIndexedDBPromise = setupIndexedDB();
-  app.ports.toJs.subscribe(async function (event) {
+  app.ports[TO_JS_PORT].subscribe(async function (event) {
     console.log("fromElm", event);
 
     if (event.tag === undefined || event.tag === null) {
@@ -49,7 +54,7 @@ exports.init = async function (app) {
 
     switch (event.tag) {
       case "GenerateIds":
-        app.ports.toElm.send(
+        app.ports[TO_ELM_PORT].send(
           JSON.stringify({ tag: "IdsGenerated", data: generateIds() })
         );
         break;
@@ -61,7 +66,7 @@ exports.init = async function (app) {
       case "LoadUserData":
         const userData = await getUser();
         console.log("getUserData", userData);
-        app.ports.toElm.send(
+        app.ports[TO_ELM_PORT].send(
           JSON.stringify({ tag: "UserDataLoaded", data: userData })
         );
 
@@ -74,7 +79,7 @@ exports.init = async function (app) {
       case "LoadFrontendSyncModel":
         console.log("LoadFrontendSyncModel");
         const frontendSyncModel = await getFrontendSyncModel();
-        app.ports.toElm.send(
+        app.ports[TO_ELM_PORT].send(
           JSON.stringify({
             tag: "FrontendSyncModelDataLoaded",
             data: frontendSyncModel,
@@ -87,7 +92,7 @@ exports.init = async function (app) {
         await clearData();
         document.cookie =
           "sid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-        app.ports.toElm.send(JSON.stringify({ tag: "LoggedOut" }));
+        app.ports[TO_ELM_PORT].send(JSON.stringify({ tag: "LoggedOut" }));
         location.reload();
 
         break;
@@ -108,7 +113,7 @@ function setupServiceworker() {
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function () {
       navigator.serviceWorker
-        .register("/serviceWorker.js")
+        .register(SERVICE_WORKER_PATH)
         .then((res) => console.log("service worker registered"))
         .catch((err) => console.log("service worker not registered", err));
     });
@@ -153,17 +158,17 @@ function getRadomCharacter() {
 
 async function storeUser(user) {
   const db = await getDb();
-  const transaction = db.transaction(["userData"], "readwrite");
-  const store = transaction.objectStore("userData");
+  const transaction = db.transaction([USER_DATA_STORE], "readwrite");
+  const store = transaction.objectStore(USER_DATA_STORE);
   return store.put({ key: userKey, value: user });
 }
 
 async function getUser() {
   try {
     const db = await getDb();
-    const transaction = db.transaction(["userData"], "readonly");
-    const store = transaction.objectStore("userData");
-    const request = await store.get(userKey);
+    const transaction = db.transaction([USER_DATA_STORE], "readwrite");
+    const store = transaction.objectStore(USER_DATA_STORE);
+    const request = store.get(userKey);
 
     const result = await new Promise((resolve, reject) => {
       request.onsuccess = (event) => resolve(event.target.result);
@@ -176,9 +181,17 @@ async function getUser() {
       return result.value;
     } else {
       const localStorageUser = localStorage.getItem(userKey);
-      return localStorageUser ? JSON.parse(localStorageUser) : {};
+      if (localStorageUser) {
+        const parsedUser = JSON.parse(localStorageUser);
+        // Migrate user data from localStorage to IndexedDB
+        await storeUser(parsedUser);
+        console.log("User data migrated from localStorage to IndexedDB");
+        return parsedUser;
+      }
+      return {};
     }
   } catch (error) {
+    console.error("Error in getUser:", error);
     const localStorageUser = localStorage.getItem(userKey);
     return localStorageUser ? JSON.parse(localStorageUser) : {};
   }
@@ -186,16 +199,16 @@ async function getUser() {
 
 async function storeFrontendSyncModel(model) {
   const db = await getDb();
-  const transaction = db.transaction(["frontendSyncModel"], "readwrite");
-  const store = transaction.objectStore("frontendSyncModel");
+  const transaction = db.transaction([FRONTEND_SYNC_MODEL_STORE], "readwrite");
+  const store = transaction.objectStore(FRONTEND_SYNC_MODEL_STORE);
   return store.put({ key: frontendSyncModelKey, value: model });
 }
 
 async function getFrontendSyncModel() {
   try {
     const db = await getDb();
-    const transaction = db.transaction(["frontendSyncModel"], "readonly");
-    const store = transaction.objectStore("frontendSyncModel");
+    const transaction = db.transaction([FRONTEND_SYNC_MODEL_STORE], "readonly");
+    const store = transaction.objectStore(FRONTEND_SYNC_MODEL_STORE);
     const request = store.get(frontendSyncModelKey);
 
     const result = await new Promise((resolve, reject) => {
@@ -227,11 +240,13 @@ async function getFrontendSyncModel() {
 async function clearData() {
   const db = await getDb();
   const transaction = db.transaction(
-    ["userData", "frontendSyncModel"],
+    [USER_DATA_STORE, FRONTEND_SYNC_MODEL_STORE],
     "readwrite"
   );
-  const userDataStore = transaction.objectStore("userData");
-  const frontendSyncModelStore = transaction.objectStore("frontendSyncModel");
+  const userDataStore = transaction.objectStore(USER_DATA_STORE);
+  const frontendSyncModelStore = transaction.objectStore(
+    FRONTEND_SYNC_MODEL_STORE
+  );
 
   try {
     await Promise.all([
