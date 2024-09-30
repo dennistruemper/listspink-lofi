@@ -96,7 +96,7 @@ scaffold shared caption toContentMsg content =
         mobileMenuHidden =
             case shared.menuOpen of
                 True ->
-                    "z-10 lg:z-0"
+                    "z-20 lg:z-0"
 
                 False ->
                     "hidden"
@@ -104,7 +104,7 @@ scaffold shared caption toContentMsg content =
         blur =
             if shared.menuOpen then
                 [ div
-                    [ Attr.class "z-10 fixed inset-0 bg-gray-900/80"
+                    [ Attr.class "z-20 fixed inset-0 bg-gray-900/80"
                     , Attr.attribute "aria-hidden" "true"
                     , Html.Events.onClick (toContentMsg CloseSidebarClicked)
                     ]
