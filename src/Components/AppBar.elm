@@ -34,10 +34,15 @@ view data =
         [ Html.div [ Html.Attributes.class "h-full overflow-y-scroll px-2 lg:px-4" ]
             data.content
         , Html.div [ Html.Attributes.class "w-full h-12 bg-white border-t p-2 border-gray-200 dark:bg-gray-700 dark:border-gray-600" ]
-            [ Row.row
-                data.actions
-                |> Row.withAlignment Row.NoneAlingment
-                |> Row.withSpacing Row.Between
-                |> Row.view
+            [ if List.length data.actions == 1 then
+                Row.row data.actions
+                    |> Row.withSpacing Row.NoneSpacing
+                    |> Row.withAlignment Row.End
+                    |> Row.view
+
+              else
+                Row.row data.actions
+                    |> Row.withSpacing Row.Between
+                    |> Row.view
             ]
         ]
