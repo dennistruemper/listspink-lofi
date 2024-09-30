@@ -80,5 +80,5 @@ subscriptions model =
 view : Model -> View Msg
 view model =
     { title = title
-    , body = [ Html.text "/settings" ]
+    , body = [ Html.text "settings" ]
     }

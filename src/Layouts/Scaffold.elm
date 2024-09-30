@@ -114,7 +114,7 @@ scaffold shared caption toContentMsg content =
             else
                 []
     in
-    main_ [ Attr.class " h-screen w-full flex flex-row" ]
+    main_ [ Attr.class " h-screen w-full flex flex-row safe-content" ]
         (blur
             ++ [ div [ Attr.class (mobileMenuHidden ++ " lg:block absolute top-0 left-0 lg:static h-full bg-fuchsia-300 p-4 flex flex-col content-start") ]
                     [ button
