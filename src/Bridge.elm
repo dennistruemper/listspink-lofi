@@ -47,3 +47,5 @@ type ToBackend
     | EventAdded EventDefinition
     | UseSyncCode { code : String, deviceId : String, deviceName : String }
     | RequestNewEvents Time.Posix
+    | RequestListSubscription { listId : String }
+    | ReloadAllForAggregate { aggregateId : String }

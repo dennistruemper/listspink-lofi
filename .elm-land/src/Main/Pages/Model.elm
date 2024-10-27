@@ -16,6 +16,7 @@ import Pages.Setup
 import Pages.Setup.Connect
 import Pages.Setup.NewAccount
 import Pages.SetupKnown
+import Pages.Share.ListId_
 import Pages.NotFound_
 import View exposing (View)
 
@@ -37,6 +38,7 @@ type Model
     | Setup_Connect Pages.Setup.Connect.Model
     | Setup_NewAccount Pages.Setup.NewAccount.Model
     | SetupKnown Pages.SetupKnown.Model
+    | Share_ListId_ { listId : String } Pages.Share.ListId_.Model
     | NotFound_ Pages.NotFound_.Model
     | Redirecting_
     | Loading_

@@ -46,3 +46,4 @@ type ToFrontend
     | SyncCodeUsed { name : String, userId : String, deviceId : String, deviceName : String }
     | ConnectionEstablished
     | EventSyncResult { events : List EventDefinition, lastSyncServerTime : Time.Posix }
+    | ListSubscriptionAdded { userId : String, listId : String, timestamp : Time.Posix }

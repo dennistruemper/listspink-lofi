@@ -81,6 +81,13 @@ listUpdatedCodec =
         |> S.finishRecord
 
 
+listSharedWithUserCodec =
+    S.record Event.ListSharedWithUserData
+        |> S.field .userId S.string
+        |> S.field .listId S.string
+        |> S.finishRecord
+
+
 itemCreatedCodec =
     S.record Event.ItemCreatedData
         |> S.field .itemId S.string
@@ -134,7 +141,7 @@ itemUpdatedCodec =
 eventDataCodec : S.Codec e Event.EventData
 eventDataCodec =
     S.customType
-        (\listCreatedEncoder listUpdatedEncoder itemCreatedEncoder itemStateChangedEncoder itemUpdatedEncoder value ->
+        (\listCreatedEncoder listUpdatedEncoder itemCreatedEncoder itemStateChangedEncoder itemUpdatedEncoder listSharedWithUserEncoder value ->
             case value of
                 Event.ListCreated listCreatedData ->
                     listCreatedEncoder listCreatedData
@@ -150,12 +157,16 @@ eventDataCodec =
 
                 Event.ItemUpdated itemUpdatedData ->
                     itemUpdatedEncoder itemUpdatedData
+
+                Event.ListSharedWithUser listSharedWithUserData ->
+                    listSharedWithUserEncoder listSharedWithUserData
         )
         |> S.variant1 Event.ListCreated listCreatedCodec
         |> S.variant1 Event.ListUpdated listUpdatedCodec
         |> S.variant1 Event.ItemCreated itemCreatedCodec
         |> S.variant1 Event.ItemStateChanged itemStateChangedCodec
         |> S.variant1 Event.ItemUpdated itemUpdatedCodec
+        |> S.variant1 Event.ListSharedWithUser listSharedWithUserCodec
         |> S.finishCustomType
 
 

@@ -4,6 +4,7 @@ import Bridge
 import Components.Button as Button
 import Components.Caption as Caption
 import Components.Input as Input
+import Dict
 import Effect exposing (Effect)
 import Html
 import Html.Attributes
@@ -19,7 +20,7 @@ import View exposing (View)
 page : Shared.Model -> Route () -> Page Model Msg
 page shared route =
     Page.new
-        { init = init
+        { init = init shared route
         , update = update shared
         , subscriptions = subscriptions
         , view = view shared
@@ -35,15 +36,17 @@ type alias Model =
     , deviceName : String
     , validation : Maybe String
     , initialState : Bool
+    , redirect : Maybe String
     }
 
 
-init : () -> ( Model, Effect Msg )
-init () =
+init : Shared.Model -> Route () -> () -> ( Model, Effect Msg )
+init shared route () =
     ( { userName = ""
       , deviceName = ""
       , validation = Nothing
       , initialState = True
+      , redirect = Dict.get "from" route.query
       }
     , Effect.none
     )
@@ -85,12 +88,21 @@ update shared msg incomingModel =
                                         , deviceName = model.deviceName
                                         , userName = model.userName
                                         }
+
+                                redirect =
+                                    case model.redirect of
+                                        Just from ->
+                                            Effect.replaceRoutePath (Route.Path.fromString from |> Maybe.withDefault Route.Path.Home_)
+
+                                        Nothing ->
+                                            Effect.replaceRoutePath Route.Path.Home_
                             in
                             Effect.batch
                                 [ Effect.accountCreated newUser
                                 , Effect.generateIds
                                 , Effect.sendCmd <|
                                     Lamdera.sendToBackend (Bridge.NewUser newUser)
+                                , redirect
                                 ]
             in
             ( { model | validation = validation }

@@ -23,6 +23,7 @@ type Path
     | Setup_Connect
     | Setup_NewAccount
     | SetupKnown
+    | Share_ListId_ { listId : String }
     | NotFound_
 
 
@@ -103,6 +104,12 @@ fromString urlPath =
         "setup-known" :: [] ->
             Just SetupKnown
 
+        "share" :: listId_ :: [] ->
+            Share_ListId_
+                { listId = listId_
+                }
+                |> Just
+
         _ ->
             Nothing
 
@@ -165,6 +172,9 @@ toString path =
 
                 SetupKnown ->
                     [ "setup-known" ]
+
+                Share_ListId_ params ->
+                    [ "share", params.listId ]
 
                 NotFound_ ->
                     [ "404" ]

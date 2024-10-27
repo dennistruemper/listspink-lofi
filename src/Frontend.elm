@@ -7,7 +7,9 @@ import Html.Attributes as Attr
 import Json.Encode
 import Lamdera
 import Main as ElmLand
+import Main.Pages.Msg
 import Pages.Home_
+import Pages.Share.ListId_
 import Shared.Msg
 import Task
 import Time
@@ -48,6 +50,9 @@ updateFromBackend msg model =
 
         EventSyncResult result ->
             ( model, sendSharedMsg <| Shared.Msg.GotSyncResult result )
+
+        ListSubscriptionAdded data ->
+            ElmLand.update (ElmLand.Page <| Main.Pages.Msg.Share_ListId_ <| Pages.Share.ListId_.GotListSubscriptionAdded data) model
 
 
 sendSharedMsg : Shared.Msg.Msg -> Cmd FrontendMsg

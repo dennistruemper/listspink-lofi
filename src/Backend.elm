@@ -3,8 +3,11 @@ module Backend exposing (..)
 import Bridge exposing (..)
 import Dict exposing (Dict)
 import Event
+import EventMetadataHelper
 import Html
 import Lamdera exposing (ClientId, SessionId)
+import Main.Pages.Msg
+import Pages.Share.ListId_
 import Random
 import Subscriptions
 import Sync
@@ -138,6 +141,22 @@ update backendMsg model =
                                 -- TODO "Send events to connected clients"
                             in
                             ( { model | syncModel = newSyncModel.newBackendModel, subscriptions = newSubscriptions }, Cmd.batch commands )
+
+                        RequestListSubscription data ->
+                            let
+                                newSubscriptions =
+                                    Subscriptions.addSubscription { userId = user.userId, aggregateId = data.listId } model.subscriptions
+                            in
+                            ( { model | subscriptions = newSubscriptions }
+                            , Lamdera.sendToFrontend sessionId <| ListSubscriptionAdded { userId = user.userId, listId = data.listId, timestamp = now }
+                            )
+
+                        ReloadAllForAggregate data ->
+                            let
+                                events =
+                                    Sync.getEventsForAggregateId data.aggregateId model.syncModel |> List.map .event
+                            in
+                            ( model, Lamdera.sendToFrontend sessionId <| EventSyncResult { events = events, lastSyncServerTime = now } )
 
 
 updateFromFrontend : SessionId -> ClientId -> ToBackend -> Model -> ( Model, Cmd BackendMsg )

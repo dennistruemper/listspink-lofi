@@ -5,6 +5,7 @@ import Bridge
 import Components.AppBar as AppBar
 import Components.Button as Button
 import Components.Input as Input
+import Dict
 import Effect exposing (Effect)
 import Html
 import Html.Attributes
@@ -13,6 +14,7 @@ import Lamdera
 import Layouts
 import Page exposing (Page)
 import Route exposing (Route)
+import Route.Path
 import Shared
 import View exposing (View)
 
@@ -24,7 +26,7 @@ title =
 page : Shared.Model -> Route () -> Page Model Msg
 page shared route =
     Page.new
-        { init = init
+        { init = init shared route
         , update = update shared
         , subscriptions = subscriptions
         , view = view shared
@@ -39,14 +41,16 @@ type alias Model =
     { codeInput : String
     , deviceName : String
     , validation : Maybe String
+    , redirect : Maybe String
     }
 
 
-init : () -> ( Model, Effect Msg )
-init () =
+init : Shared.Model -> Route () -> () -> ( Model, Effect Msg )
+init shared route () =
     ( { codeInput = ""
       , deviceName = ""
       , validation = Just ""
+      , redirect = Dict.get "from" route.query
       }
     , Effect.none
     )
@@ -90,7 +94,21 @@ update shared msg model =
             in
             case ( validation, shared.nextIds ) of
                 ( Nothing, Just nextIds ) ->
-                    ( model, Effect.sendCmd <| Lamdera.sendToBackend (Bridge.UseSyncCode { code = model.codeInput, deviceId = nextIds.deviceId, deviceName = model.deviceName }) )
+                    let
+                        redirect =
+                            case model.redirect of
+                                Just from ->
+                                    Effect.replaceRoutePath (Route.Path.fromString from |> Maybe.withDefault Route.Path.Home_)
+
+                                Nothing ->
+                                    Effect.replaceRoutePath Route.Path.Home_
+                    in
+                    ( model
+                    , Effect.batch
+                        [ Effect.sendCmd <| Lamdera.sendToBackend (Bridge.UseSyncCode { code = model.codeInput, deviceId = nextIds.deviceId, deviceName = model.deviceName })
+                        , redirect
+                        ]
+                    )
 
                 _ ->
                     ( { model | validation = validation }, Effect.generateIds )

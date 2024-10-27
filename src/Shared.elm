@@ -16,6 +16,7 @@ import Bridge
 import Dict
 import Effect exposing (Effect)
 import Event
+import EventMetadataHelper
 import Json.Decode
 import Lamdera
 import Ports
@@ -27,6 +28,7 @@ import Shared.Msg
 import SortedEventList
 import Subscriptions
 import Sync
+import Task
 import UserManagement
 
 
@@ -87,7 +89,7 @@ update route msg model =
             )
 
         Shared.Msg.NewUserCreated user ->
-            ( { model | user = Just user }, Effect.batch [ Effect.storeUserData user, Effect.pushRoutePath Route.Path.Home_ ] )
+            ( { model | user = Just user }, Effect.batch [ Effect.storeUserData user ] )
 
         Shared.Msg.GotSyncCode code ->
             ( { model | syncCode = Just code }, Effect.none )
@@ -113,7 +115,7 @@ update route msg model =
                 user =
                     Bridge.UserOnDevice { userId = data.userId, deviceId = data.deviceId, deviceName = data.deviceName, userName = data.name }
             in
-            ( { model | user = Just user }, Effect.batch [ Effect.storeUserData user, Effect.pushRoutePath Route.Path.Home_ ] )
+            ( { model | user = Just user }, Effect.batch [ Effect.storeUserData user ] )
 
         Shared.Msg.ConnectionEstablished ->
             let

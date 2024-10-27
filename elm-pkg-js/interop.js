@@ -101,6 +101,14 @@ exports.init = async function (app) {
         console.log(event.data);
         break;
 
+      case "CopyToClipboard":
+        try {
+          await navigator.clipboard.writeText(event.data);
+        } catch (err) {
+          console.error("Failed to copy text: ", err);
+        }
+        break;
+
       default:
         console.log(`fromElm event of tag ${event.tag} not handled`, event);
     }

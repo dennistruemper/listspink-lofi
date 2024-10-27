@@ -6,6 +6,7 @@ import Components.Button as Button
 import Components.Caption as Caption
 import Components.Input as Input
 import Components.Padding as Padding
+import Components.QrCode as QrCode
 import Components.Text as Text
 import Dict
 import Effect exposing (Effect)
@@ -13,13 +14,14 @@ import Event
 import EventMetadataHelper
 import Format
 import Html
-import Html.Attributes
+import Html.Attributes exposing (src)
 import Layouts
 import Page exposing (Page)
 import Route exposing (Route)
 import Route.Path
 import Shared
 import Time
+import Url
 import View exposing (View)
 
 
@@ -30,7 +32,7 @@ title =
 page : Auth.User -> Shared.Model -> Route { listId : String } -> Page Model Msg
 page user shared route =
     Page.new
-        { init = init route.params.listId shared
+        { init = init route.params.listId route shared
         , update = update shared
         , subscriptions = subscriptions
         , view = view shared
@@ -52,16 +54,28 @@ toLayout user model =
 type alias Model =
     { listId : String
     , listName : Maybe String
+    , fullHostNameAndPort : String
     }
 
 
-init : String -> Shared.Model -> () -> ( Model, Effect Msg )
-init listId shared () =
+urlProtocolToString : Url.Protocol -> String
+urlProtocolToString protocol =
+    case protocol of
+        Url.Http ->
+            "http://"
+
+        Url.Https ->
+            "https://"
+
+
+init : String -> Route { listId : String } -> Shared.Model -> () -> ( Model, Effect Msg )
+init listId route shared () =
     ( { listId = listId
       , listName =
             shared.state.lists
                 |> Dict.get listId
                 |> Maybe.map .name
+      , fullHostNameAndPort = (route.url.protocol |> urlProtocolToString) ++ route.url.host ++ ":" ++ (route.url.port_ |> Maybe.withDefault 443 |> String.fromInt)
       }
     , Effect.none
     )
@@ -75,6 +89,7 @@ type Msg
     = ListNameChanged String
     | UpdateListButtonClicked
     | GotTimeForUpdateList Time.Posix
+    | CopyShareLinkClicked String
 
 
 update : Shared.Model -> Msg -> Model -> ( Model, Effect Msg )
@@ -115,6 +130,9 @@ update shared msg model =
                 Err error ->
                     --TODO
                     ( model, Effect.none )
+
+        CopyShareLinkClicked shareUrl ->
+            ( model, Effect.copyToClipboard shareUrl )
 
 
 
@@ -157,6 +175,14 @@ view shared model =
     , body =
         [ case maybeList of
             Just list ->
+                let
+                    shareUrl =
+                        model.fullHostNameAndPort ++ (Route.Path.Share_ListId_ { listId = list.listId } |> Route.Path.toString)
+
+                    qrCodeConfig =
+                        QrCode.qrCode shareUrl
+                            |> QrCode.withSize 250
+                in
                 AppBar.appBar
                     |> AppBar.withContent
                         [ Caption.caption2 "Editable"
@@ -169,6 +195,18 @@ view shared model =
                                 (validateListName model.listName)
                                 (model.listName |> Maybe.withDefault list.name)
                                 |> Input.view
+                            ]
+                            |> Padding.view
+                        , Caption.caption2 "Share"
+                            |> Caption.withLine True
+                            |> Caption.view
+                        , Padding.left
+                            [ Html.details []
+                                [ Html.summary [] [ Html.text "Show QR Code" ]
+                                , QrCode.view qrCodeConfig
+                                ]
+                            , Button.button "Copy share link" (CopyShareLinkClicked shareUrl)
+                                |> Button.view
                             ]
                             |> Padding.view
                         , Caption.caption2 "Fun facts"

@@ -1,4 +1,4 @@
-module EventMetadataHelper exposing (createEventMetadata)
+module EventMetadataHelper exposing (createEventMetadata, createEventMetadataWithUserId)
 
 import Bridge
 import Event
@@ -21,4 +21,14 @@ createEventMetadata maybeNextIds getAggregateId maybeUser timestamp =
                     Err "Unknown user"
 
                 Just (Bridge.UserOnDevice userOnDeviceData) ->
-                    Ok { eventId = nextIds.eventId, aggregateId = getAggregateId nextIds, userId = userOnDeviceData.userId, timestamp = timestamp }
+                    createEventMetadataWithUserId maybeNextIds getAggregateId userOnDeviceData.userId timestamp
+
+
+createEventMetadataWithUserId : Maybe Shared.Model.NextIds -> (Shared.Model.NextIds -> String) -> String -> Time.Posix -> Result String Event.EventMetadata
+createEventMetadataWithUserId maybeNextIds getAggregateId userId timestamp =
+    case maybeNextIds of
+        Nothing ->
+            Err "No nextIds"
+
+        Just nextIds ->
+            Ok { eventId = nextIds.eventId, aggregateId = getAggregateId nextIds, userId = userId, timestamp = timestamp }

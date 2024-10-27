@@ -6,6 +6,7 @@ module Event exposing
     , ItemStateChangedData
     , ItemUpdatedData
     , ListCreatedData
+    , ListSharedWithUserData
     , ListUpdatedData
     , PinkItem
     , PinkList
@@ -14,6 +15,7 @@ module Event exposing
     , createItemStateChangedEvent
     , createItemUpdatedEvent
     , createListCreatedEvent
+    , createListSharedWithUserEvent
     , createListUpdatedEvent
     , getAggregateId
     , getEventId
@@ -40,6 +42,7 @@ type alias EventMetadata =
 type EventData
     = ListCreated ListCreatedData
     | ListUpdated ListUpdatedData
+    | ListSharedWithUser ListSharedWithUserData
     | ItemCreated ItemCreatedData
     | ItemStateChanged ItemStateChangedData
     | ItemUpdated ItemUpdatedData
@@ -54,6 +57,10 @@ type alias ListCreatedData =
 type alias ListUpdatedData =
     { name : String
     }
+
+
+type alias ListSharedWithUserData =
+    { userId : String, listId : String }
 
 
 type alias ItemUpdatedData =
@@ -112,6 +119,14 @@ createItemStateChangedEvent metadata data =
     Event metadata (ItemStateChanged data)
 
 
+createListSharedWithUserEvent :
+    EventMetadata
+    -> { userId : String, listId : String }
+    -> EventDefinition
+createListSharedWithUserEvent metadata data =
+    Event metadata (ListSharedWithUser data)
+
+
 getMetadata : EventDefinition -> EventMetadata
 getMetadata event =
     case event of
@@ -159,6 +174,7 @@ type alias PinkList =
     , createdAt : Time.Posix
     , lastUpdatedAt : Time.Posix
     , numberOfUpdates : Int
+    , users : List String
     }
 
 
@@ -199,6 +215,7 @@ projectEvent event state =
                                 , createdAt = metadata.timestamp
                                 , lastUpdatedAt = metadata.timestamp
                                 , numberOfUpdates = 0
+                                , users = []
                                 }
                                 state.lists
                     }
@@ -217,6 +234,21 @@ projectEvent event state =
                                                     , lastUpdatedAt = metadata.timestamp
                                                     , numberOfUpdates = list.numberOfUpdates + 1
                                                 }
+
+                                        Nothing ->
+                                            Nothing
+                                )
+                                state.lists
+                    }
+
+                ListSharedWithUser listSharedWithUserData ->
+                    { state
+                        | lists =
+                            Dict.update listSharedWithUserData.listId
+                                (\maybeList ->
+                                    case maybeList of
+                                        Just list ->
+                                            Just { list | users = listSharedWithUserData.userId :: list.users }
 
                                         Nothing ->
                                             Nothing
@@ -334,7 +366,13 @@ projectEvent event state =
                                                                         , lastUpdatedAt = metadata.timestamp
                                                                         , numberOfUpdates = item.numberOfUpdates + 1
                                                                         , priority = Maybe.withDefault ItemPriority.MediumItemPriority itemData.itemPriority
-                                                                        , description = itemData.description
+                                                                        , description =
+                                                                            case itemData.description of
+                                                                                Just description ->
+                                                                                    Just description
+
+                                                                                Nothing ->
+                                                                                    item.description
                                                                     }
                                                                 )
                                                                 maybeItem

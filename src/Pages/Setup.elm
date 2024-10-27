@@ -24,7 +24,7 @@ page : Shared.Model -> Route () -> Page Model Msg
 page shared route =
     Page.new
         { init = init shared route
-        , update = update shared
+        , update = update shared route
         , subscriptions = subscriptions
         , view = view shared
         }
@@ -60,8 +60,8 @@ type Msg
     | NoOp
 
 
-update : Shared.Model -> Msg -> Model -> ( Model, Effect Msg )
-update shared msg model =
+update : Shared.Model -> Route () -> Msg -> Model -> ( Model, Effect Msg )
+update shared route msg model =
     case msg of
         GotTime time ->
             case ( model.initialUserdata, shared.user ) of
@@ -71,8 +71,8 @@ update shared msg model =
                             case model.redirect of
                                 Just from ->
                                     case Route.Path.fromString from of
-                                        Just route ->
-                                            Effect.replaceRoutePath route
+                                        Just newRoute ->
+                                            Effect.replaceRoutePath newRoute
 
                                         Nothing ->
                                             Effect.none
@@ -87,12 +87,12 @@ update shared msg model =
 
         CreateNewAccount ->
             ( model
-            , Effect.pushRoutePath Route.Path.Setup_NewAccount
+            , Effect.pushRoute { path = Route.Path.Setup_NewAccount, hash = Nothing, query = route.query }
             )
 
         ConnectExistingAccount ->
             ( model
-            , Effect.pushRoutePath Route.Path.Setup_Connect
+            , Effect.pushRoute { path = Route.Path.Setup_Connect, hash = Nothing, query = route.query }
             )
 
         ShowNewConnectionInfo ->

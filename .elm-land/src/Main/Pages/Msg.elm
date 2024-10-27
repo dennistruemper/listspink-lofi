@@ -16,6 +16,7 @@ import Pages.Setup
 import Pages.Setup.Connect
 import Pages.Setup.NewAccount
 import Pages.SetupKnown
+import Pages.Share.ListId_
 import Pages.NotFound_
 
 
@@ -36,4 +37,5 @@ type Msg
     | Setup_Connect Pages.Setup.Connect.Msg
     | Setup_NewAccount Pages.Setup.NewAccount.Msg
     | SetupKnown Pages.SetupKnown.Msg
+    | Share_ListId_ Pages.Share.ListId_.Msg
     | NotFound_ Pages.NotFound_.Msg

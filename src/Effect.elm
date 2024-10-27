@@ -4,6 +4,7 @@ module Effect exposing
     , addEvent
     , back
     , batch
+    , copyToClipboard
     , generateIds
     , getTime
     , loadExternalUrl
@@ -69,6 +70,14 @@ log message =
     SendMessageToJavaScript
         { tag = "Log"
         , data = Json.Encode.string message
+        }
+
+
+copyToClipboard : String -> Effect msg
+copyToClipboard text =
+    SendMessageToJavaScript
+        { tag = "CopyToClipboard"
+        , data = Json.Encode.string text
         }
 
 
