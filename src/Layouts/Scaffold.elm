@@ -167,7 +167,7 @@ scaffold shared caption toContentMsg content =
 menuEntry : (Msg -> contentMsg) -> Route.Path.Path -> String -> Html contentMsg
 menuEntry toContentMsg path caption =
     div
-        [ Attr.class "flex flex-row w-full"
+        [ Attr.class "flex flex-row w-full p-2"
         ]
         [ button
             [ Attr.type_ "button"
