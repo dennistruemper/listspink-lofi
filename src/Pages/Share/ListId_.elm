@@ -1,4 +1,4 @@
-module Pages.Share.ListId_ exposing (Model, Msg(..), page)
+module Pages.Share.ListId_ exposing (Model, Msg(..), States(..), page)
 
 import Auth
 import Bridge
