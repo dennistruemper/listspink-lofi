@@ -4,6 +4,7 @@ import Pages.Home_
 import Pages.Account
 import Pages.Admin
 import Pages.Credits
+import Pages.List.ImportShared
 import Pages.Lists
 import Pages.Lists.Create
 import Pages.Lists.Edit.ListId_
@@ -26,6 +27,7 @@ type Model
     | Account Pages.Account.Model
     | Admin Pages.Admin.Model
     | Credits Pages.Credits.Model
+    | List_ImportShared Pages.List.ImportShared.Model
     | Lists Pages.Lists.Model
     | Lists_Create Pages.Lists.Create.Model
     | Lists_Edit_ListId_ { listId : String } Pages.Lists.Edit.ListId_.Model

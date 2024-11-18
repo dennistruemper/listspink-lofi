@@ -11,6 +11,7 @@ type Path
     | Account
     | Admin
     | Credits
+    | List_ImportShared
     | Lists
     | Lists_Create
     | Lists_Edit_ListId_ { listId : String }
@@ -54,6 +55,9 @@ fromString urlPath =
 
         "credits" :: [] ->
             Just Credits
+
+        "list" :: "import-shared" :: [] ->
+            Just List_ImportShared
 
         "lists" :: [] ->
             Just Lists
@@ -136,6 +140,9 @@ toString path =
 
                 Credits ->
                     [ "credits" ]
+
+                List_ImportShared ->
+                    [ "list", "import-shared" ]
 
                 Lists ->
                     [ "lists" ]

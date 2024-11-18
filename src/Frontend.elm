@@ -54,6 +54,9 @@ updateFromBackend msg model =
         ListSubscriptionAdded data ->
             ElmLand.update (ElmLand.Page <| Main.Pages.Msg.Share_ListId_ <| Pages.Share.ListId_.GotListSubscriptionAdded data) model
 
+        ListSubscriptionFailed ->
+            ElmLand.update (ElmLand.Page <| Main.Pages.Msg.Share_ListId_ Pages.Share.ListId_.GotListSubscriptionFailed) model
+
 
 sendSharedMsg : Shared.Msg.Msg -> Cmd FrontendMsg
 sendSharedMsg msg =

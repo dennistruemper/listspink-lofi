@@ -71,6 +71,7 @@ init () =
 type Msg
     = CreateDummyList
     | CreatNewListClicked
+    | ImportSharedListClicked
 
 
 update : Shared.Model -> Msg -> Model -> ( Model, Effect Msg )
@@ -122,6 +123,11 @@ update shared msg model =
                     , Effect.batch [ Effect.generateIds, effect ]
                     )
 
+        ImportSharedListClicked ->
+            ( model
+            , Effect.pushRoutePath Route.Path.List_ImportShared
+            )
+
         CreatNewListClicked ->
             ( model
             , Effect.pushRoutePath Route.Path.Lists_Create
@@ -155,7 +161,8 @@ view shared model =
                     |> Column.view
                 ]
             |> AppBar.withActions
-                [ Button.button "Create New List" CreatNewListClicked |> Button.view
+                [ Button.button "Import Shared List" ImportSharedListClicked |> Button.view
+                , Button.button "Create New List" CreatNewListClicked |> Button.view
                 ]
             |> AppBar.view
         ]

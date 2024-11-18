@@ -2,14 +2,17 @@ module Pages.Share.ListId_ exposing (Model, Msg(..), page)
 
 import Auth
 import Bridge
+import Components.Button as Button
 import Effect exposing (Effect)
 import Html exposing (..)
 import Lamdera
 import Layouts
 import Page exposing (Page)
+import Process
 import Route exposing (Route)
 import Route.Path
 import Shared
+import Task
 import Time
 import View exposing (View)
 
@@ -58,7 +61,10 @@ init listId _ =
     ( { listId = listId
       , state = InitializingSync
       }
-    , Effect.sendCmd <| Lamdera.sendToBackend (Bridge.RequestListSubscription { listId = listId })
+    , Effect.batch
+        [ Effect.sendCmd <| Lamdera.sendToBackend (Bridge.RequestListSubscription { listId = listId })
+        , Effect.sendCmd <| (Process.sleep 5000 |> Task.perform (\_ -> TimeoutSubscriptionWait))
+        ]
     )
 
 
@@ -68,6 +74,9 @@ init listId _ =
 
 type Msg
     = GotListSubscriptionAdded { userId : String, listId : String, timestamp : Time.Posix }
+    | GotListSubscriptionFailed
+    | TimeoutSubscriptionWait
+    | GoBackClicked
 
 
 update : Msg -> Model -> ( Model, Effect Msg )
@@ -87,6 +96,26 @@ update msg model =
             else
                 ( model, Effect.none )
 
+        GotListSubscriptionFailed ->
+            ( { model | state = ErrorSyncing "Failed to subscribe to list. Please check the URL and try again." }
+            , Effect.none
+            )
+
+        TimeoutSubscriptionWait ->
+            case model.state of
+                InitializingSync ->
+                    ( { model | state = ErrorSyncing "Timeout waiting for subscription confirmation. Please check the URL and try again." }
+                    , Effect.none
+                    )
+
+                _ ->
+                    ( model, Effect.none )
+
+        GoBackClicked ->
+            ( model
+            , Effect.replaceRoutePath Route.Path.List_ImportShared
+            )
+
 
 
 -- SUBSCRIPTIONS
@@ -94,8 +123,7 @@ update msg model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.batch
-        []
+    Sub.none
 
 
 
@@ -124,4 +152,7 @@ viewState state =
             text "Done syncing"
 
         ErrorSyncing error ->
-            text ("Error syncing: " ++ error)
+            div []
+                [ div [] [ text error ]
+                , Button.button "Go Back" GoBackClicked |> Button.view
+                ]

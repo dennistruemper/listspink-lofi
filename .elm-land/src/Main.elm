@@ -19,6 +19,7 @@ import Pages.Home_
 import Pages.Account
 import Pages.Admin
 import Pages.Credits
+import Pages.List.ImportShared
 import Pages.Lists
 import Pages.Lists.Create
 import Pages.Lists.Edit.ListId_
@@ -214,6 +215,30 @@ initPageAndLayout model =
                     , layout = 
                         Page.layout pageModel page
                             |> Maybe.map (Layouts.map (Main.Pages.Msg.Credits >> Page))
+                            |> Maybe.map (initLayout model)
+                    }
+                )
+
+        Route.Path.List_ImportShared ->
+            runWhenAuthenticatedWithLayout
+                model
+                (\user ->
+                    let
+                        page : Page.Page Pages.List.ImportShared.Model Pages.List.ImportShared.Msg
+                        page =
+                            Pages.List.ImportShared.page user model.shared (Route.fromUrl () model.url)
+
+                        ( pageModel, pageEffect ) =
+                            Page.init page ()
+                    in
+                    { page = 
+                        Tuple.mapBoth
+                            Main.Pages.Model.List_ImportShared
+                            (Effect.map Main.Pages.Msg.List_ImportShared >> fromPageEffect model)
+                            ( pageModel, pageEffect )
+                    , layout = 
+                        Page.layout pageModel page
+                            |> Maybe.map (Layouts.map (Main.Pages.Msg.List_ImportShared >> Page))
                             |> Maybe.map (initLayout model)
                     }
                 )
@@ -784,6 +809,16 @@ updateFromPage msg model =
                         (Page.update (Pages.Credits.page user model.shared (Route.fromUrl () model.url)) pageMsg pageModel)
                 )
 
+        ( Main.Pages.Msg.List_ImportShared pageMsg, Main.Pages.Model.List_ImportShared pageModel ) ->
+            runWhenAuthenticated
+                model
+                (\user ->
+                    Tuple.mapBoth
+                        Main.Pages.Model.List_ImportShared
+                        (Effect.map Main.Pages.Msg.List_ImportShared >> fromPageEffect model)
+                        (Page.update (Pages.List.ImportShared.page user model.shared (Route.fromUrl () model.url)) pageMsg pageModel)
+                )
+
         ( Main.Pages.Msg.Lists pageMsg, Main.Pages.Model.Lists pageModel ) ->
             runWhenAuthenticated
                 model
@@ -957,6 +992,12 @@ toLayoutFromPage model =
                 |> Maybe.andThen (Page.layout pageModel)
                 |> Maybe.map (Layouts.map (Main.Pages.Msg.Credits >> Page))
 
+        Main.Pages.Model.List_ImportShared pageModel ->
+            Route.fromUrl () model.url
+                |> toAuthProtectedPage model Pages.List.ImportShared.page
+                |> Maybe.andThen (Page.layout pageModel)
+                |> Maybe.map (Layouts.map (Main.Pages.Msg.List_ImportShared >> Page))
+
         Main.Pages.Model.Lists pageModel ->
             Route.fromUrl () model.url
                 |> toAuthProtectedPage model Pages.Lists.page
@@ -1118,6 +1159,15 @@ subscriptions model =
                         (\user ->
                             Page.subscriptions (Pages.Credits.page user model.shared (Route.fromUrl () model.url)) pageModel
                                 |> Sub.map Main.Pages.Msg.Credits
+                                |> Sub.map Page
+                        )
+                        (Auth.onPageLoad model.shared (Route.fromUrl () model.url))
+
+                Main.Pages.Model.List_ImportShared pageModel ->
+                    Auth.Action.subscriptions
+                        (\user ->
+                            Page.subscriptions (Pages.List.ImportShared.page user model.shared (Route.fromUrl () model.url)) pageModel
+                                |> Sub.map Main.Pages.Msg.List_ImportShared
                                 |> Sub.map Page
                         )
                         (Auth.onPageLoad model.shared (Route.fromUrl () model.url))
@@ -1338,6 +1388,15 @@ viewPage model =
                 )
                 (Auth.onPageLoad model.shared (Route.fromUrl () model.url))
 
+        Main.Pages.Model.List_ImportShared pageModel ->
+            Auth.Action.view (View.map never (Auth.viewCustomPage model.shared (Route.fromUrl () model.url)))
+                (\user ->
+                    Page.view (Pages.List.ImportShared.page user model.shared (Route.fromUrl () model.url)) pageModel
+                        |> View.map Main.Pages.Msg.List_ImportShared
+                        |> View.map Page
+                )
+                (Auth.onPageLoad model.shared (Route.fromUrl () model.url))
+
         Main.Pages.Model.Lists pageModel ->
             Auth.Action.view (View.map never (Auth.viewCustomPage model.shared (Route.fromUrl () model.url)))
                 (\user ->
@@ -1548,6 +1607,16 @@ toPageUrlHookCmd model routes =
                 )
                 (Auth.onPageLoad model.shared (Route.fromUrl () model.url))
 
+        Main.Pages.Model.List_ImportShared pageModel ->
+            Auth.Action.command
+                (\user ->
+                    Page.toUrlMessages routes (Pages.List.ImportShared.page user model.shared (Route.fromUrl () model.url)) 
+                        |> List.map Main.Pages.Msg.List_ImportShared
+                        |> List.map Page
+                        |> toCommands
+                )
+                (Auth.onPageLoad model.shared (Route.fromUrl () model.url))
+
         Main.Pages.Model.Lists pageModel ->
             Auth.Action.command
                 (\user ->
@@ -1737,6 +1806,9 @@ isAuthProtected routePath =
             True
 
         Route.Path.Credits ->
+            True
+
+        Route.Path.List_ImportShared ->
             True
 
         Route.Path.Lists ->

@@ -146,9 +146,16 @@ update backendMsg model =
                             let
                                 newSubscriptions =
                                     Subscriptions.addSubscription { userId = user.userId, aggregateId = data.listId } model.subscriptions
+
+                                cmd =
+                                    if newSubscriptions /= model.subscriptions then
+                                        Lamdera.sendToFrontend sessionId <| ListSubscriptionAdded { userId = user.userId, listId = data.listId, timestamp = now }
+
+                                    else
+                                        Lamdera.sendToFrontend sessionId <| ListSubscriptionFailed
                             in
                             ( { model | subscriptions = newSubscriptions }
-                            , Lamdera.sendToFrontend sessionId <| ListSubscriptionAdded { userId = user.userId, listId = data.listId, timestamp = now }
+                            , cmd
                             )
 
                         ReloadAllForAggregate data ->

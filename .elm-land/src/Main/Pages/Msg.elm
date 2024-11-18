@@ -4,6 +4,7 @@ import Pages.Home_
 import Pages.Account
 import Pages.Admin
 import Pages.Credits
+import Pages.List.ImportShared
 import Pages.Lists
 import Pages.Lists.Create
 import Pages.Lists.Edit.ListId_
@@ -25,6 +26,7 @@ type Msg
     | Account Pages.Account.Msg
     | Admin Pages.Admin.Msg
     | Credits Pages.Credits.Msg
+    | List_ImportShared Pages.List.ImportShared.Msg
     | Lists Pages.Lists.Msg
     | Lists_Create Pages.Lists.Create.Msg
     | Lists_Edit_ListId_ Pages.Lists.Edit.ListId_.Msg
