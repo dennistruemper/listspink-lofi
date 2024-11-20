@@ -206,183 +206,163 @@ projectEvent event state =
         Event metadata data ->
             case data of
                 ListCreated listData ->
-                    { state
-                        | lists =
-                            Dict.insert listData.listId
-                                { name = listData.name
-                                , listId = listData.listId
-                                , items = Dict.empty
-                                , createdAt = metadata.timestamp
-                                , lastUpdatedAt = metadata.timestamp
-                                , numberOfUpdates = 0
-                                , users = []
-                                }
-                                state.lists
-                    }
+                    handleListCreated metadata listData state
 
                 ListUpdated listData ->
-                    { state
-                        | lists =
-                            Dict.update
-                                metadata.aggregateId
-                                (\maybeList ->
-                                    case maybeList of
-                                        Just list ->
-                                            Just
-                                                { list
-                                                    | name = listData.name
-                                                    , lastUpdatedAt = metadata.timestamp
-                                                    , numberOfUpdates = list.numberOfUpdates + 1
-                                                }
+                    handleListUpdated metadata listData state
 
-                                        Nothing ->
-                                            Nothing
-                                )
-                                state.lists
-                    }
-
-                ListSharedWithUser listSharedWithUserData ->
-                    { state
-                        | lists =
-                            Dict.update listSharedWithUserData.listId
-                                (\maybeList ->
-                                    case maybeList of
-                                        Just list ->
-                                            Just { list | users = listSharedWithUserData.userId :: list.users }
-
-                                        Nothing ->
-                                            Nothing
-                                )
-                                state.lists
-                    }
+                ListSharedWithUser listData ->
+                    handleListSharedWithUser listData state
 
                 ItemCreated itemData ->
-                    { state
-                        | lists =
-                            Dict.update
-                                metadata.aggregateId
-                                (\maybeList ->
-                                    case maybeList of
-                                        Just list ->
-                                            Just
-                                                { list
-                                                    | items =
-                                                        case Dict.get itemData.itemId list.items of
-                                                            Just _ ->
-                                                                list.items
-
-                                                            Nothing ->
-                                                                Dict.insert itemData.itemId
-                                                                    { name = itemData.itemName
-                                                                    , itemId = itemData.itemId
-                                                                    , description = itemData.itemDescription
-                                                                    , createdAt = metadata.timestamp
-                                                                    , completedAt = Nothing
-                                                                    , lastUpdatedAt = metadata.timestamp
-                                                                    , numberOfUpdates = 0
-                                                                    , priority = Maybe.withDefault ItemPriority.MediumItemPriority itemData.itemPriority
-                                                                    }
-                                                                    list.items
-                                                    , lastUpdatedAt = metadata.timestamp
-                                                    , numberOfUpdates = list.numberOfUpdates + 1
-                                                }
-
-                                        Nothing ->
-                                            Nothing
-                                )
-                                state.lists
-                    }
+                    handleItemCreated metadata itemData state
 
                 ItemStateChanged itemData ->
-                    { state
-                        | lists =
-                            Dict.update
-                                metadata.aggregateId
-                                (\maybeList ->
-                                    case maybeList of
-                                        Just list ->
-                                            Just
-                                                { list
-                                                    | items =
-                                                        Dict.update
-                                                            itemData.itemId
-                                                            (\maybeItem ->
-                                                                case maybeItem of
-                                                                    Just item ->
-                                                                        Just
-                                                                            { item
-                                                                                | completedAt =
-                                                                                    if itemData.newState then
-                                                                                        Just metadata.timestamp
-
-                                                                                    else
-                                                                                        Nothing
-                                                                                , lastUpdatedAt = metadata.timestamp
-                                                                                , numberOfUpdates = item.numberOfUpdates + 1
-                                                                            }
-
-                                                                    Nothing ->
-                                                                        Nothing
-                                                            )
-                                                            list.items
-                                                    , lastUpdatedAt = metadata.timestamp
-                                                    , numberOfUpdates = list.numberOfUpdates + 1
-                                                }
-
-                                        Nothing ->
-                                            Nothing
-                                )
-                                state.lists
-                    }
+                    handleItemStateChanged metadata itemData state
 
                 ItemUpdated itemData ->
-                    { state
-                        | lists =
-                            Dict.update metadata.aggregateId
-                                (\maybeList ->
-                                    Maybe.map
-                                        (\list ->
-                                            { list
-                                                | items =
-                                                    Dict.update itemData.itemId
-                                                        (\maybeItem ->
-                                                            Maybe.map
-                                                                (\item ->
-                                                                    let
-                                                                        newCompletedAt =
-                                                                            case itemData.completed of
-                                                                                Just (Just time) ->
-                                                                                    Just time
+                    handleItemUpdated metadata itemData state
 
-                                                                                Just Nothing ->
-                                                                                    Nothing
 
-                                                                                Nothing ->
-                                                                                    item.completedAt
-                                                                    in
-                                                                    { item
-                                                                        | name = itemData.name |> Maybe.withDefault item.name
-                                                                        , completedAt = newCompletedAt
-                                                                        , lastUpdatedAt = metadata.timestamp
-                                                                        , numberOfUpdates = item.numberOfUpdates + 1
-                                                                        , priority = Maybe.withDefault ItemPriority.MediumItemPriority itemData.itemPriority
-                                                                        , description =
-                                                                            case itemData.description of
-                                                                                Just description ->
-                                                                                    Just description
+handleListCreated : EventMetadata -> ListCreatedData -> State -> State
+handleListCreated metadata listData state =
+    { state
+        | lists =
+            Dict.insert listData.listId
+                { name = listData.name
+                , listId = listData.listId
+                , items = Dict.empty
+                , createdAt = metadata.timestamp
+                , lastUpdatedAt = metadata.timestamp
+                , numberOfUpdates = 0
+                , users = []
+                }
+                state.lists
+    }
 
-                                                                                Nothing ->
-                                                                                    item.description
-                                                                    }
-                                                                )
-                                                                maybeItem
-                                                        )
-                                                        list.items
-                                                , lastUpdatedAt = metadata.timestamp
-                                                , numberOfUpdates = list.numberOfUpdates + 1
-                                            }
-                                        )
-                                        maybeList
-                                )
-                                state.lists
-                    }
+
+handleListUpdated : EventMetadata -> ListUpdatedData -> State -> State
+handleListUpdated metadata listData state =
+    updateList metadata.aggregateId
+        (\list ->
+            { list
+                | name = listData.name
+                , lastUpdatedAt = metadata.timestamp
+                , numberOfUpdates = list.numberOfUpdates + 1
+            }
+        )
+        state
+
+
+handleListSharedWithUser : ListSharedWithUserData -> State -> State
+handleListSharedWithUser listData state =
+    updateList listData.listId
+        (\list -> { list | users = listData.userId :: list.users })
+        state
+
+
+handleItemCreated : EventMetadata -> ItemCreatedData -> State -> State
+handleItemCreated metadata itemData state =
+    updateList metadata.aggregateId
+        (\list ->
+            { list
+                | items =
+                    Dict.insert itemData.itemId
+                        { name = itemData.itemName
+                        , itemId = itemData.itemId
+                        , description = itemData.itemDescription
+                        , createdAt = metadata.timestamp
+                        , completedAt = Nothing
+                        , lastUpdatedAt = metadata.timestamp
+                        , numberOfUpdates = 0
+                        , priority = Maybe.withDefault ItemPriority.MediumItemPriority itemData.itemPriority
+                        }
+                        list.items
+                , lastUpdatedAt = metadata.timestamp
+                , numberOfUpdates = list.numberOfUpdates + 1
+            }
+        )
+        state
+
+
+handleItemStateChanged : EventMetadata -> ItemStateChangedData -> State -> State
+handleItemStateChanged metadata itemData state =
+    updateList metadata.aggregateId
+        (\list ->
+            { list
+                | items = updateItem itemData.itemId (updateItemState metadata itemData) list.items
+                , lastUpdatedAt = metadata.timestamp
+                , numberOfUpdates = list.numberOfUpdates + 1
+            }
+        )
+        state
+
+
+handleItemUpdated : EventMetadata -> ItemUpdatedData -> State -> State
+handleItemUpdated metadata itemData state =
+    updateList metadata.aggregateId
+        (\list ->
+            { list
+                | items = updateItem itemData.itemId (updateItemFields metadata itemData) list.items
+                , lastUpdatedAt = metadata.timestamp
+                , numberOfUpdates = list.numberOfUpdates + 1
+            }
+        )
+        state
+
+
+
+-- Helper functions
+
+
+updateList : String -> (PinkList -> PinkList) -> State -> State
+updateList listId updateFn state =
+    { state
+        | lists =
+            Dict.update listId
+                (Maybe.map updateFn)
+                state.lists
+    }
+
+
+updateItem : String -> (PinkItem -> PinkItem) -> Dict String PinkItem -> Dict String PinkItem
+updateItem itemId updateFn items =
+    Dict.update itemId (Maybe.map updateFn) items
+
+
+updateItemState : EventMetadata -> ItemStateChangedData -> PinkItem -> PinkItem
+updateItemState metadata itemData item =
+    { item
+        | completedAt =
+            if itemData.newState then
+                Just metadata.timestamp
+
+            else
+                Nothing
+        , lastUpdatedAt = metadata.timestamp
+        , numberOfUpdates = item.numberOfUpdates + 1
+    }
+
+
+updateItemFields : EventMetadata -> ItemUpdatedData -> PinkItem -> PinkItem
+updateItemFields metadata itemData item =
+    { item
+        | name = itemData.name |> Maybe.withDefault item.name
+        , completedAt =
+            case itemData.completed of
+                Just (Just time) ->
+                    Just time
+
+                Just Nothing ->
+                    Nothing
+
+                Nothing ->
+                    item.completedAt
+        , lastUpdatedAt = metadata.timestamp
+        , numberOfUpdates = item.numberOfUpdates + 1
+        , priority = Maybe.withDefault ItemPriority.MediumItemPriority itemData.itemPriority
+        , description =
+            itemData.description
+                |> Maybe.map (\description -> Just description)
+                |> Maybe.withDefault item.description
+    }
