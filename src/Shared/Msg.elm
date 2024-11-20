@@ -3,6 +3,7 @@ module Shared.Msg exposing (Msg(..))
 import Bridge
 import Dict exposing (Dict)
 import Event exposing (EventDefinition)
+import Role exposing (Role)
 import Subscriptions
 import Sync
 import Time
@@ -21,7 +22,7 @@ type Msg
     | NewUserCreated Bridge.User
     | AddEvent EventDefinition
     | GotSyncCode Int
-    | GotUserData { name : String, userId : String, deviceId : String, deviceName : String }
+    | GotUserData { name : String, userId : String, deviceId : String, deviceName : String, roles : List Role }
     | GotMessageFromJs String
     | ConnectionEstablished
     | GotSyncResult { events : List EventDefinition, lastSyncServerTime : Time.Posix }

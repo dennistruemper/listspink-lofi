@@ -79,7 +79,13 @@ update backendMsg model =
                                         Just resultUserData ->
                                             Cmd.batch
                                                 [ Lamdera.sendToFrontend sessionId <|
-                                                    SyncCodeUsed { name = resultUserData.name, userId = resultUserData.userId, deviceId = data.deviceId, deviceName = data.deviceName }
+                                                    SyncCodeUsed
+                                                        { name = resultUserData.name
+                                                        , userId = resultUserData.userId
+                                                        , deviceId = data.deviceId
+                                                        , deviceName = data.deviceName
+                                                        , roles = resultUserData.roles
+                                                        }
                                                 , Lamdera.sendToFrontend sessionId <| ConnectionEstablished
                                                 ]
                             in

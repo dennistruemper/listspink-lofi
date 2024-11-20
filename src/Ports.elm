@@ -5,6 +5,7 @@ import FrontendSyncModelSerializer
 import Json.Decode
 import Json.Decode.Pipeline as Pipeline
 import Json.Encode
+import Role
 import Serialize
 import Sync
 import UserManagement
@@ -50,6 +51,7 @@ userDataDecoder =
         |> Pipeline.required "deviceId" Json.Decode.string
         |> Pipeline.required "deviceName" Json.Decode.string
         |> Pipeline.required "userName" Json.Decode.string
+        |> Pipeline.optional "roles" (Json.Decode.list Role.decoder) []
 
 
 decodeMsg : String -> ToElm

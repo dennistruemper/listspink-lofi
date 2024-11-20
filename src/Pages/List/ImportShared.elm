@@ -1,4 +1,4 @@
-module Pages.List.ImportShared exposing (Model, Msg, page)
+module Pages.List.ImportShared exposing (Model, Msg(..), page)
 
 import Auth
 import Components.AppBar as AppBar

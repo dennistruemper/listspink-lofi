@@ -1,6 +1,7 @@
 module UserManagement exposing (Model, UserData, UserOnDeviceData, addDeviceDataToUser, addUser, cancelSync, getAllSessionsForUser, getOtherSessionsForUser, getSessionCount, getSyncCodeForUser, getUserForSession, init, reconnectUserOnDevice, startSyncForUser, useSyncCode)
 
 import Dict exposing (Dict)
+import Role exposing (Role)
 import Time
 
 
@@ -19,6 +20,7 @@ type alias UserData =
     , devices : List { deviceId : String, name : String }
     , userId : String
     , syncInProgress : Maybe SyncData
+    , roles : List Role
     }
 
 
@@ -29,7 +31,12 @@ type alias SyncData =
 
 
 type alias UserOnDeviceData =
-    { userId : String, deviceId : String, deviceName : String, userName : String }
+    { userId : String
+    , deviceId : String
+    , deviceName : String
+    , userName : String
+    , roles : List Role
+    }
 
 
 init : Model
@@ -68,6 +75,7 @@ addUser sessionId newUserData now model =
                 , devices = [ { deviceId = newUserData.deviceId, name = newUserData.deviceName } ]
                 , userId = newUserData.userId
                 , syncInProgress = Nothing
+                , roles = newUserData.roles
                 }
                 model.users
     in
@@ -149,6 +157,7 @@ addDeviceDataToUser sessionId newUserData now model =
                         , devices = List.append oldData.devices [ { deviceId = newUserData.deviceId, name = newUserData.deviceName } ]
                         , userId = newUserData.userId
                         , syncInProgress = oldData.syncInProgress
+                        , roles = newUserData.roles
                         }
                         users
     in

@@ -2,6 +2,7 @@ module Bridge exposing (..)
 
 import Event exposing (EventDefinition)
 import Json.Encode
+import Role
 import Time
 import UserManagement
 
@@ -32,6 +33,7 @@ encodeUserOnDeviceData data =
         , ( "deviceId", Json.Encode.string data.deviceId )
         , ( "deviceName", Json.Encode.string data.deviceName )
         , ( "userName", Json.Encode.string data.userName )
+        , ( "roles", Json.Encode.list Role.encode data.roles )
         ]
 
 

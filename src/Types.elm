@@ -7,6 +7,7 @@ import Dict exposing (Dict)
 import Event exposing (EventDefinition)
 import Lamdera exposing (ClientId, SessionId)
 import Main as ElmLand
+import Role exposing (Role)
 import Subscriptions
 import Sync
 import Time
@@ -43,7 +44,7 @@ type BackendMsg
 type ToFrontend
     = AdminDataRequested { userManagement : UserManagement.Model, backendSyncModel : Sync.BackendSyncModel, subscriptions : Subscriptions.Model }
     | SyncCodeCreated Int
-    | SyncCodeUsed { name : String, userId : String, deviceId : String, deviceName : String }
+    | SyncCodeUsed { name : String, userId : String, deviceId : String, deviceName : String, roles : List Role }
     | ConnectionEstablished
     | EventSyncResult { events : List EventDefinition, lastSyncServerTime : Time.Posix }
     | ListSubscriptionAdded { userId : String, listId : String, timestamp : Time.Posix }

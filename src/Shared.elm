@@ -113,7 +113,13 @@ update route msg model =
         Shared.Msg.GotUserData data ->
             let
                 user =
-                    Bridge.UserOnDevice { userId = data.userId, deviceId = data.deviceId, deviceName = data.deviceName, userName = data.name }
+                    Bridge.UserOnDevice
+                        { userId = data.userId
+                        , deviceId = data.deviceId
+                        , deviceName = data.deviceName
+                        , userName = data.name
+                        , roles = data.roles
+                        }
             in
             ( { model | user = Just user }, Effect.batch [ Effect.storeUserData user ] )
 

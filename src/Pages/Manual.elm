@@ -8,6 +8,7 @@ import Html.Attributes
 import Html.Events
 import Lamdera
 import Page exposing (Page)
+import Role
 import Route exposing (Route)
 import Shared
 import Shared.Model
@@ -85,6 +86,7 @@ update msg model =
                         , deviceId = model.newDeviceId
                         , deviceName = model.newDeviceName
                         , userName = model.newUserName
+                        , roles = [ Role.User ]
                         }
             in
             ( model
@@ -113,6 +115,7 @@ update msg model =
                         , deviceId = model.newDeviceId
                         , deviceName = model.newDeviceName
                         , userName = model.newUserName
+                        , roles = [ Role.User ]
                         }
                 ]
             )

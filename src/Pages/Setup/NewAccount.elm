@@ -11,6 +11,7 @@ import Html.Attributes
 import Html.Events
 import Lamdera
 import Page exposing (Page)
+import Role
 import Route exposing (Route)
 import Route.Path
 import Shared
@@ -87,6 +88,7 @@ update shared msg incomingModel =
                                         , deviceId = nextIds.deviceId
                                         , deviceName = model.deviceName
                                         , userName = model.userName
+                                        , roles = [ Role.User ]
                                         }
 
                                 redirect =
