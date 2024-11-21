@@ -1,4 +1,4 @@
-const cacheName = "cache-v14";
+const cacheName = "cache-v15";
 const assets = ["/"];
 self.addEventListener("install", (installEvent) => {
   installEvent.waitUntil(
