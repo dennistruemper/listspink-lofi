@@ -129,7 +129,21 @@ function setupServiceworker() {
     window.addEventListener("load", function () {
       navigator.serviceWorker
         .register(SERVICE_WORKER_PATH)
-        .then((res) => console.log("service worker registered"))
+        .then((res) => {
+          console.log("service worker registered");
+          res.addEventListener("message", (event) => {
+            console.log("service worker message", event);
+            if (event.data && event.data.version) {
+              localStorage.setItem("version", event.data.version);
+              app.ports[TO_ELM_PORT].send(
+                JSON.stringify({
+                  tag: "VersionLoaded",
+                  data: event.data.version,
+                })
+              );
+            }
+          });
+        })
         .catch((err) => console.log("service worker not registered", err));
     });
   }

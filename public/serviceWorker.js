@@ -4,9 +4,16 @@ self.addEventListener("install", (installEvent) => {
   installEvent.waitUntil(
     caches.open(cacheName).then((cache) => {
       cache.addAll(assets);
-      localStorage.setItem("version", cacheName.split("-")[1]);
     })
   );
+  // Send version to client after installation
+  self.clients.matchAll().then((clients) => {
+    clients.forEach((client) => {
+      client.postMessage({
+        version: cacheName.split("-")[1],
+      });
+    });
+  });
 });
 
 self.addEventListener("fetch", (event) => {
