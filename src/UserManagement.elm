@@ -69,13 +69,23 @@ addUser sessionId newUserData now model =
                 { userId = newUserData.userId, createdAt = now, deviceId = newUserData.deviceId, sessionId = sessionId }
                 model.userSessions
 
+        isFirstUser =
+            Dict.isEmpty model.users
+
+        rolesToAdd =
+            if isFirstUser then
+                [ Role.Admin ]
+
+            else
+                []
+
         newUsers =
             Dict.insert newUserData.userId
                 { name = newUserData.userName
                 , devices = [ { deviceId = newUserData.deviceId, name = newUserData.deviceName } ]
                 , userId = newUserData.userId
                 , syncInProgress = Nothing
-                , roles = newUserData.roles
+                , roles = rolesToAdd ++ newUserData.roles
                 }
                 model.users
     in
