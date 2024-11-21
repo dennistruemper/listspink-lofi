@@ -39,6 +39,7 @@ type BackendMsg
     | NoOpBackendMsg
     | FromFrontendWithTime SessionId ClientId ToBackend Time.Posix
     | SyncCodeForUserCreated String SessionId Time.Posix Int
+    | AdminJobTick Time.Posix
 
 
 type ToFrontend
@@ -49,3 +50,4 @@ type ToFrontend
     | EventSyncResult { events : List EventDefinition, lastSyncServerTime : Time.Posix }
     | ListSubscriptionAdded { userId : String, listId : String, timestamp : Time.Posix }
     | ListSubscriptionFailed
+    | UserRolesUpdated { userId : String, roles : List Role }

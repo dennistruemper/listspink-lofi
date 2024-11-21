@@ -182,6 +182,26 @@ update route msg model =
         Shared.Msg.SidebarToggled newValue ->
             ( { model | menuOpen = newValue }, Effect.none )
 
+        Shared.Msg.UserRolesUpdated data ->
+            let
+                updatedUser =
+                    case model.user of
+                        Just userData ->
+                            case userData of
+                                Bridge.UserOnDevice userOnDeviceData ->
+                                    Just (Bridge.UserOnDevice { userOnDeviceData | roles = data.roles })
+
+                                Bridge.Unknown ->
+                                    Just userData
+
+                        Nothing ->
+                            Nothing
+
+                effect =
+                    updatedUser |> Maybe.map Effect.storeUserData |> Maybe.withDefault Effect.none
+            in
+            ( { model | user = updatedUser }, effect )
+
 
 
 -- SUBSCRIPTIONS

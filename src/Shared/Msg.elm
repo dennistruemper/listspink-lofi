@@ -26,4 +26,5 @@ type Msg
     | GotMessageFromJs String
     | ConnectionEstablished
     | GotSyncResult { events : List EventDefinition, lastSyncServerTime : Time.Posix }
+    | UserRolesUpdated { userId : String, roles : List Role }
     | SidebarToggled Bool

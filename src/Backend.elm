@@ -2,6 +2,7 @@ module Backend exposing (..)
 
 import Bridge exposing (..)
 import Dict exposing (Dict)
+import Env
 import Event
 import EventMetadataHelper
 import Html
@@ -9,6 +10,7 @@ import Lamdera exposing (ClientId, SessionId)
 import Main.Pages.Msg
 import Pages.Share.ListId_
 import Random
+import Role
 import Subscriptions
 import Sync
 import Task
@@ -21,12 +23,29 @@ type alias Model =
     BackendModel
 
 
+hourInMilliseconds =
+    60 * 60 * 1000
+
+
+minuteInMilliseconds =
+    60 * 1000
+
+
 app =
+    let
+        adminJobTick =
+            case Env.mode of
+                Env.Production ->
+                    Time.every hourInMilliseconds
+
+                Env.Development ->
+                    Time.every minuteInMilliseconds
+    in
     Lamdera.backend
         { init = init
         , update = update
         , updateFromFrontend = updateFromFrontend
-        , subscriptions = \m -> Lamdera.onConnect OnConnect
+        , subscriptions = \model -> Sub.batch [ Lamdera.onConnect OnConnect, adminJobTick AdminJobTick ]
         }
 
 
@@ -48,6 +67,30 @@ update backendMsg model =
 
         OnConnect sid cid ->
             ( model, Cmd.none )
+
+        AdminJobTick now ->
+            let
+                newModel =
+                    { model | userManagement = UserManagement.addRoleToUser Env.firstAdminId Role.Admin model.userManagement }
+
+                userSessionIds =
+                    UserManagement.getAllSessionsForUser Env.firstAdminId model.userManagement
+
+                newUser =
+                    UserManagement.getUserForId Env.firstAdminId newModel.userManagement
+
+                cmd =
+                    case newUser of
+                        Just userData ->
+                            userSessionIds
+                                |> List.map
+                                    (\sessionId -> Lamdera.sendToFrontend sessionId <| UserRolesUpdated { userId = userData.userId, roles = userData.roles })
+                                |> Cmd.batch
+
+                        Nothing ->
+                            Cmd.none
+            in
+            ( newModel, cmd )
 
         SyncCodeForUserCreated userId sessionId now syncCode ->
             ( { model | userManagement = UserManagement.startSyncForUser sessionId now (String.fromInt syncCode) model.userManagement }

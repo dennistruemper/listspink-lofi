@@ -1,4 +1,4 @@
-module UserManagement exposing (Model, UserData, UserOnDeviceData, addDeviceDataToUser, addUser, cancelSync, getAllSessionsForUser, getOtherSessionsForUser, getSessionCount, getSyncCodeForUser, getUserForSession, init, reconnectUserOnDevice, startSyncForUser, useSyncCode)
+module UserManagement exposing (Model, UserData, UserOnDeviceData, addDeviceDataToUser, addRoleToUser, addUser, cancelSync, getAllSessionsForUser, getOtherSessionsForUser, getSessionCount, getSyncCodeForUser, getUserForId, getUserForSession, init, reconnectUserOnDevice, startSyncForUser, useSyncCode)
 
 import Dict exposing (Dict)
 import Role exposing (Role)
@@ -164,6 +164,11 @@ addDeviceDataToUser sessionId newUserData now model =
     { model | users = newUsers, userSessions = newSessions }
 
 
+getUserForId : String -> Model -> Maybe UserData
+getUserForId userId model =
+    Dict.get userId model.users
+
+
 getOtherSessionsForUser : String -> Model -> List String
 getOtherSessionsForUser sessionId model =
     let
@@ -264,6 +269,24 @@ useSyncCode sessionId data model =
                 }
             , user = Just user
             }
+
+
+addRoleToUser : String -> Role -> Model -> Model
+addRoleToUser userId role model =
+    let
+        user =
+            Dict.get userId model.users
+    in
+    case user of
+        Nothing ->
+            model
+
+        Just userData ->
+            if List.member role userData.roles then
+                model
+
+            else
+                { model | users = Dict.insert userId { userData | roles = role :: userData.roles } model.users }
 
 
 cancelSync : String -> Model -> Model

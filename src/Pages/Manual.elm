@@ -190,6 +190,8 @@ viewUser user =
                 , Html.text ("User Name: " ++ data.userName)
                 , Html.br [] []
                 , Html.text ("Device Name: " ++ data.deviceName)
+                , Html.br [] []
+                , Html.text ("Roles: " ++ (data.roles |> List.map Role.toString |> String.join ", "))
                 ]
 
         Just Bridge.Unknown ->
