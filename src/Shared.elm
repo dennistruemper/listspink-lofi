@@ -62,8 +62,9 @@ init flagsResult route =
       , syncModel = Sync.initFrontend
       , state = Event.initialState
       , menuOpen = False
+      , version = Nothing
       }
-    , Effect.batch [ Effect.generateIds, Effect.loadUserData, Effect.loadFrontendSyncModel ]
+    , Effect.batch [ Effect.generateIds, Effect.loadUserData, Effect.loadFrontendSyncModel, Effect.loadVersion ]
     )
 
 
@@ -164,6 +165,9 @@ update route msg model =
                                     Effect.sendCmd <| Lamdera.sendToBackend <| Bridge.ReconnectUser { userId = user.userId, deviceId = user.deviceId }
                     in
                     ( { model | user = Just userData }, reconnectEffect )
+
+                Ports.VersionLoaded version ->
+                    ( { model | version = version }, Effect.none )
 
                 Ports.UnknownMessage error ->
                     ( model, Effect.log error )

@@ -72,6 +72,13 @@ exports.init = async function (app) {
 
         break;
 
+      case "LoadVersion":
+        const version = localStorage.getItem("version");
+        app.ports[TO_ELM_PORT].send(
+          JSON.stringify({ tag: "VersionLoaded", data: version })
+        );
+        break;
+
       case "StoreFrontendSyncModel":
         await storeFrontendSyncModel(event.data);
         break;

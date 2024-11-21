@@ -2,6 +2,7 @@ module Pages.Manual exposing (Model, Msg(..), page)
 
 import Bridge
 import Components.Button as Button
+import Components.Text
 import Effect exposing (Effect)
 import Html
 import Html.Attributes
@@ -211,6 +212,8 @@ viewShared shared =
         , Html.text ("Sync Code: " ++ (shared.syncCode |> Maybe.map String.fromInt |> Maybe.withDefault "No code"))
         , Html.br [] []
         , Html.div [] [ Html.text "Next Ids:", viewNextIds shared.nextIds ]
+        , Html.br [] []
+        , Components.Text.keyValue "Version" (shared.version |> Maybe.withDefault "No version") |> Components.Text.view
         ]
 
 

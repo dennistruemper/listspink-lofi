@@ -32,4 +32,5 @@ type alias Model =
     , syncModel : Sync.FrontendSyncModel
     , state : Event.State
     , menuOpen : Bool
+    , version : Maybe String
     }

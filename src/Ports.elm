@@ -17,6 +17,7 @@ type ToElm
     | UserLoggedOut
     | UnknownMessage String
     | FrontendSyncModelDataLoaded (Result String Sync.FrontendSyncModel)
+    | VersionLoaded (Maybe String)
 
 
 type alias IdsGeneratedData =
@@ -72,6 +73,14 @@ decodeMsg json =
 
                 Err message ->
                     UnknownMessage (formatError "data for UserDataLoaded" message)
+
+        Ok "VersionLoaded" ->
+            case Json.Decode.decodeString (Json.Decode.field "data" Json.Decode.string) json of
+                Ok version ->
+                    VersionLoaded (Just version)
+
+                Err message ->
+                    VersionLoaded Nothing
 
         Ok "FrontendSyncModelDataLoaded" ->
             let

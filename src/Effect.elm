@@ -10,6 +10,7 @@ module Effect exposing
     , loadExternalUrl
     , loadFrontendSyncModel
     , loadUserData
+    , loadVersion
     , log
     , logout
     , map
@@ -101,6 +102,14 @@ loadUserData : Effect msg
 loadUserData =
     SendMessageToJavaScript
         { tag = "LoadUserData"
+        , data = Json.Encode.null
+        }
+
+
+loadVersion : Effect msg
+loadVersion =
+    SendMessageToJavaScript
+        { tag = "LoadVersion"
         , data = Json.Encode.null
         }
 

@@ -1,12 +1,14 @@
 module Pages.Settings exposing (Model, Msg(..), page)
 
 import Auth
+import Components.Text
 import Effect exposing (Effect)
 import Html
 import Layouts
 import Page exposing (Page)
 import Route exposing (Route)
 import Shared
+import Shared.Model
 import View exposing (View)
 
 
@@ -20,7 +22,7 @@ page user shared route =
         { init = init
         , update = update
         , subscriptions = subscriptions
-        , view = view
+        , view = view shared
         }
         |> Page.withLayout (toLayout user)
 
@@ -77,8 +79,15 @@ subscriptions model =
 -- VIEW
 
 
-view : Model -> View Msg
-view model =
+view : Shared.Model -> Model -> View Msg
+view shared model =
     { title = title
-    , body = [ Html.text "settings" ]
+    , body =
+        [ case shared.version of
+            Just version ->
+                Html.text <| "Version: " ++ version
+
+            Nothing ->
+                Html.div [] []
+        ]
     }

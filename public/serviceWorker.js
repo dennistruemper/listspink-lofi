@@ -7,6 +7,7 @@ self.addEventListener("install", (installEvent) => {
     })
   );
 });
+localStorage.setItem("version", cacheName.split("-")[1]);
 
 self.addEventListener("fetch", (event) => {
   // check if request is on my domain
