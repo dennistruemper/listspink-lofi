@@ -1,4 +1,5 @@
-const cacheName = "cache-v17";
+const version = "v17";
+const cacheName = `cache-${version}`;
 const assets = ["/"];
 self.addEventListener("install", (installEvent) => {
   installEvent.waitUntil(
@@ -6,14 +7,6 @@ self.addEventListener("install", (installEvent) => {
       cache.addAll(assets);
     })
   );
-  // Send version to client after installation
-  self.clients.matchAll().then((clients) => {
-    clients.forEach((client) => {
-      client.postMessage({
-        version: cacheName.split("-")[1],
-      });
-    });
-  });
 });
 
 self.addEventListener("fetch", (event) => {

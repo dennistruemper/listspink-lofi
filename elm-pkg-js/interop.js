@@ -2,6 +2,7 @@
 port supermario_copy_to_clipboard_to_js : String -> Cmd msg
 */
 
+const version = "v17";
 const userKey = "user";
 const frontendSyncModelKey = "frontendSyncModel";
 const dbName = "AppDatabase";
@@ -73,7 +74,6 @@ exports.init = async function (app) {
         break;
 
       case "LoadVersion":
-        const version = localStorage.getItem("version");
         app.ports[TO_ELM_PORT].send(
           JSON.stringify({ tag: "VersionLoaded", data: version })
         );
