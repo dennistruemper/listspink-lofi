@@ -12,13 +12,17 @@ module Components.Toast exposing
     , view
     , warning
     , withDuration
+    , withOnRemove
     , withPosition
     )
 
 import Dict exposing (Dict)
 import Html exposing (Html)
 import Html.Attributes as Attr
+import Html.Events as Events
 import Process
+import Svg exposing (svg)
+import Svg.Attributes as SvgAttr
 import Task
 
 
@@ -46,6 +50,7 @@ type alias Toast =
     , toastType : ToastType
     , position : Position
     , duration : Float -- in milliseconds
+    , onRemove : Maybe (Int -> Msg)
     }
 
 
@@ -73,6 +78,7 @@ create toastType message =
     , toastType = toastType
     , position = TopRight
     , duration = 3000
+    , onRemove = Nothing
     }
 
 
@@ -94,6 +100,11 @@ info message =
 warning : String -> Toast
 warning message =
     create Warning message
+
+
+withOnRemove : (Int -> Msg) -> Toast -> Toast
+withOnRemove onRemove toast =
+    { toast | onRemove = Just onRemove }
 
 
 withPosition : Position -> Toast -> Toast
@@ -134,16 +145,42 @@ typeToClass toastType =
             "bg-yellow-500"
 
 
-viewSingle : Toast -> Html msg
+viewSingle : Toast -> Html Msg
 viewSingle toast =
     Html.div
-        [ Attr.class "mb-2 px-4 py-2 text-white rounded shadow-lg"
+        [ Attr.class "mb-2 px-4 py-2 text-white rounded shadow-lg flex items-center justify-between"
         , Attr.class (typeToClass toast.toastType)
         ]
-        [ Html.text toast.message ]
+        ([ Html.text toast.message ]
+            ++ (toast.onRemove
+                    |> Maybe.map
+                        (\onRemove ->
+                            [ Html.button
+                                [ Attr.class "ml-4 p-1 hover:bg-black/20 rounded transition-colors"
+                                , Events.onClick (onRemove toast.id)
+                                ]
+                                [ svg
+                                    [ SvgAttr.width "16"
+                                    , SvgAttr.height "16"
+                                    , SvgAttr.viewBox "0 0 24 24"
+                                    , SvgAttr.fill "none"
+                                    , SvgAttr.stroke "currentColor"
+                                    , SvgAttr.strokeWidth "2"
+                                    , SvgAttr.strokeLinecap "round"
+                                    , SvgAttr.strokeLinejoin "round"
+                                    ]
+                                    [ Svg.path [ SvgAttr.d "M18 6L6 18" ] []
+                                    , Svg.path [ SvgAttr.d "M6 6l12 12" ] []
+                                    ]
+                                ]
+                            ]
+                        )
+                    |> Maybe.withDefault []
+               )
+        )
 
 
-view : Model -> Html msg
+view : Model -> Html Msg
 view model =
     let
         -- Get position from first toast, default to TopRight

@@ -18,6 +18,7 @@ module Effect exposing
     , none
     , pushRoute
     , pushRoutePath
+    , removeToast
     , replaceRoute
     , replaceRoutePath
     , sendCmd
@@ -164,6 +165,11 @@ getTime gotTimeMsg =
 addToast : Components.Toast.Toast -> Effect msg
 addToast toastInput =
     SendSharedMsg (Shared.Msg.AddToast toastInput)
+
+
+removeToast : Int -> Effect msg
+removeToast id =
+    SendSharedMsg (Shared.Msg.ToastMsg (Components.Toast.RemoveToast id))
 
 
 

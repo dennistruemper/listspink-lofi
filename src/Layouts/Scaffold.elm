@@ -58,6 +58,7 @@ type Msg
     = CloseSidebarClicked
     | OpenSidebarClicked
     | NavigationClicked Route.Path.Path
+    | ToastRemoveToast Int
 
 
 update : Msg -> Model -> ( Model, Effect Msg )
@@ -73,6 +74,9 @@ update msg model =
 
         NavigationClicked path ->
             ( model, Effect.pushRoutePath path )
+
+        ToastRemoveToast id ->
+            ( model, Effect.removeToast id )
 
 
 subscriptions : Model -> Sub Msg
@@ -115,6 +119,15 @@ scaffold shared caption toContentMsg content =
 
             else
                 []
+
+        toastView =
+            Components.Toast.view shared.toasts
+                |> Html.map
+                    (\toastMsg ->
+                        case toastMsg of
+                            Components.Toast.RemoveToast id ->
+                                toContentMsg (ToastRemoveToast id)
+                    )
     in
     main_ [ Attr.class " h-screen w-full flex flex-row safe-content h-screen-safe" ]
         (blur
@@ -164,7 +177,7 @@ scaffold shared caption toContentMsg content =
                     [ appBar caption toContentMsg
                     , div [ Attr.class "grow overflow-y-scroll" ] content
                     ]
-               , Components.Toast.view shared.toasts
+               , toastView
                ]
         )
 

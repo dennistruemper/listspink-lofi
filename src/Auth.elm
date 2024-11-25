@@ -65,5 +65,15 @@ ifAdminElse user onAllowed onDisallowed =
             onDisallowed
 
 
+redirectIfNotAdmin : Bridge.User -> Effect.Effect msg
 redirectIfNotAdmin user =
-    ifAdminElse user Effect.none (Effect.batch [ Effect.replaceRoutePath Route.Path.Home_, Effect.addToast (Components.Toast.error "You are not authorized to access this page.") ])
+    ifAdminElse user
+        Effect.none
+        (Effect.batch
+            [ Effect.replaceRoutePath Route.Path.Home_
+            , Effect.addToast
+                (Components.Toast.error "You are not authorized to access this page."
+                    |> Components.Toast.withOnRemove Components.Toast.RemoveToast
+                )
+            ]
+        )
