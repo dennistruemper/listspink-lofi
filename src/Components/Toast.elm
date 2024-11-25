@@ -50,7 +50,7 @@ type alias Toast =
     , toastType : ToastType
     , position : Position
     , duration : Float -- in milliseconds
-    , onRemove : Maybe (Int -> Msg)
+    , withRemove : Bool
     }
 
 
@@ -78,7 +78,7 @@ create toastType message =
     , toastType = toastType
     , position = TopRight
     , duration = 3000
-    , onRemove = Nothing
+    , withRemove = True
     }
 
 
@@ -102,9 +102,9 @@ warning message =
     create Warning message
 
 
-withOnRemove : (Int -> Msg) -> Toast -> Toast
-withOnRemove onRemove toast =
-    { toast | onRemove = Just onRemove }
+withOnRemove : Bool -> Toast -> Toast
+withOnRemove withRemove toast =
+    { toast | withRemove = withRemove }
 
 
 withPosition : Position -> Toast -> Toast
@@ -145,43 +145,42 @@ typeToClass toastType =
             "bg-yellow-500"
 
 
-viewSingle : Toast -> Html Msg
-viewSingle toast =
+viewSingle : (Msg -> msg) -> Toast -> Html msg
+viewSingle convertMsg toast =
     Html.div
         [ Attr.class "mb-2 px-4 py-2 text-white rounded shadow-lg flex items-center justify-between"
         , Attr.class (typeToClass toast.toastType)
         ]
         ([ Html.text toast.message ]
-            ++ (toast.onRemove
-                    |> Maybe.map
-                        (\onRemove ->
-                            [ Html.button
-                                [ Attr.class "ml-4 p-1 hover:bg-black/20 rounded transition-colors"
-                                , Events.onClick (onRemove toast.id)
-                                ]
-                                [ svg
-                                    [ SvgAttr.width "16"
-                                    , SvgAttr.height "16"
-                                    , SvgAttr.viewBox "0 0 24 24"
-                                    , SvgAttr.fill "none"
-                                    , SvgAttr.stroke "currentColor"
-                                    , SvgAttr.strokeWidth "2"
-                                    , SvgAttr.strokeLinecap "round"
-                                    , SvgAttr.strokeLinejoin "round"
-                                    ]
-                                    [ Svg.path [ SvgAttr.d "M18 6L6 18" ] []
-                                    , Svg.path [ SvgAttr.d "M6 6l12 12" ] []
-                                    ]
-                                ]
+            ++ (if toast.withRemove then
+                    [ Html.button
+                        [ Attr.class "ml-4 p-1 hover:bg-black/20 rounded transition-colors"
+                        , Events.onClick (convertMsg (RemoveToast toast.id))
+                        ]
+                        [ svg
+                            [ SvgAttr.width "16"
+                            , SvgAttr.height "16"
+                            , SvgAttr.viewBox "0 0 24 24"
+                            , SvgAttr.fill "none"
+                            , SvgAttr.stroke "currentColor"
+                            , SvgAttr.strokeWidth "2"
+                            , SvgAttr.strokeLinecap "round"
+                            , SvgAttr.strokeLinejoin "round"
                             ]
-                        )
-                    |> Maybe.withDefault []
+                            [ Svg.path [ SvgAttr.d "M18 6L6 18" ] []
+                            , Svg.path [ SvgAttr.d "M6 6l12 12" ] []
+                            ]
+                        ]
+                    ]
+
+                else
+                    []
                )
         )
 
 
-view : Model -> Html Msg
-view model =
+view : Model -> (Msg -> msg) -> Html msg
+view model convertMsg =
     let
         -- Get position from first toast, default to TopRight
         position =
@@ -211,5 +210,5 @@ view model =
         ]
         (model.toasts
             |> Dict.values
-            |> List.map viewSingle
+            |> List.map (viewSingle convertMsg)
         )

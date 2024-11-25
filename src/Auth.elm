@@ -72,8 +72,6 @@ redirectIfNotAdmin user =
         (Effect.batch
             [ Effect.replaceRoutePath Route.Path.Home_
             , Effect.addToast
-                (Components.Toast.error "You are not authorized to access this page."
-                    |> Components.Toast.withOnRemove Components.Toast.RemoveToast
-                )
+                (Components.Toast.error "You are not authorized to access this page.")
             ]
         )

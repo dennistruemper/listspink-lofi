@@ -96,6 +96,13 @@ view shared caption { toContentMsg, model, content } =
     }
 
 
+mapToastMsg : (Msg -> contentMsg) -> Components.Toast.Msg -> contentMsg
+mapToastMsg toContentMsg toastMsg =
+    case toastMsg of
+        Components.Toast.RemoveToast id ->
+            toContentMsg (ToastRemoveToast id)
+
+
 scaffold : Shared.Model -> Maybe String -> (Msg -> contentMsg) -> List (Html contentMsg) -> Html contentMsg
 scaffold shared caption toContentMsg content =
     let
@@ -121,13 +128,7 @@ scaffold shared caption toContentMsg content =
                 []
 
         toastView =
-            Components.Toast.view shared.toasts
-                |> Html.map
-                    (\toastMsg ->
-                        case toastMsg of
-                            Components.Toast.RemoveToast id ->
-                                toContentMsg (ToastRemoveToast id)
-                    )
+            Components.Toast.view shared.toasts (mapToastMsg toContentMsg)
     in
     main_ [ Attr.class " h-screen w-full flex flex-row safe-content h-screen-safe" ]
         (blur
