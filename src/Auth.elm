@@ -1,8 +1,10 @@
-module Auth exposing (User, onPageLoad, viewCustomPage)
+module Auth exposing (User, ifAdminElse, onPageLoad, redirectIfNotAdmin, viewCustomPage)
 
 import Auth.Action
 import Bridge
 import Dict
+import Effect
+import Role
 import Route exposing (Route)
 import Route.Path
 import Shared
@@ -46,3 +48,21 @@ redirectToSetupPage route =
 viewCustomPage : Shared.Model -> Route () -> View Never
 viewCustomPage shared route =
     View.fromString "Loading..."
+
+
+ifAdminElse : Bridge.User -> a -> a -> a
+ifAdminElse user onAllowed onDisallowed =
+    case user of
+        Bridge.UserOnDevice userData ->
+            if userData.roles |> List.member Role.Admin then
+                onAllowed
+
+            else
+                onDisallowed
+
+        Bridge.Unknown ->
+            onDisallowed
+
+
+redirectIfNotAdmin user =
+    ifAdminElse user Effect.none (Effect.replaceRoutePath Route.Path.Home_)

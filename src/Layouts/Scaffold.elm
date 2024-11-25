@@ -8,6 +8,7 @@ import Html exposing (..)
 import Html.Attributes as Attr exposing (class)
 import Html.Events
 import Layout exposing (Layout)
+import Role
 import Route exposing (Route)
 import Route.Path
 import Shared
@@ -147,6 +148,8 @@ scaffold shared caption toContentMsg content =
                     , menuEntry toContentMsg Route.Path.Lists "Lists"
                     , div [ Attr.class "grow" ] []
                     , div [ Attr.class "hidden lg:block" ] [ horizontalDevider ]
+                    , menuEntryEnabledForRole toContentMsg shared.user Role.Admin Route.Path.Manual "Admin"
+                    , horizontalDevider
                     , menuEntry toContentMsg Route.Path.Account "Account"
                     , horizontalDevider
                     , menuEntry toContentMsg Route.Path.Credits "Credits"
@@ -162,6 +165,23 @@ scaffold shared caption toContentMsg content =
                     ]
                ]
         )
+
+
+menuEntryEnabledForRole : (Msg -> contentMsg) -> Maybe Auth.User -> Role.Role -> Route.Path.Path -> String -> Html contentMsg
+menuEntryEnabledForRole toContentMsg user role path caption =
+    case user of
+        Just Bridge.Unknown ->
+            div [] []
+
+        Just (Bridge.UserOnDevice userData) ->
+            if userData.roles |> List.member role then
+                menuEntry toContentMsg path caption
+
+            else
+                div [] []
+
+        Nothing ->
+            div [] []
 
 
 menuEntry : (Msg -> contentMsg) -> Route.Path.Path -> String -> Html contentMsg

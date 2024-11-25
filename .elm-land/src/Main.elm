@@ -388,24 +388,28 @@ initPageAndLayout model =
                 )
 
         Route.Path.Manual ->
-            let
-                page : Page.Page Pages.Manual.Model Pages.Manual.Msg
-                page =
-                    Pages.Manual.page model.shared (Route.fromUrl () model.url)
+            runWhenAuthenticatedWithLayout
+                model
+                (\user ->
+                    let
+                        page : Page.Page Pages.Manual.Model Pages.Manual.Msg
+                        page =
+                            Pages.Manual.page user model.shared (Route.fromUrl () model.url)
 
-                ( pageModel, pageEffect ) =
-                    Page.init page ()
-            in
-            { page = 
-                Tuple.mapBoth
-                    Main.Pages.Model.Manual
-                    (Effect.map Main.Pages.Msg.Manual >> fromPageEffect model)
-                    ( pageModel, pageEffect )
-            , layout = 
-                Page.layout pageModel page
-                    |> Maybe.map (Layouts.map (Main.Pages.Msg.Manual >> Page))
-                    |> Maybe.map (initLayout model)
-            }
+                        ( pageModel, pageEffect ) =
+                            Page.init page ()
+                    in
+                    { page = 
+                        Tuple.mapBoth
+                            Main.Pages.Model.Manual
+                            (Effect.map Main.Pages.Msg.Manual >> fromPageEffect model)
+                            ( pageModel, pageEffect )
+                    , layout = 
+                        Page.layout pageModel page
+                            |> Maybe.map (Layouts.map (Main.Pages.Msg.Manual >> Page))
+                            |> Maybe.map (initLayout model)
+                    }
+                )
 
         Route.Path.Settings ->
             runWhenAuthenticatedWithLayout
@@ -880,10 +884,14 @@ updateFromPage msg model =
                 )
 
         ( Main.Pages.Msg.Manual pageMsg, Main.Pages.Model.Manual pageModel ) ->
-            Tuple.mapBoth
-                Main.Pages.Model.Manual
-                (Effect.map Main.Pages.Msg.Manual >> fromPageEffect model)
-                (Page.update (Pages.Manual.page model.shared (Route.fromUrl () model.url)) pageMsg pageModel)
+            runWhenAuthenticated
+                model
+                (\user ->
+                    Tuple.mapBoth
+                        Main.Pages.Model.Manual
+                        (Effect.map Main.Pages.Msg.Manual >> fromPageEffect model)
+                        (Page.update (Pages.Manual.page user model.shared (Route.fromUrl () model.url)) pageMsg pageModel)
+                )
 
         ( Main.Pages.Msg.Settings pageMsg, Main.Pages.Model.Settings pageModel ) ->
             runWhenAuthenticated
@@ -1036,8 +1044,8 @@ toLayoutFromPage model =
 
         Main.Pages.Model.Manual pageModel ->
             Route.fromUrl () model.url
-                |> Pages.Manual.page model.shared
-                |> Page.layout pageModel
+                |> toAuthProtectedPage model Pages.Manual.page
+                |> Maybe.andThen (Page.layout pageModel)
                 |> Maybe.map (Layouts.map (Main.Pages.Msg.Manual >> Page))
 
         Main.Pages.Model.Settings pageModel ->
@@ -1227,9 +1235,13 @@ subscriptions model =
                         (Auth.onPageLoad model.shared (Route.fromUrl () model.url))
 
                 Main.Pages.Model.Manual pageModel ->
-                    Page.subscriptions (Pages.Manual.page model.shared (Route.fromUrl () model.url)) pageModel
-                        |> Sub.map Main.Pages.Msg.Manual
-                        |> Sub.map Page
+                    Auth.Action.subscriptions
+                        (\user ->
+                            Page.subscriptions (Pages.Manual.page user model.shared (Route.fromUrl () model.url)) pageModel
+                                |> Sub.map Main.Pages.Msg.Manual
+                                |> Sub.map Page
+                        )
+                        (Auth.onPageLoad model.shared (Route.fromUrl () model.url))
 
                 Main.Pages.Model.Settings pageModel ->
                     Auth.Action.subscriptions
@@ -1452,9 +1464,13 @@ viewPage model =
                 (Auth.onPageLoad model.shared (Route.fromUrl () model.url))
 
         Main.Pages.Model.Manual pageModel ->
-            Page.view (Pages.Manual.page model.shared (Route.fromUrl () model.url)) pageModel
-                |> View.map Main.Pages.Msg.Manual
-                |> View.map Page
+            Auth.Action.view (View.map never (Auth.viewCustomPage model.shared (Route.fromUrl () model.url)))
+                (\user ->
+                    Page.view (Pages.Manual.page user model.shared (Route.fromUrl () model.url)) pageModel
+                        |> View.map Main.Pages.Msg.Manual
+                        |> View.map Page
+                )
+                (Auth.onPageLoad model.shared (Route.fromUrl () model.url))
 
         Main.Pages.Model.Settings pageModel ->
             Auth.Action.view (View.map never (Auth.viewCustomPage model.shared (Route.fromUrl () model.url)))
@@ -1678,10 +1694,14 @@ toPageUrlHookCmd model routes =
                 (Auth.onPageLoad model.shared (Route.fromUrl () model.url))
 
         Main.Pages.Model.Manual pageModel ->
-            Page.toUrlMessages routes (Pages.Manual.page model.shared (Route.fromUrl () model.url)) 
-                |> List.map Main.Pages.Msg.Manual
-                |> List.map Page
-                |> toCommands
+            Auth.Action.command
+                (\user ->
+                    Page.toUrlMessages routes (Pages.Manual.page user model.shared (Route.fromUrl () model.url)) 
+                        |> List.map Main.Pages.Msg.Manual
+                        |> List.map Page
+                        |> toCommands
+                )
+                (Auth.onPageLoad model.shared (Route.fromUrl () model.url))
 
         Main.Pages.Model.Settings pageModel ->
             Auth.Action.command
@@ -1830,7 +1850,7 @@ isAuthProtected routePath =
             True
 
         Route.Path.Manual ->
-            False
+            True
 
         Route.Path.Settings ->
             True

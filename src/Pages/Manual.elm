@@ -1,5 +1,6 @@
 module Pages.Manual exposing (Model, Msg(..), page)
 
+import Auth
 import Bridge
 import Components.Button as Button
 import Components.Text
@@ -17,13 +18,13 @@ import Shared.Msg
 import View exposing (View)
 
 
-page : Shared.Model -> Route () -> Page Model Msg
-page shared route =
+page : Auth.User -> Shared.Model -> Route () -> Page Model Msg
+page user shared route =
     Page.new
-        { init = init
+        { init = init user
         , update = update
         , subscriptions = subscriptions
-        , view = view shared
+        , view = view user shared
         }
 
 
@@ -39,14 +40,14 @@ type alias Model =
     }
 
 
-init : () -> ( Model, Effect Msg )
-init () =
+init : Auth.User -> () -> ( Model, Effect Msg )
+init user () =
     ( { newUserId = ""
       , newDeviceId = ""
       , newUserName = ""
       , newDeviceName = ""
       }
-    , Effect.none
+    , Auth.redirectIfNotAdmin user
     )
 
 
@@ -135,47 +136,49 @@ subscriptions model =
 -- VIEW
 
 
-view : Shared.Model -> Model -> View Msg
-view shared model =
+view : Auth.User -> Shared.Model -> Model -> View Msg
+view user shared model =
     { title = "Pages.Menual.NewUser"
     , body =
-        [ Html.input
-            [ Html.Attributes.placeholder "User ID"
-            , Html.Attributes.value model.newUserId
-            , Html.Events.onInput NewUseridChanged
+        Auth.ifAdminElse user
+            [ Html.input
+                [ Html.Attributes.placeholder "User ID"
+                , Html.Attributes.value model.newUserId
+                , Html.Events.onInput NewUseridChanged
+                ]
+                []
+            , Html.input
+                [ Html.Attributes.placeholder "Device ID"
+                , Html.Attributes.value model.newDeviceId
+                , Html.Events.onInput NewDeviceIdChanged
+                ]
+                []
+            , Html.input
+                [ Html.Attributes.placeholder "User Name"
+                , Html.Attributes.value model.newUserName
+                , Html.Events.onInput NewUserNameChanged
+                ]
+                []
+            , Html.input
+                [ Html.Attributes.placeholder "Device Name"
+                , Html.Attributes.value model.newDeviceName
+                , Html.Events.onInput NewDeviceNameChanged
+                ]
+                []
+            , Button.button "Create" CreateUserButtonClicked |> Button.view
+            , Button.button "Reconnect" ReconnectUser |> Button.view
+            , Html.br [] []
+            , Button.button "Request Admin Data" AdminDataRequested |> Button.view
+            , Html.text "TODO AdminData" -- shared.adminData
+            , Html.br [] []
+            , Html.text ("Code:" ++ (shared.syncCode |> Maybe.map String.fromInt |> Maybe.withDefault "No code"))
+            , Html.br [] []
+            , Html.br [] []
+            , Html.div [] [ Html.text "User:", viewUser shared.user ]
+            , Html.br [] []
+            , viewShared shared
             ]
-            []
-        , Html.input
-            [ Html.Attributes.placeholder "Device ID"
-            , Html.Attributes.value model.newDeviceId
-            , Html.Events.onInput NewDeviceIdChanged
-            ]
-            []
-        , Html.input
-            [ Html.Attributes.placeholder "User Name"
-            , Html.Attributes.value model.newUserName
-            , Html.Events.onInput NewUserNameChanged
-            ]
-            []
-        , Html.input
-            [ Html.Attributes.placeholder "Device Name"
-            , Html.Attributes.value model.newDeviceName
-            , Html.Events.onInput NewDeviceNameChanged
-            ]
-            []
-        , Button.button "Create" CreateUserButtonClicked |> Button.view
-        , Button.button "Reconnect" ReconnectUser |> Button.view
-        , Html.br [] []
-        , Button.button "Request Admin Data" AdminDataRequested |> Button.view
-        , Html.text "TODO AdminData" -- shared.adminData
-        , Html.br [] []
-        , Html.text ("Code:" ++ (shared.syncCode |> Maybe.map String.fromInt |> Maybe.withDefault "No code"))
-        , Html.br [] []
-        , Html.br [] []
-        , Html.div [] [ Html.text "User:", viewUser shared.user ]
-        , Html.br [] []
-        , viewShared shared
-        ]
+            [ Html.text "Not allowed" ]
     }
 
 
