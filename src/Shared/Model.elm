@@ -1,6 +1,7 @@
 module Shared.Model exposing (Model, NextIds)
 
 import Bridge
+import Components.Toast
 import Dict exposing (Dict)
 import Event exposing (EventDefinition)
 import Subscriptions
@@ -33,4 +34,5 @@ type alias Model =
     , state : Event.State
     , menuOpen : Bool
     , version : Maybe String
+    , toasts : Components.Toast.Model
     }

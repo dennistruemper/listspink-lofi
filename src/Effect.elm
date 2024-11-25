@@ -2,6 +2,7 @@ module Effect exposing
     ( Effect
     , accountCreated
     , addEvent
+    , addToast
     , back
     , batch
     , copyToClipboard
@@ -29,11 +30,13 @@ module Effect exposing
 
 import Bridge
 import Browser.Navigation
+import Components.Toast
 import Dict exposing (Dict)
 import Event exposing (EventDefinition)
 import FrontendSyncModelSerializer
 import Json.Encode
 import Ports
+import Process
 import Route exposing (Route)
 import Route.Path
 import Shared.Model
@@ -158,7 +161,14 @@ getTime gotTimeMsg =
     SendCmd (Time.now |> Task.perform gotTimeMsg)
 
 
+addToast : Components.Toast.Toast -> Effect msg
+addToast toastInput =
+    SendSharedMsg (Shared.Msg.AddToast toastInput)
 
+
+
+--]
+--]
 -- BASICS
 
 

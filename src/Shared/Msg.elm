@@ -1,6 +1,7 @@
 module Shared.Msg exposing (Msg(..))
 
 import Bridge
+import Components.Toast
 import Dict exposing (Dict)
 import Event exposing (EventDefinition)
 import Role exposing (Role)
@@ -28,3 +29,5 @@ type Msg
     | GotSyncResult { events : List EventDefinition, lastSyncServerTime : Time.Posix }
     | UserRolesUpdated { userId : String, roles : List Role }
     | SidebarToggled Bool
+    | AddToast Components.Toast.Toast
+    | ToastMsg Components.Toast.Msg

@@ -3,6 +3,7 @@ module Layouts.Scaffold exposing (Model, Msg(..), Props, layout)
 import Auth
 import Bridge
 import Components.Caption as Caption
+import Components.Toast
 import Effect exposing (Effect)
 import Html exposing (..)
 import Html.Attributes as Attr exposing (class)
@@ -163,6 +164,7 @@ scaffold shared caption toContentMsg content =
                     [ appBar caption toContentMsg
                     , div [ Attr.class "grow overflow-y-scroll" ] content
                     ]
+               , Components.Toast.view shared.toasts
                ]
         )
 

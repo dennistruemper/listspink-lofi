@@ -2,6 +2,7 @@ module Auth exposing (User, ifAdminElse, onPageLoad, redirectIfNotAdmin, viewCus
 
 import Auth.Action
 import Bridge
+import Components.Toast
 import Dict
 import Effect
 import Role
@@ -65,4 +66,4 @@ ifAdminElse user onAllowed onDisallowed =
 
 
 redirectIfNotAdmin user =
-    ifAdminElse user Effect.none (Effect.replaceRoutePath Route.Path.Home_)
+    ifAdminElse user Effect.none (Effect.batch [ Effect.replaceRoutePath Route.Path.Home_, Effect.addToast (Components.Toast.error "You are not authorized to access this page.") ])

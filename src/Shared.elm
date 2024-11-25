@@ -13,6 +13,7 @@ module Shared exposing
 -}
 
 import Bridge
+import Components.Toast
 import Dict
 import Effect exposing (Effect)
 import Event
@@ -20,6 +21,7 @@ import EventMetadataHelper
 import Json.Decode
 import Lamdera
 import Ports
+import Process
 import Route exposing (Route)
 import Route.Path
 import Set
@@ -63,6 +65,7 @@ init flagsResult route =
       , state = Event.initialState
       , menuOpen = False
       , version = Nothing
+      , toasts = Components.Toast.init
       }
     , Effect.batch [ Effect.generateIds, Effect.loadUserData, Effect.loadFrontendSyncModel, Effect.loadVersion ]
     )
@@ -205,6 +208,23 @@ update route msg model =
                     updatedUser |> Maybe.map Effect.storeUserData |> Maybe.withDefault Effect.none
             in
             ( { model | user = updatedUser }, effect )
+
+        Shared.Msg.AddToast toast ->
+            let
+                ( newToasts, toastId ) =
+                    Components.Toast.addToast toast model.toasts
+
+                effect =
+                    Effect.sendCmd (Task.perform (\_ -> Shared.Msg.ToastMsg (Components.Toast.RemoveToast toastId)) (Process.sleep toast.duration))
+            in
+            ( { model | toasts = newToasts }, effect )
+
+        Shared.Msg.ToastMsg toastMsg ->
+            let
+                newModel =
+                    { model | toasts = Components.Toast.update toastMsg model.toasts }
+            in
+            ( newModel, Effect.none )
 
 
 
