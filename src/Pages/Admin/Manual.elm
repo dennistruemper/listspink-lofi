@@ -1,4 +1,4 @@
-module Pages.Manual exposing (Model, Msg(..), page)
+module Pages.Admin.Manual exposing (Model, Msg(..), page)
 
 import Auth
 import Bridge

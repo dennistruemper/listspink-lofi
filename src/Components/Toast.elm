@@ -37,6 +37,41 @@ type Position
     | BottomLeft
 
 
+serializePosition : Position -> String
+serializePosition position =
+    case position of
+        TopRight ->
+            "top-right"
+
+        TopLeft ->
+            "top-left"
+
+        BottomRight ->
+            "bottom-right"
+
+        BottomLeft ->
+            "bottom-left"
+
+
+deserializePosition : String -> Position
+deserializePosition position =
+    case position of
+        "top-right" ->
+            TopRight
+
+        "top-left" ->
+            TopLeft
+
+        "bottom-right" ->
+            BottomRight
+
+        "bottom-left" ->
+            BottomLeft
+
+        _ ->
+            TopRight
+
+
 type ToastType
     = Success
     | Error
@@ -182,33 +217,44 @@ viewSingle convertMsg toast =
 view : Model -> (Msg -> msg) -> Html msg
 view model convertMsg =
     let
-        -- Get position from first toast, default to TopRight
-        position =
+        toastsByPosition =
             model.toasts
                 |> Dict.values
-                |> List.head
-                |> Maybe.map .position
-                |> Maybe.withDefault TopRight
+                |> List.foldr
+                    (\toast acc ->
+                        Dict.update (serializePosition toast.position)
+                            (\maybeToasts ->
+                                Just (toast :: Maybe.withDefault [] maybeToasts)
+                            )
+                            acc
+                    )
+                    Dict.empty
 
-        containerPosition =
-            case position of
-                TopRight ->
-                    "top-4 right-4"
+        viewContainer : Position -> List Toast -> Html msg
+        viewContainer position toasts =
+            let
+                containerPosition =
+                    case position of
+                        TopRight ->
+                            "top-4 right-4"
 
-                TopLeft ->
-                    "top-4 left-4"
+                        TopLeft ->
+                            "top-4 left-4"
 
-                BottomRight ->
-                    "bottom-4 right-4"
+                        BottomRight ->
+                            "bottom-4 right-4"
 
-                BottomLeft ->
-                    "bottom-4 left-4"
+                        BottomLeft ->
+                            "bottom-4 left-4"
+            in
+            Html.div
+                [ Attr.class "fixed z-50 flex flex-col min-w-[200px] max-w-[400px]"
+                , Attr.class containerPosition
+                ]
+                (List.map (viewSingle convertMsg) toasts)
     in
-    Html.div
-        [ Attr.class "fixed z-50 flex flex-col min-w-[200px] max-w-[400px]"
-        , Attr.class containerPosition
-        ]
-        (model.toasts
-            |> Dict.values
-            |> List.map (viewSingle convertMsg)
+    Html.div []
+        (toastsByPosition
+            |> Dict.toList
+            |> List.map (\( position, toasts ) -> viewContainer (deserializePosition position) toasts)
         )

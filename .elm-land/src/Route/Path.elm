@@ -9,7 +9,8 @@ import Url.Parser exposing ((</>))
 type Path
     = Home_
     | Account
-    | Admin
+    | Admin_Manual
+    | Admin_Menu
     | Credits
     | List_ImportShared
     | Lists
@@ -18,7 +19,6 @@ type Path
     | Lists_Id__CreateItem { id : String }
     | Lists_ListId_ { listId : String }
     | Lists_ListId__Edit_ItemId_ { listId : String, itemId : String }
-    | Manual
     | Settings
     | Setup
     | Setup_Connect
@@ -50,8 +50,11 @@ fromString urlPath =
         "account" :: [] ->
             Just Account
 
-        "admin" :: [] ->
-            Just Admin
+        "admin" :: "manual" :: [] ->
+            Just Admin_Manual
+
+        "admin" :: "menu" :: [] ->
+            Just Admin_Menu
 
         "credits" :: [] ->
             Just Credits
@@ -89,9 +92,6 @@ fromString urlPath =
                 , itemId = itemId_
                 }
                 |> Just
-
-        "manual" :: [] ->
-            Just Manual
 
         "settings" :: [] ->
             Just Settings
@@ -135,8 +135,11 @@ toString path =
                 Account ->
                     [ "account" ]
 
-                Admin ->
-                    [ "admin" ]
+                Admin_Manual ->
+                    [ "admin", "manual" ]
+
+                Admin_Menu ->
+                    [ "admin", "menu" ]
 
                 Credits ->
                     [ "credits" ]
@@ -161,9 +164,6 @@ toString path =
 
                 Lists_ListId__Edit_ItemId_ params ->
                     [ "lists", params.listId, "edit", params.itemId ]
-
-                Manual ->
-                    [ "manual" ]
 
                 Settings ->
                     [ "settings" ]

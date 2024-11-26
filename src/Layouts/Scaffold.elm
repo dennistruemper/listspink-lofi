@@ -163,7 +163,7 @@ scaffold shared caption toContentMsg content =
                     , menuEntry toContentMsg Route.Path.Lists "Lists"
                     , div [ Attr.class "grow" ] []
                     , div [ Attr.class "hidden lg:block" ] [ horizontalDevider ]
-                    , menuEntryEnabledForRole toContentMsg shared.user Role.Admin Route.Path.Manual "Admin"
+                    , menuEntryEnabledForRole toContentMsg shared.user Role.Admin Route.Path.Admin_Menu "Admin"
                     , horizontalDevider
                     , menuEntry toContentMsg Route.Path.Account "Account"
                     , horizontalDevider

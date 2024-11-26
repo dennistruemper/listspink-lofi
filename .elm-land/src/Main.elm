@@ -17,7 +17,8 @@ import Main.Pages.Msg
 import Page
 import Pages.Home_
 import Pages.Account
-import Pages.Admin
+import Pages.Admin.Manual
+import Pages.Admin.Menu
 import Pages.Credits
 import Pages.List.ImportShared
 import Pages.Lists
@@ -26,7 +27,6 @@ import Pages.Lists.Edit.ListId_
 import Pages.Lists.Id_.CreateItem
 import Pages.Lists.ListId_
 import Pages.Lists.ListId_.Edit.ItemId_
-import Pages.Manual
 import Pages.Settings
 import Pages.Setup
 import Pages.Setup.Connect
@@ -171,26 +171,50 @@ initPageAndLayout model =
                     }
                 )
 
-        Route.Path.Admin ->
+        Route.Path.Admin_Manual ->
             runWhenAuthenticatedWithLayout
                 model
                 (\user ->
                     let
-                        page : Page.Page Pages.Admin.Model Pages.Admin.Msg
+                        page : Page.Page Pages.Admin.Manual.Model Pages.Admin.Manual.Msg
                         page =
-                            Pages.Admin.page user model.shared (Route.fromUrl () model.url)
+                            Pages.Admin.Manual.page user model.shared (Route.fromUrl () model.url)
 
                         ( pageModel, pageEffect ) =
                             Page.init page ()
                     in
                     { page = 
                         Tuple.mapBoth
-                            Main.Pages.Model.Admin
-                            (Effect.map Main.Pages.Msg.Admin >> fromPageEffect model)
+                            Main.Pages.Model.Admin_Manual
+                            (Effect.map Main.Pages.Msg.Admin_Manual >> fromPageEffect model)
                             ( pageModel, pageEffect )
                     , layout = 
                         Page.layout pageModel page
-                            |> Maybe.map (Layouts.map (Main.Pages.Msg.Admin >> Page))
+                            |> Maybe.map (Layouts.map (Main.Pages.Msg.Admin_Manual >> Page))
+                            |> Maybe.map (initLayout model)
+                    }
+                )
+
+        Route.Path.Admin_Menu ->
+            runWhenAuthenticatedWithLayout
+                model
+                (\user ->
+                    let
+                        page : Page.Page Pages.Admin.Menu.Model Pages.Admin.Menu.Msg
+                        page =
+                            Pages.Admin.Menu.page user model.shared (Route.fromUrl () model.url)
+
+                        ( pageModel, pageEffect ) =
+                            Page.init page ()
+                    in
+                    { page = 
+                        Tuple.mapBoth
+                            Main.Pages.Model.Admin_Menu
+                            (Effect.map Main.Pages.Msg.Admin_Menu >> fromPageEffect model)
+                            ( pageModel, pageEffect )
+                    , layout = 
+                        Page.layout pageModel page
+                            |> Maybe.map (Layouts.map (Main.Pages.Msg.Admin_Menu >> Page))
                             |> Maybe.map (initLayout model)
                     }
                 )
@@ -383,30 +407,6 @@ initPageAndLayout model =
                     , layout = 
                         Page.layout pageModel page
                             |> Maybe.map (Layouts.map (Main.Pages.Msg.Lists_ListId__Edit_ItemId_ >> Page))
-                            |> Maybe.map (initLayout model)
-                    }
-                )
-
-        Route.Path.Manual ->
-            runWhenAuthenticatedWithLayout
-                model
-                (\user ->
-                    let
-                        page : Page.Page Pages.Manual.Model Pages.Manual.Msg
-                        page =
-                            Pages.Manual.page user model.shared (Route.fromUrl () model.url)
-
-                        ( pageModel, pageEffect ) =
-                            Page.init page ()
-                    in
-                    { page = 
-                        Tuple.mapBoth
-                            Main.Pages.Model.Manual
-                            (Effect.map Main.Pages.Msg.Manual >> fromPageEffect model)
-                            ( pageModel, pageEffect )
-                    , layout = 
-                        Page.layout pageModel page
-                            |> Maybe.map (Layouts.map (Main.Pages.Msg.Manual >> Page))
                             |> Maybe.map (initLayout model)
                     }
                 )
@@ -793,14 +793,24 @@ updateFromPage msg model =
                         (Page.update (Pages.Account.page user model.shared (Route.fromUrl () model.url)) pageMsg pageModel)
                 )
 
-        ( Main.Pages.Msg.Admin pageMsg, Main.Pages.Model.Admin pageModel ) ->
+        ( Main.Pages.Msg.Admin_Manual pageMsg, Main.Pages.Model.Admin_Manual pageModel ) ->
             runWhenAuthenticated
                 model
                 (\user ->
                     Tuple.mapBoth
-                        Main.Pages.Model.Admin
-                        (Effect.map Main.Pages.Msg.Admin >> fromPageEffect model)
-                        (Page.update (Pages.Admin.page user model.shared (Route.fromUrl () model.url)) pageMsg pageModel)
+                        Main.Pages.Model.Admin_Manual
+                        (Effect.map Main.Pages.Msg.Admin_Manual >> fromPageEffect model)
+                        (Page.update (Pages.Admin.Manual.page user model.shared (Route.fromUrl () model.url)) pageMsg pageModel)
+                )
+
+        ( Main.Pages.Msg.Admin_Menu pageMsg, Main.Pages.Model.Admin_Menu pageModel ) ->
+            runWhenAuthenticated
+                model
+                (\user ->
+                    Tuple.mapBoth
+                        Main.Pages.Model.Admin_Menu
+                        (Effect.map Main.Pages.Msg.Admin_Menu >> fromPageEffect model)
+                        (Page.update (Pages.Admin.Menu.page user model.shared (Route.fromUrl () model.url)) pageMsg pageModel)
                 )
 
         ( Main.Pages.Msg.Credits pageMsg, Main.Pages.Model.Credits pageModel ) ->
@@ -881,16 +891,6 @@ updateFromPage msg model =
                         (Main.Pages.Model.Lists_ListId__Edit_ItemId_ params)
                         (Effect.map Main.Pages.Msg.Lists_ListId__Edit_ItemId_ >> fromPageEffect model)
                         (Page.update (Pages.Lists.ListId_.Edit.ItemId_.page user model.shared (Route.fromUrl params model.url)) pageMsg pageModel)
-                )
-
-        ( Main.Pages.Msg.Manual pageMsg, Main.Pages.Model.Manual pageModel ) ->
-            runWhenAuthenticated
-                model
-                (\user ->
-                    Tuple.mapBoth
-                        Main.Pages.Model.Manual
-                        (Effect.map Main.Pages.Msg.Manual >> fromPageEffect model)
-                        (Page.update (Pages.Manual.page user model.shared (Route.fromUrl () model.url)) pageMsg pageModel)
                 )
 
         ( Main.Pages.Msg.Settings pageMsg, Main.Pages.Model.Settings pageModel ) ->
@@ -988,11 +988,17 @@ toLayoutFromPage model =
                 |> Maybe.andThen (Page.layout pageModel)
                 |> Maybe.map (Layouts.map (Main.Pages.Msg.Account >> Page))
 
-        Main.Pages.Model.Admin pageModel ->
+        Main.Pages.Model.Admin_Manual pageModel ->
             Route.fromUrl () model.url
-                |> toAuthProtectedPage model Pages.Admin.page
+                |> toAuthProtectedPage model Pages.Admin.Manual.page
                 |> Maybe.andThen (Page.layout pageModel)
-                |> Maybe.map (Layouts.map (Main.Pages.Msg.Admin >> Page))
+                |> Maybe.map (Layouts.map (Main.Pages.Msg.Admin_Manual >> Page))
+
+        Main.Pages.Model.Admin_Menu pageModel ->
+            Route.fromUrl () model.url
+                |> toAuthProtectedPage model Pages.Admin.Menu.page
+                |> Maybe.andThen (Page.layout pageModel)
+                |> Maybe.map (Layouts.map (Main.Pages.Msg.Admin_Menu >> Page))
 
         Main.Pages.Model.Credits pageModel ->
             Route.fromUrl () model.url
@@ -1041,12 +1047,6 @@ toLayoutFromPage model =
                 |> toAuthProtectedPage model Pages.Lists.ListId_.Edit.ItemId_.page
                 |> Maybe.andThen (Page.layout pageModel)
                 |> Maybe.map (Layouts.map (Main.Pages.Msg.Lists_ListId__Edit_ItemId_ >> Page))
-
-        Main.Pages.Model.Manual pageModel ->
-            Route.fromUrl () model.url
-                |> toAuthProtectedPage model Pages.Manual.page
-                |> Maybe.andThen (Page.layout pageModel)
-                |> Maybe.map (Layouts.map (Main.Pages.Msg.Manual >> Page))
 
         Main.Pages.Model.Settings pageModel ->
             Route.fromUrl () model.url
@@ -1153,11 +1153,20 @@ subscriptions model =
                         )
                         (Auth.onPageLoad model.shared (Route.fromUrl () model.url))
 
-                Main.Pages.Model.Admin pageModel ->
+                Main.Pages.Model.Admin_Manual pageModel ->
                     Auth.Action.subscriptions
                         (\user ->
-                            Page.subscriptions (Pages.Admin.page user model.shared (Route.fromUrl () model.url)) pageModel
-                                |> Sub.map Main.Pages.Msg.Admin
+                            Page.subscriptions (Pages.Admin.Manual.page user model.shared (Route.fromUrl () model.url)) pageModel
+                                |> Sub.map Main.Pages.Msg.Admin_Manual
+                                |> Sub.map Page
+                        )
+                        (Auth.onPageLoad model.shared (Route.fromUrl () model.url))
+
+                Main.Pages.Model.Admin_Menu pageModel ->
+                    Auth.Action.subscriptions
+                        (\user ->
+                            Page.subscriptions (Pages.Admin.Menu.page user model.shared (Route.fromUrl () model.url)) pageModel
+                                |> Sub.map Main.Pages.Msg.Admin_Menu
                                 |> Sub.map Page
                         )
                         (Auth.onPageLoad model.shared (Route.fromUrl () model.url))
@@ -1230,15 +1239,6 @@ subscriptions model =
                         (\user ->
                             Page.subscriptions (Pages.Lists.ListId_.Edit.ItemId_.page user model.shared (Route.fromUrl params model.url)) pageModel
                                 |> Sub.map Main.Pages.Msg.Lists_ListId__Edit_ItemId_
-                                |> Sub.map Page
-                        )
-                        (Auth.onPageLoad model.shared (Route.fromUrl () model.url))
-
-                Main.Pages.Model.Manual pageModel ->
-                    Auth.Action.subscriptions
-                        (\user ->
-                            Page.subscriptions (Pages.Manual.page user model.shared (Route.fromUrl () model.url)) pageModel
-                                |> Sub.map Main.Pages.Msg.Manual
                                 |> Sub.map Page
                         )
                         (Auth.onPageLoad model.shared (Route.fromUrl () model.url))
@@ -1382,11 +1382,20 @@ viewPage model =
                 )
                 (Auth.onPageLoad model.shared (Route.fromUrl () model.url))
 
-        Main.Pages.Model.Admin pageModel ->
+        Main.Pages.Model.Admin_Manual pageModel ->
             Auth.Action.view (View.map never (Auth.viewCustomPage model.shared (Route.fromUrl () model.url)))
                 (\user ->
-                    Page.view (Pages.Admin.page user model.shared (Route.fromUrl () model.url)) pageModel
-                        |> View.map Main.Pages.Msg.Admin
+                    Page.view (Pages.Admin.Manual.page user model.shared (Route.fromUrl () model.url)) pageModel
+                        |> View.map Main.Pages.Msg.Admin_Manual
+                        |> View.map Page
+                )
+                (Auth.onPageLoad model.shared (Route.fromUrl () model.url))
+
+        Main.Pages.Model.Admin_Menu pageModel ->
+            Auth.Action.view (View.map never (Auth.viewCustomPage model.shared (Route.fromUrl () model.url)))
+                (\user ->
+                    Page.view (Pages.Admin.Menu.page user model.shared (Route.fromUrl () model.url)) pageModel
+                        |> View.map Main.Pages.Msg.Admin_Menu
                         |> View.map Page
                 )
                 (Auth.onPageLoad model.shared (Route.fromUrl () model.url))
@@ -1459,15 +1468,6 @@ viewPage model =
                 (\user ->
                     Page.view (Pages.Lists.ListId_.Edit.ItemId_.page user model.shared (Route.fromUrl params model.url)) pageModel
                         |> View.map Main.Pages.Msg.Lists_ListId__Edit_ItemId_
-                        |> View.map Page
-                )
-                (Auth.onPageLoad model.shared (Route.fromUrl () model.url))
-
-        Main.Pages.Model.Manual pageModel ->
-            Auth.Action.view (View.map never (Auth.viewCustomPage model.shared (Route.fromUrl () model.url)))
-                (\user ->
-                    Page.view (Pages.Manual.page user model.shared (Route.fromUrl () model.url)) pageModel
-                        |> View.map Main.Pages.Msg.Manual
                         |> View.map Page
                 )
                 (Auth.onPageLoad model.shared (Route.fromUrl () model.url))
@@ -1603,11 +1603,21 @@ toPageUrlHookCmd model routes =
                 )
                 (Auth.onPageLoad model.shared (Route.fromUrl () model.url))
 
-        Main.Pages.Model.Admin pageModel ->
+        Main.Pages.Model.Admin_Manual pageModel ->
             Auth.Action.command
                 (\user ->
-                    Page.toUrlMessages routes (Pages.Admin.page user model.shared (Route.fromUrl () model.url)) 
-                        |> List.map Main.Pages.Msg.Admin
+                    Page.toUrlMessages routes (Pages.Admin.Manual.page user model.shared (Route.fromUrl () model.url)) 
+                        |> List.map Main.Pages.Msg.Admin_Manual
+                        |> List.map Page
+                        |> toCommands
+                )
+                (Auth.onPageLoad model.shared (Route.fromUrl () model.url))
+
+        Main.Pages.Model.Admin_Menu pageModel ->
+            Auth.Action.command
+                (\user ->
+                    Page.toUrlMessages routes (Pages.Admin.Menu.page user model.shared (Route.fromUrl () model.url)) 
+                        |> List.map Main.Pages.Msg.Admin_Menu
                         |> List.map Page
                         |> toCommands
                 )
@@ -1688,16 +1698,6 @@ toPageUrlHookCmd model routes =
                 (\user ->
                     Page.toUrlMessages routes (Pages.Lists.ListId_.Edit.ItemId_.page user model.shared (Route.fromUrl params model.url)) 
                         |> List.map Main.Pages.Msg.Lists_ListId__Edit_ItemId_
-                        |> List.map Page
-                        |> toCommands
-                )
-                (Auth.onPageLoad model.shared (Route.fromUrl () model.url))
-
-        Main.Pages.Model.Manual pageModel ->
-            Auth.Action.command
-                (\user ->
-                    Page.toUrlMessages routes (Pages.Manual.page user model.shared (Route.fromUrl () model.url)) 
-                        |> List.map Main.Pages.Msg.Manual
                         |> List.map Page
                         |> toCommands
                 )
@@ -1822,7 +1822,10 @@ isAuthProtected routePath =
         Route.Path.Account ->
             True
 
-        Route.Path.Admin ->
+        Route.Path.Admin_Manual ->
+            True
+
+        Route.Path.Admin_Menu ->
             True
 
         Route.Path.Credits ->
@@ -1847,9 +1850,6 @@ isAuthProtected routePath =
             True
 
         Route.Path.Lists_ListId__Edit_ItemId_ _ ->
-            True
-
-        Route.Path.Manual ->
             True
 
         Route.Path.Settings ->

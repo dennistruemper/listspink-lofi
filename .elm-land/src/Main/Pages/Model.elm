@@ -2,7 +2,8 @@ module Main.Pages.Model exposing (Model(..))
 
 import Pages.Home_
 import Pages.Account
-import Pages.Admin
+import Pages.Admin.Manual
+import Pages.Admin.Menu
 import Pages.Credits
 import Pages.List.ImportShared
 import Pages.Lists
@@ -11,7 +12,6 @@ import Pages.Lists.Edit.ListId_
 import Pages.Lists.Id_.CreateItem
 import Pages.Lists.ListId_
 import Pages.Lists.ListId_.Edit.ItemId_
-import Pages.Manual
 import Pages.Settings
 import Pages.Setup
 import Pages.Setup.Connect
@@ -25,7 +25,8 @@ import View exposing (View)
 type Model
     = Home_ Pages.Home_.Model
     | Account Pages.Account.Model
-    | Admin Pages.Admin.Model
+    | Admin_Manual Pages.Admin.Manual.Model
+    | Admin_Menu Pages.Admin.Menu.Model
     | Credits Pages.Credits.Model
     | List_ImportShared Pages.List.ImportShared.Model
     | Lists Pages.Lists.Model
@@ -34,7 +35,6 @@ type Model
     | Lists_Id__CreateItem { id : String } Pages.Lists.Id_.CreateItem.Model
     | Lists_ListId_ { listId : String } Pages.Lists.ListId_.Model
     | Lists_ListId__Edit_ItemId_ { listId : String, itemId : String } Pages.Lists.ListId_.Edit.ItemId_.Model
-    | Manual Pages.Manual.Model
     | Settings Pages.Settings.Model
     | Setup Pages.Setup.Model
     | Setup_Connect Pages.Setup.Connect.Model

@@ -2,7 +2,8 @@ module Main.Pages.Msg exposing (Msg(..))
 
 import Pages.Home_
 import Pages.Account
-import Pages.Admin
+import Pages.Admin.Manual
+import Pages.Admin.Menu
 import Pages.Credits
 import Pages.List.ImportShared
 import Pages.Lists
@@ -11,7 +12,6 @@ import Pages.Lists.Edit.ListId_
 import Pages.Lists.Id_.CreateItem
 import Pages.Lists.ListId_
 import Pages.Lists.ListId_.Edit.ItemId_
-import Pages.Manual
 import Pages.Settings
 import Pages.Setup
 import Pages.Setup.Connect
@@ -24,7 +24,8 @@ import Pages.NotFound_
 type Msg
     = Home_ Pages.Home_.Msg
     | Account Pages.Account.Msg
-    | Admin Pages.Admin.Msg
+    | Admin_Manual Pages.Admin.Manual.Msg
+    | Admin_Menu Pages.Admin.Menu.Msg
     | Credits Pages.Credits.Msg
     | List_ImportShared Pages.List.ImportShared.Msg
     | Lists Pages.Lists.Msg
@@ -33,7 +34,6 @@ type Msg
     | Lists_Id__CreateItem Pages.Lists.Id_.CreateItem.Msg
     | Lists_ListId_ Pages.Lists.ListId_.Msg
     | Lists_ListId__Edit_ItemId_ Pages.Lists.ListId_.Edit.ItemId_.Msg
-    | Manual Pages.Manual.Msg
     | Settings Pages.Settings.Msg
     | Setup Pages.Setup.Msg
     | Setup_Connect Pages.Setup.Connect.Msg
