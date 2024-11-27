@@ -5,6 +5,7 @@ import Components.AppBar as AppBar
 import Components.Button as Button
 import Components.Caption as Caption
 import Components.Input as Input
+import Components.KeyListener as KeyListener
 import Components.Padding as Padding
 import Components.Select as Select
 import Components.Text as Text
@@ -274,6 +275,18 @@ subscriptions model =
 -- VIEW
 
 
+onValidEnter : Model -> Html.Attribute Msg
+onValidEnter model =
+    KeyListener.onKeyUp
+        (\key ->
+            if key == "Enter" && validate model == Nothing then
+                Just SaveClicked
+
+            else
+                Nothing
+        )
+
+
 view : Model -> View Msg
 view model =
     { title = title
@@ -289,26 +302,29 @@ view model =
         in
         [ AppBar.appBar
             |> AppBar.withContent
-                [ Caption.caption2 "Editable" |> Caption.withLine True |> Caption.view
-                , Padding.left
-                    [ Input.text "Name" NameChanged Nothing model.itemName |> Input.view
-                    , Toggle.toggle "Completed" DoneClicked model.itemChecked |> Toggle.view
-                    , Input.text "Description" ItemDescriptionChanged Nothing model.itemDescription |> Input.view
-                    , Select.select "Priority"
-                        ItemPriorityChanged
-                        ItemPriority.all
-                        itemPriorityToString
-                        model.itemPriority
-                        |> Select.view
+                [ Html.div
+                    [ onValidEnter model ]
+                    [ Caption.caption2 "Editable" |> Caption.withLine True |> Caption.view
+                    , Padding.left
+                        [ Input.text "Name" NameChanged Nothing model.itemName |> Input.view
+                        , Toggle.toggle "Completed" DoneClicked model.itemChecked |> Toggle.view
+                        , Input.text "Description" ItemDescriptionChanged Nothing model.itemDescription |> Input.view
+                        , Select.select "Priority"
+                            ItemPriorityChanged
+                            ItemPriority.all
+                            itemPriorityToString
+                            model.itemPriority
+                            |> Select.view
+                        ]
+                        |> Padding.view
+                    , Caption.caption2 "Fun facts" |> Caption.withLine True |> Caption.view
+                    , Padding.left
+                        [ Text.keyValue "Created at" (model.createdAt |> Format.time) |> Text.view
+                        , Text.keyValue "Last update at" (model.lastUpdatedAt |> Format.time) |> Text.view
+                        , Text.keyValue "Number of updates" (model.numberOfUpdates |> String.fromInt) |> Text.view
+                        ]
+                        |> Padding.view
                     ]
-                    |> Padding.view
-                , Caption.caption2 "Fun facts" |> Caption.withLine True |> Caption.view
-                , Padding.left
-                    [ Text.keyValue "Created at" (model.createdAt |> Format.time) |> Text.view
-                    , Text.keyValue "Last update at" (model.lastUpdatedAt |> Format.time) |> Text.view
-                    , Text.keyValue "Number of updates" (model.numberOfUpdates |> String.fromInt) |> Text.view
-                    ]
-                    |> Padding.view
                 ]
             |> AppBar.withActions
                 [ Button.button "Update Item" SaveClicked

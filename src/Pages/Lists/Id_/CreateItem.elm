@@ -4,6 +4,7 @@ import Auth
 import Components.AppBar as AppBar
 import Components.Button as Button
 import Components.Input as Input
+import Components.KeyListener as KeyListener
 import Components.Select as Select
 import Effect exposing (Effect)
 import Event
@@ -190,6 +191,18 @@ validate model =
                     Nothing
 
 
+onValidEnter : Model -> Html.Attribute Msg
+onValidEnter model =
+    KeyListener.onKeyUp
+        (\key ->
+            if key == "Enter" && validate model == Nothing then
+                Just CreateItemButtonClicked
+
+            else
+                Nothing
+        )
+
+
 viewCreateItemForm : Shared.Model -> Model -> Html.Html Msg
 viewCreateItemForm shared model =
     let
@@ -203,21 +216,24 @@ viewCreateItemForm shared model =
     in
     AppBar.appBar
         |> AppBar.withContent
-            [ Input.text "Name" ItemNameChanged (validateName model) model.itemName |> Input.view
-            , Input.text "Description" ItemDescriptionChanged (validateDescription model) model.itemDescription |> Input.view
-            , Select.select "Priority"
-                ItemPriorityChanged
-                ItemPriority.all
-                itemPriorityToString
-                model.itemPriority
-                |> Select.view
-            , Html.br [] []
-            , case model.error of
-                Just error ->
-                    Html.text error
+            [ Html.div
+                [ onValidEnter model ]
+                [ Input.text "Name" ItemNameChanged (validateName model) model.itemName |> Input.view
+                , Input.text "Description" ItemDescriptionChanged (validateDescription model) model.itemDescription |> Input.view
+                , Select.select "Priority"
+                    ItemPriorityChanged
+                    ItemPriority.all
+                    itemPriorityToString
+                    model.itemPriority
+                    |> Select.view
+                , Html.br [] []
+                , case model.error of
+                    Just error ->
+                        Html.text error
 
-                Nothing ->
-                    Html.text ""
+                    Nothing ->
+                        Html.text ""
+                ]
             ]
         |> AppBar.withActions [ Button.button "Create" CreateItemButtonClicked |> Button.withDisabled buttonDisabled |> Button.view ]
         |> AppBar.view

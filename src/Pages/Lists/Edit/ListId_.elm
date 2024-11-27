@@ -5,6 +5,7 @@ import Components.AppBar as AppBar
 import Components.Button as Button
 import Components.Caption as Caption
 import Components.Input as Input
+import Components.KeyListener as KeyListener
 import Components.Padding as Padding
 import Components.QrCode as QrCode
 import Components.Text as Text
@@ -162,6 +163,23 @@ validateListName maybeListName =
 -- VIEW
 
 
+onValidEnter : Model -> Html.Attribute Msg
+onValidEnter model =
+    KeyListener.onKeyUp
+        (\key ->
+            if
+                key
+                    == "Enter"
+                    && validateListName model.listName
+                    == Nothing
+            then
+                Just UpdateListButtonClicked
+
+            else
+                Nothing
+        )
+
+
 view : Shared.Model -> Model -> View Msg
 view shared model =
     let
@@ -185,39 +203,42 @@ view shared model =
                 in
                 AppBar.appBar
                     |> AppBar.withContent
-                        [ Caption.caption2 "Editable"
-                            |> Caption.withLine True
-                            |> Caption.view
-                        , Padding.left
-                            [ Input.text
-                                "List Name"
-                                ListNameChanged
-                                (validateListName model.listName)
-                                (model.listName |> Maybe.withDefault list.name)
-                                |> Input.view
-                            ]
-                            |> Padding.view
-                        , Caption.caption2 "Share"
-                            |> Caption.withLine True
-                            |> Caption.view
-                        , Padding.left
-                            [ Html.details []
-                                [ Html.summary [] [ Html.text "Show QR Code" ]
-                                , QrCode.view qrCodeConfig
+                        [ Html.div
+                            [ onValidEnter model ]
+                            [ Caption.caption2 "Editable"
+                                |> Caption.withLine True
+                                |> Caption.view
+                            , Padding.left
+                                [ Input.text
+                                    "List Name"
+                                    ListNameChanged
+                                    (validateListName model.listName)
+                                    (model.listName |> Maybe.withDefault list.name)
+                                    |> Input.view
                                 ]
-                            , Button.button "Copy share link" (CopyShareLinkClicked shareUrl)
-                                |> Button.view
+                                |> Padding.view
+                            , Caption.caption2 "Share"
+                                |> Caption.withLine True
+                                |> Caption.view
+                            , Padding.left
+                                [ Html.details []
+                                    [ Html.summary [] [ Html.text "Show QR Code" ]
+                                    , QrCode.view qrCodeConfig
+                                    ]
+                                , Button.button "Copy share link" (CopyShareLinkClicked shareUrl)
+                                    |> Button.view
+                                ]
+                                |> Padding.view
+                            , Caption.caption2 "Fun facts"
+                                |> Caption.withLine True
+                                |> Caption.view
+                            , Padding.left
+                                [ Text.keyValue "Created at" (list.createdAt |> Format.time) |> Text.view
+                                , Text.keyValue "Last update at" (list.lastUpdatedAt |> Format.time) |> Text.view
+                                , Text.keyValue "Number of updates" (list.numberOfUpdates |> String.fromInt) |> Text.view
+                                ]
+                                |> Padding.view
                             ]
-                            |> Padding.view
-                        , Caption.caption2 "Fun facts"
-                            |> Caption.withLine True
-                            |> Caption.view
-                        , Padding.left
-                            [ Text.keyValue "Created at" (list.createdAt |> Format.time) |> Text.view
-                            , Text.keyValue "Last update at" (list.lastUpdatedAt |> Format.time) |> Text.view
-                            , Text.keyValue "Number of updates" (list.numberOfUpdates |> String.fromInt) |> Text.view
-                            ]
-                            |> Padding.view
                         ]
                     |> AppBar.withActions
                         [ Button.button "Update List" UpdateListButtonClicked
