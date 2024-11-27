@@ -61,7 +61,6 @@ type Msg
     | NewUserNameChanged String
     | NewDeviceNameChanged String
     | CreateUserButtonClicked
-    | AdminDataRequested
     | ReconnectUser
 
 
@@ -101,9 +100,6 @@ update msg model =
                 , Effect.accountCreated newUser
                 ]
             )
-
-        AdminDataRequested ->
-            ( model, Effect.sendCmd <| Lamdera.sendToBackend Bridge.RequestAdminData )
 
         ReconnectUser ->
             ( model
@@ -167,9 +163,6 @@ view user shared model =
                 []
             , Button.button "Create" CreateUserButtonClicked |> Button.view
             , Button.button "Reconnect" ReconnectUser |> Button.view
-            , Html.br [] []
-            , Button.button "Request Admin Data" AdminDataRequested |> Button.view
-            , Html.text "TODO AdminData" -- shared.adminData
             , Html.br [] []
             , Html.text ("Code:" ++ (shared.syncCode |> Maybe.map String.fromInt |> Maybe.withDefault "No code"))
             , Html.br [] []

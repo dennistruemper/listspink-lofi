@@ -4,6 +4,7 @@ import Pages.Home_
 import Pages.Account
 import Pages.Admin.Manual
 import Pages.Admin.Menu
+import Pages.Admin.Users
 import Pages.Credits
 import Pages.List.ImportShared
 import Pages.Lists
@@ -26,6 +27,7 @@ type Msg
     | Account Pages.Account.Msg
     | Admin_Manual Pages.Admin.Manual.Msg
     | Admin_Menu Pages.Admin.Menu.Msg
+    | Admin_Users Pages.Admin.Users.Msg
     | Credits Pages.Credits.Msg
     | List_ImportShared Pages.List.ImportShared.Msg
     | Lists Pages.Lists.Msg

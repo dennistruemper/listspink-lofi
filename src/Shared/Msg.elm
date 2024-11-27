@@ -5,10 +5,10 @@ import Components.Toast
 import Dict exposing (Dict)
 import Event exposing (EventDefinition)
 import Role exposing (Role)
+import Status exposing (Status)
 import Subscriptions
 import Sync
 import Time
-import UserManagement
 
 
 {-| Normally, this value would live in "Shared.elm"
@@ -19,8 +19,7 @@ own file, so they can be imported by `Effect.elm`
 
 -}
 type Msg
-    = GotAdminData { userManagement : UserManagement.Model, backendSyncModel : Sync.BackendSyncModel, subscriptions : Subscriptions.Model }
-    | NewUserCreated Bridge.User
+    = NewUserCreated Bridge.User
     | AddEvent EventDefinition
     | GotSyncCode Int
     | GotUserData { name : String, userId : String, deviceId : String, deviceName : String, roles : List Role }
@@ -31,3 +30,5 @@ type Msg
     | SidebarToggled Bool
     | AddToast Components.Toast.Toast
     | ToastMsg Components.Toast.Msg
+    | NotAuthenticated
+    | StatusResponse Status String

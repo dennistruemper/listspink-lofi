@@ -11,6 +11,7 @@ type Path
     | Account
     | Admin_Manual
     | Admin_Menu
+    | Admin_Users
     | Credits
     | List_ImportShared
     | Lists
@@ -55,6 +56,9 @@ fromString urlPath =
 
         "admin" :: "menu" :: [] ->
             Just Admin_Menu
+
+        "admin" :: "users" :: [] ->
+            Just Admin_Users
 
         "credits" :: [] ->
             Just Credits
@@ -140,6 +144,9 @@ toString path =
 
                 Admin_Menu ->
                     [ "admin", "menu" ]
+
+                Admin_Users ->
+                    [ "admin", "users" ]
 
                 Credits ->
                     [ "credits" ]

@@ -1,4 +1,24 @@
-module UserManagement exposing (Model, UserData, UserOnDeviceData, addDeviceDataToUser, addRoleToUser, addUser, cancelSync, getAllSessionsForUser, getOtherSessionsForUser, getSessionCount, getSyncCodeForUser, getUserForId, getUserForSession, init, reconnectUserOnDevice, startSyncForUser, useSyncCode)
+module UserManagement exposing
+    ( Model
+    , UserData
+    , UserOnDeviceData
+    , addDeviceDataToUser
+    , addRoleToUser
+    , addUser
+    , cancelSync
+    , deleteUser
+    , getAllSessionsForUser
+    , getOtherSessionsForUser
+    , getSessionCount
+    , getSyncCodeForUser
+    , getUserForId
+    , getUserForSession
+    , getUsers
+    , init
+    , reconnectUserOnDevice
+    , startSyncForUser
+    , useSyncCode
+    )
 
 import Dict exposing (Dict)
 import Role exposing (Role)
@@ -94,6 +114,11 @@ addUser sessionId newUserData now model =
 
     else
         { model | users = newUsers, userSessions = newSessions }
+
+
+getUsers : Model -> List UserData
+getUsers model =
+    Dict.values model.users
 
 
 reconnectUserOnDevice : String -> { userId : String, deviceId : String } -> Time.Posix -> Model -> Model
@@ -209,15 +234,10 @@ getOtherSessionsForUser sessionId model =
 
 getAllSessionsForUser : String -> Model -> List String
 getAllSessionsForUser userId model =
-    Dict.toList model.userSessions
-        |> List.filterMap
-            (\( sid, data ) ->
-                if data.userId == userId then
-                    Just sid
-
-                else
-                    Nothing
-            )
+    Dict.filter
+        (\_ session -> session.userId == userId)
+        model.userSessions
+        |> Dict.keys
 
 
 startSyncForUser : String -> Time.Posix -> String -> Model -> Model
@@ -316,3 +336,22 @@ cancelSync sessionId model =
                         model.users
     in
     { model | users = newUsers }
+
+
+deleteUser : String -> Model -> Model
+deleteUser userId model =
+    let
+        -- Remove user from users dict
+        newUsers =
+            Dict.remove userId model.users
+
+        -- Remove all sessions for this user
+        newSessions =
+            Dict.filter
+                (\_ session -> session.userId /= userId)
+                model.userSessions
+    in
+    { model
+        | users = newUsers
+        , userSessions = newSessions
+    }

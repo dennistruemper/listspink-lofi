@@ -28,6 +28,7 @@ import Set
 import Shared.Model
 import Shared.Msg
 import SortedEventList
+import Status
 import Subscriptions
 import Sync
 import Task
@@ -57,8 +58,7 @@ type alias Model =
 
 init : Result Json.Decode.Error Flags -> Route () -> ( Model, Effect Msg )
 init flagsResult route =
-    ( { adminData = { userManagement = UserManagement.init, backendSyncModel = Sync.initBackend, subscriptions = Subscriptions.init }
-      , user = Nothing
+    ( { user = Nothing
       , syncCode = Nothing
       , nextIds = Nothing
       , syncModel = Sync.initFrontend
@@ -87,11 +87,6 @@ withSyncModelPersistence ( model, effect ) =
 update : Route () -> Msg -> Model -> ( Model, Effect Msg )
 update route msg model =
     case msg of
-        Shared.Msg.GotAdminData data ->
-            ( { model | adminData = data }
-            , Effect.none
-            )
-
         Shared.Msg.NewUserCreated user ->
             ( { model | user = Just user }, Effect.batch [ Effect.storeUserData user ] )
 
@@ -225,6 +220,17 @@ update route msg model =
                     { model | toasts = Components.Toast.update toastMsg model.toasts }
             in
             ( newModel, Effect.none )
+
+        Shared.Msg.NotAuthenticated ->
+            ( model, Effect.addToast (Components.Toast.error "Not authenticated") )
+
+        Shared.Msg.StatusResponse status id ->
+            case status of
+                Status.Success maybeMessage ->
+                    ( model, Effect.addToast (Components.Toast.success (maybeMessage |> Maybe.withDefault "Success")) )
+
+                Status.Error message ->
+                    ( model, Effect.addToast (Components.Toast.error message) )
 
 
 

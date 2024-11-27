@@ -141,15 +141,39 @@ update backendMsg model =
 
                         -- Do not handle other messages for unknown user session
                         _ ->
-                            ( model, Cmd.none )
+                            ( model, Lamdera.sendToFrontend sessionId <| NotAuthenticated )
 
                 Just user ->
                     case msg of
-                        RequestAdminData ->
-                            ( model
-                            , Lamdera.sendToFrontend sessionId <|
-                                AdminDataRequested { userManagement = model.userManagement, backendSyncModel = model.syncModel, subscriptions = model.subscriptions }
-                            )
+                        AdminRequest request ->
+                            case request of
+                                DeleteUser userId ->
+                                    let
+                                        newUserManagement =
+                                            UserManagement.deleteUser userId model.userManagement
+
+                                        affectedSessions =
+                                            UserManagement.getAllSessionsForUser userId model.userManagement
+
+                                        notifyCommands =
+                                            affectedSessions
+                                                |> List.map
+                                                    (\sid ->
+                                                        Lamdera.sendToFrontend sid (AdminDataResponse (Types.UserDeleted userId))
+                                                    )
+                                                |> List.append [ Lamdera.sendToFrontend sessionId (AdminDataResponse (Types.UserDeleted userId)) ]
+                                    in
+                                    ( { model | userManagement = newUserManagement }
+                                    , Cmd.batch notifyCommands
+                                    )
+
+                                UsersRequest ->
+                                    let
+                                        users =
+                                            UserManagement.getUsers model.userManagement
+                                                |> List.map (\usr -> { name = usr.name, devices = usr.devices, userId = usr.userId })
+                                    in
+                                    ( model, Lamdera.sendToFrontend sessionId <| AdminDataResponse (Types.UsersResponse { users = users }) )
 
                         NewUser newUserData ->
                             handleHello now newUserData model sessionId

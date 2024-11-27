@@ -41,10 +41,15 @@ type alias UserData =
     { name : String, devices : List { deviceId : String, name : String }, userId : String }
 
 
+type AdminRequestType
+    = UsersRequest
+    | DeleteUser String
+
+
 type ToBackend
     = NewUser User
     | ReconnectUser { userId : String, deviceId : String }
-    | RequestAdminData
+    | AdminRequest AdminRequestType
     | GenerateSyncCode
     | EventAdded EventDefinition
     | UseSyncCode { code : String, deviceId : String, deviceName : String }

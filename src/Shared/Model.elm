@@ -26,8 +26,7 @@ type alias NextIds =
 
 
 type alias Model =
-    { adminData : { userManagement : UserManagement.Model, backendSyncModel : Sync.BackendSyncModel, subscriptions : Subscriptions.Model }
-    , user : Maybe Bridge.User
+    { user : Maybe Bridge.User
     , syncCode : Maybe Int
     , nextIds : Maybe NextIds
     , syncModel : Sync.FrontendSyncModel

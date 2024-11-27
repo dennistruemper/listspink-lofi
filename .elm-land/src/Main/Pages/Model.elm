@@ -4,6 +4,7 @@ import Pages.Home_
 import Pages.Account
 import Pages.Admin.Manual
 import Pages.Admin.Menu
+import Pages.Admin.Users
 import Pages.Credits
 import Pages.List.ImportShared
 import Pages.Lists
@@ -27,6 +28,7 @@ type Model
     | Account Pages.Account.Model
     | Admin_Manual Pages.Admin.Manual.Model
     | Admin_Menu Pages.Admin.Menu.Model
+    | Admin_Users Pages.Admin.Users.Model
     | Credits Pages.Credits.Model
     | List_ImportShared Pages.List.ImportShared.Model
     | Lists Pages.Lists.Model

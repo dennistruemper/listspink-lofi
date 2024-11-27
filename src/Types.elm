@@ -43,11 +43,17 @@ type BackendMsg
 
 
 type ToFrontend
-    = AdminDataRequested { userManagement : UserManagement.Model, backendSyncModel : Sync.BackendSyncModel, subscriptions : Subscriptions.Model }
+    = AdminDataResponse AdminResponse
     | SyncCodeCreated Int
     | SyncCodeUsed { name : String, userId : String, deviceId : String, deviceName : String, roles : List Role }
     | ConnectionEstablished
+    | NotAuthenticated
     | EventSyncResult { events : List EventDefinition, lastSyncServerTime : Time.Posix }
     | ListSubscriptionAdded { userId : String, listId : String, timestamp : Time.Posix }
     | ListSubscriptionFailed
     | UserRolesUpdated { userId : String, roles : List Role }
+
+
+type AdminResponse
+    = UsersResponse { users : List Bridge.UserData }
+    | UserDeleted String

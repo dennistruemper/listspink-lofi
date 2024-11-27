@@ -8,9 +8,11 @@ import Json.Encode
 import Lamdera
 import Main as ElmLand
 import Main.Pages.Msg
+import Pages.Admin.Users
 import Pages.Home_
 import Pages.Share.ListId_
 import Shared.Msg
+import Status
 import Task
 import Time
 import Types exposing (..)
@@ -36,9 +38,6 @@ app =
 updateFromBackend : ToFrontend -> Model -> ( Model, Cmd FrontendMsg )
 updateFromBackend msg model =
     case msg of
-        AdminDataRequested data ->
-            ( model, sendSharedMsg <| Shared.Msg.GotAdminData data )
-
         SyncCodeCreated code ->
             ( model, sendSharedMsg <| Shared.Msg.GotSyncCode code )
 
@@ -47,6 +46,9 @@ updateFromBackend msg model =
 
         ConnectionEstablished ->
             ( model, sendSharedMsg Shared.Msg.ConnectionEstablished )
+
+        NotAuthenticated ->
+            ( model, sendSharedMsg Shared.Msg.NotAuthenticated )
 
         EventSyncResult result ->
             ( model, sendSharedMsg <| Shared.Msg.GotSyncResult result )
@@ -59,6 +61,22 @@ updateFromBackend msg model =
 
         UserRolesUpdated data ->
             ( model, sendSharedMsg <| Shared.Msg.UserRolesUpdated data )
+
+        AdminDataResponse response ->
+            case response of
+                UsersResponse users ->
+                    -- do not user shared and send directly to requesting page
+                    ElmLand.update (ElmLand.Page <| Main.Pages.Msg.Admin_Users <| Pages.Admin.Users.GotUsers users.users) model
+
+                UserDeleted userId ->
+                    let
+                        ( newModel, updatePageCmd ) =
+                            ElmLand.update (ElmLand.Page <| Main.Pages.Msg.Admin_Users (Pages.Admin.Users.UserDeleted userId)) model
+
+                        statusResponseCmd =
+                            sendSharedMsg <| Shared.Msg.StatusResponse (Status.Success (Just ("User deleted: " ++ userId))) userId
+                    in
+                    ( newModel, Cmd.batch [ updatePageCmd, statusResponseCmd ] )
 
 
 sendSharedMsg : Shared.Msg.Msg -> Cmd FrontendMsg

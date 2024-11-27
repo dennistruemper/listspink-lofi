@@ -26,6 +26,7 @@ page user shared route =
         , subscriptions = subscriptions
         , view = view shared
         }
+        |> Page.withLayout (toLayout user)
 
 
 toLayout : Auth.User -> Model -> Layouts.Layout Msg
@@ -46,12 +47,9 @@ init user () =
     let
         redirectEfect =
             Auth.redirectIfNotAdmin user
-
-        requestAdminDataEffect =
-            Auth.ifAdminElse user (Effect.sendCmd <| Lamdera.sendToBackend Bridge.RequestAdminData) Effect.none
     in
     ( {}
-    , Effect.batch [ redirectEfect, requestAdminDataEffect ]
+    , Effect.batch [ redirectEfect ]
     )
 
 
@@ -90,6 +88,7 @@ view shared model =
     { title = title
     , body =
         [ menuEntry Route.Path.Admin_Manual "Manual Page"
+        , menuEntry Route.Path.Admin_Users "Users"
         ]
     }
 
