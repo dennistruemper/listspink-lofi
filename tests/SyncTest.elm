@@ -4,6 +4,7 @@ import Array
 import Event exposing (EventDefinition)
 import EventTestHelper
 import Expect
+import Role exposing (Role)
 import Subscriptions
 import Sync
 import Test exposing (Test)
@@ -40,31 +41,33 @@ type alias DeviceData =
     }
 
 
-alice : { device1 : DeviceData, userId : String }
+alice : { device1 : DeviceData, userId : String, roles : List Role }
 alice =
-    { device1 = { sessionId = "Alice1Session", deviceId = "Alice1" }, userId = "Alice" }
+    { device1 = { sessionId = "Alice1Session", deviceId = "Alice1" }, userId = "Alice", roles = [ Role.User ] }
 
 
-bob : { device1 : DeviceData, device2 : DeviceData, userId : String }
+bob : { device1 : DeviceData, device2 : DeviceData, userId : String, roles : List Role }
 bob =
     { device1 = { sessionId = "Bob1Session", deviceId = "Bob1" }
     , device2 = { sessionId = "Bob2Session", deviceId = "Bob2" }
     , userId = "Bob"
+    , roles = [ Role.User ]
     }
 
 
-charlie : { device1 : DeviceData, device2 : DeviceData, device3 : DeviceData, userId : String }
+charlie : { device1 : DeviceData, device2 : DeviceData, device3 : DeviceData, userId : String, roles : List Role }
 charlie =
     { device1 = { sessionId = "Charlie1Session", deviceId = "Charlie1" }
     , device2 = { sessionId = "Charlie2Session", deviceId = "Charlie2" }
     , device3 = { sessionId = "Charlie3Session", deviceId = "Charlie3" }
     , userId = "Charlie"
+    , roles = [ Role.User ]
     }
 
 
 userOnDeviceData : String -> String -> UserManagement.UserOnDeviceData
 userOnDeviceData userId deviceId =
-    { userId = userId, deviceId = deviceId, deviceName = deviceId, userName = userId }
+    { userId = userId, deviceId = deviceId, deviceName = deviceId, userName = userId, roles = [ Role.User ] }
 
 
 defaultUserManagement : UserManagement.Model

@@ -3,6 +3,7 @@ module PortsTest exposing (..)
 import Bridge
 import Expect
 import Ports
+import Role exposing (Role)
 import Test exposing (Test)
 
 
@@ -46,7 +47,7 @@ suite =
                         "{ \"tag\": \"UserDataLoaded\", \"data\": { \"userId\": \"123\", \"deviceId\": \"456\", \"deviceName\": \"device\", \"userName\": \"user\" } }"
 
                     expected =
-                        Ports.UserDataLoaded (Bridge.UserOnDevice { userId = "123", deviceId = "456", deviceName = "device", userName = "user" })
+                        Ports.UserDataLoaded (Bridge.UserOnDevice { userId = "123", deviceId = "456", deviceName = "device", userName = "user", roles = [] })
                 in
                 Expect.equal expected (Ports.decodeMsg json)
         , Test.test "decode missing UserDataLoaded" <|

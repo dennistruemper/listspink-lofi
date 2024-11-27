@@ -2,6 +2,7 @@ module UserManagementTest exposing (..)
 
 import Dict exposing (Dict)
 import Expect exposing (..)
+import Role
 import Test exposing (..)
 import Time
 import UserManagement
@@ -19,17 +20,17 @@ aliceDeviceId =
 
 alice : UserManagement.UserOnDeviceData
 alice =
-    { userId = "1", deviceId = aliceDeviceId, deviceName = "Phone of Alice", userName = "Alice" }
+    { userId = "1", deviceId = aliceDeviceId, deviceName = "Phone of Alice", userName = "Alice", roles = [ Role.User ] }
 
 
 bob : UserManagement.UserOnDeviceData
 bob =
-    { userId = "20", deviceId = "20", userName = "Bob", deviceName = "Phone of Bob" }
+    { userId = "20", deviceId = "20", userName = "Bob", deviceName = "Phone of Bob", roles = [ Role.User ] }
 
 
 charly : UserManagement.UserOnDeviceData
 charly =
-    { userId = "30", deviceId = "30", userName = "Charly", deviceName = "Phone of Charly" }
+    { userId = "30", deviceId = "30", userName = "Charly", deviceName = "Phone of Charly", roles = [ Role.User ] }
 
 
 withDevice : String -> String -> UserManagement.UserOnDeviceData -> UserManagement.UserOnDeviceData
@@ -94,6 +95,7 @@ suite =
                                             ]
                                         , userId = alice.userId
                                         , syncInProgress = Nothing
+                                        , roles = [ Role.User ]
                                         }
                                     )
                                     (UserManagement.getUserForSession
@@ -233,6 +235,7 @@ suite =
                                         , devices = [ { deviceId = alice.deviceId, name = alice.deviceName } ]
                                         , userId = alice.userId
                                         , syncInProgress = Nothing
+                                        , roles = [ Role.Admin, Role.User ]
                                         }
                                     )
                                     (UserManagement.getUserForSession
@@ -268,6 +271,7 @@ suite =
                                         , devices = [ { deviceId = bob.deviceId, name = bob.deviceName } ]
                                         , userId = bob.userId
                                         , syncInProgress = Nothing
+                                        , roles = [ Role.User ]
                                         }
                                     )
                                     (UserManagement.getUserForSession
@@ -283,6 +287,7 @@ suite =
                                         , devices = [ { deviceId = alice.deviceId, name = alice.deviceName } ]
                                         , userId = alice.userId
                                         , syncInProgress = Nothing
+                                        , roles = [ Role.Admin, Role.User ]
                                         }
                                     )
                                     (UserManagement.getUserForSession
@@ -319,6 +324,7 @@ suite =
                                         , devices = [ { deviceId = alice.deviceId, name = alice.deviceName } ]
                                         , userId = alice.userId
                                         , syncInProgress = Nothing
+                                        , roles = [ Role.Admin, Role.User ]
                                         }
                                     )
                                     (UserManagement.getUserForSession
@@ -364,6 +370,7 @@ suite =
                                         , devices = [ { deviceId = alice.deviceId, name = alice.deviceName } ]
                                         , userId = alice.userId
                                         , syncInProgress = Nothing
+                                        , roles = [ Role.Admin, Role.User ]
                                         }
                                     )
                                     (UserManagement.getUserForSession
@@ -414,6 +421,7 @@ suite =
                                             ]
                                         , userId = alice.userId
                                         , syncInProgress = Nothing
+                                        , roles = [ Role.Admin, Role.User ]
                                         }
                                     )
                                     (UserManagement.getUserForSession
@@ -460,6 +468,7 @@ suite =
                                             ]
                                         , userId = alice.userId
                                         , syncInProgress = Nothing
+                                        , roles = [ Role.Admin, Role.User ]
                                         }
                                     )
                                     (UserManagement.getUserForSession
@@ -511,6 +520,7 @@ suite =
                                             ]
                                         , userId = alice.userId
                                         , syncInProgress = Nothing
+                                        , roles = [ Role.User ]
                                         }
                                     )
                                     (UserManagement.getUserForSession
@@ -529,6 +539,7 @@ suite =
                                             ]
                                         , userId = alice.userId
                                         , syncInProgress = Nothing
+                                        , roles = [ Role.User ]
                                         }
                                     )
                                     (UserManagement.getUserForSession
@@ -576,6 +587,7 @@ suite =
                                             ]
                                         , userId = alice.userId
                                         , syncInProgress = Nothing
+                                        , roles = [ Role.Admin, Role.User ]
                                         }
                                     )
                                     (UserManagement.getUserForSession

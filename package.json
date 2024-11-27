@@ -7,7 +7,8 @@
     "css-watch": "npm run build-css -- --watch",
     "build-css": "npx tailwindcss -i ./src/input.css -o ./public/style.css",
     "build": "rm -rf ./dist && elm-land build && ",
-    "publish-check": "lamdera check && node scripts/update-cache-version.js && git add public/serviceWorker.js elm-pkg-js/interop.js",
+    "check": "npm run test && lamdera check",
+    "publish-check": "npm run test && lamdera check && node scripts/update-cache-version.js && git add public/serviceWorker.js elm-pkg-js/interop.js",
     "publish": "lamdera deploy"
   },
   "devDependencies": {
