@@ -232,6 +232,9 @@ update route msg model =
                 Status.Error message ->
                     ( model, Effect.addToast (Components.Toast.error message) )
 
+        Shared.Msg.NoOp ->
+            ( model, Effect.none )
+
 
 
 -- SUBSCRIPTIONS

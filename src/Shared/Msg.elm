@@ -20,6 +20,7 @@ own file, so they can be imported by `Effect.elm`
 -}
 type Msg
     = NewUserCreated Bridge.User
+    | NoOp
     | AddEvent EventDefinition
     | GotSyncCode Int
     | GotUserData { name : String, userId : String, deviceId : String, deviceName : String, roles : List Role }

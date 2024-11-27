@@ -3,6 +3,7 @@ module Components.Toast exposing
     , Msg(..)
     , Position(..)
     , Toast
+    , ToastType(..)
     , addToast
     , error
     , info

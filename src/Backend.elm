@@ -238,6 +238,9 @@ update backendMsg model =
                             in
                             ( model, Lamdera.sendToFrontend sessionId <| EventSyncResult { events = events, lastSyncServerTime = now } )
 
+                        Bridge.NoOp ->
+                            ( model, Cmd.none )
+
 
 updateFromFrontend : SessionId -> ClientId -> ToBackend -> Model -> ( Model, Cmd BackendMsg )
 updateFromFrontend sessionId clientId msg model =

@@ -78,6 +78,9 @@ updateFromBackend msg model =
                     in
                     ( newModel, Cmd.batch [ updatePageCmd, statusResponseCmd ] )
 
+        NoOp ->
+            ( model, Cmd.none )
+
 
 sendSharedMsg : Shared.Msg.Msg -> Cmd FrontendMsg
 sendSharedMsg msg =

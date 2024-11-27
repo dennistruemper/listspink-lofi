@@ -44,6 +44,7 @@ type BackendMsg
 
 type ToFrontend
     = AdminDataResponse AdminResponse
+    | NoOp
     | SyncCodeCreated Int
     | SyncCodeUsed { name : String, userId : String, deviceId : String, deviceName : String, roles : List Role }
     | ConnectionEstablished
