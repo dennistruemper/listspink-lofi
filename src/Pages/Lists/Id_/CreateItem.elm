@@ -1,4 +1,4 @@
-module Pages.Lists.Id_.CreateItem exposing (Model, Msg(..), page)
+module Pages.Lists.Id_.CreateItem exposing (BatchMode(..), Model, Msg(..), page)
 
 import Auth
 import Browser.Dom as Dom

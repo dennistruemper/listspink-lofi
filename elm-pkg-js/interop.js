@@ -2,7 +2,7 @@
 port supermario_copy_to_clipboard_to_js : String -> Cmd msg
 */
 
-const version = "v21";
+const version = "v22";
 const userKey = "user";
 const frontendSyncModelKey = "frontendSyncModel";
 const dbName = "AppDatabase";
