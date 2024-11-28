@@ -192,7 +192,7 @@ update route msg model =
                                         Effect.addToast (Components.Toast.info "You are back online")
 
                                     NetworkStatus.NetworkOffline ->
-                                        Effect.addToast (Components.Toast.error "You are offline")
+                                        Effect.addToast (Components.Toast.warning "You are offline")
 
                                     _ ->
                                         Effect.none
