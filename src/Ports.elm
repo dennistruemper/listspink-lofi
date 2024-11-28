@@ -5,6 +5,7 @@ import FrontendSyncModelSerializer
 import Json.Decode
 import Json.Decode.Pipeline as Pipeline
 import Json.Encode
+import NetworkStatus
 import Role
 import Serialize
 import Sync
@@ -18,6 +19,7 @@ type ToElm
     | UnknownMessage String
     | FrontendSyncModelDataLoaded (Result String Sync.FrontendSyncModel)
     | VersionLoaded (Maybe String)
+    | NetworkStatusLoaded NetworkStatus.NetworkStatus
 
 
 type alias IdsGeneratedData =
@@ -96,6 +98,14 @@ decodeMsg json =
 
         Ok "LoggedOut" ->
             UserLoggedOut
+
+        Ok "NetworkStatusUpdated" ->
+            case Json.Decode.decodeString (Json.Decode.field "data" NetworkStatus.decoder) json of
+                Ok networkStatus ->
+                    NetworkStatusLoaded networkStatus
+
+                Err message ->
+                    UnknownMessage (formatError "data for NetworkStatus" message)
 
         Err message ->
             UnknownMessage (formatError "tag" message)

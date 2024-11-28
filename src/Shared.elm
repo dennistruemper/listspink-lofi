@@ -20,6 +20,7 @@ import Event
 import EventMetadataHelper
 import Json.Decode
 import Lamdera
+import NetworkStatus
 import Ports
 import Process
 import Route exposing (Route)
@@ -66,6 +67,7 @@ init flagsResult route =
       , menuOpen = False
       , version = Nothing
       , toasts = Components.Toast.init
+      , networkStatus = NetworkStatus.NetworkUnknown
       }
     , Effect.batch [ Effect.generateIds, Effect.loadUserData, Effect.loadFrontendSyncModel, Effect.loadVersion ]
     )
@@ -180,6 +182,25 @@ update route msg model =
 
                 Ports.UserLoggedOut ->
                     ( { model | user = Just Bridge.Unknown }, Effect.pushRoutePath Route.Path.Home_ )
+
+                Ports.NetworkStatusLoaded networkStatus ->
+                    let
+                        effect =
+                            if model.networkStatus /= NetworkStatus.NetworkUnknown && model.networkStatus /= networkStatus then
+                                case networkStatus of
+                                    NetworkStatus.NetworkOnline ->
+                                        Effect.addToast (Components.Toast.info "You are back online")
+
+                                    NetworkStatus.NetworkOffline ->
+                                        Effect.addToast (Components.Toast.error "You are offline")
+
+                                    _ ->
+                                        Effect.none
+
+                            else
+                                Effect.none
+                    in
+                    ( { model | networkStatus = networkStatus }, effect )
 
         Shared.Msg.SidebarToggled newValue ->
             ( { model | menuOpen = newValue }, Effect.none )

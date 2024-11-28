@@ -122,6 +122,19 @@ exports.init = async function (app) {
   });
   setupServiceworker();
   await setupIndexedDBPromise;
+
+  function sendNetworkStatus() {
+    app.ports[TO_ELM_PORT].send(
+      JSON.stringify({
+        tag: "NetworkStatusUpdated",
+        data: window.navigator.onLine ? "online" : "offline",
+      })
+    );
+  }
+
+  sendNetworkStatus();
+  window.addEventListener("online", () => sendNetworkStatus());
+  window.addEventListener("offline", () => sendNetworkStatus());
 };
 
 function setupServiceworker() {

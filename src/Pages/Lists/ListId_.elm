@@ -1,6 +1,7 @@
 module Pages.Lists.ListId_ exposing (Model, Msg(..), page)
 
 import Auth
+import Bridge
 import Components.AppBar as AppBar
 import Components.Button as Button
 import Dict exposing (Dict)
@@ -12,7 +13,9 @@ import Html
 import Html.Attributes
 import Html.Events
 import ItemPriority
+import Lamdera
 import Layouts
+import NetworkStatus
 import Page exposing (Page)
 import Route exposing (Route)
 import Route.Path
@@ -69,6 +72,14 @@ showDoneAfterForever =
 
 init : String -> Shared.Model -> () -> ( Model, Effect Msg )
 init listId shared () =
+    let
+        reloadEffect =
+            if shared.networkStatus == NetworkStatus.NetworkOnline then
+                Effect.sendCmd <| Lamdera.sendToBackend (Bridge.ReloadAllForAggregate { aggregateId = listId })
+
+            else
+                Effect.none
+    in
     ( { listId = listId
       , listName =
             shared.state.lists
@@ -79,7 +90,10 @@ init listId shared () =
       , currentTime = Time.millisToPosix 0
       , showDoneAfter = showDoneAfter2h
       }
-    , Effect.getTime GotCurrentTime
+    , Effect.batch
+        [ Effect.getTime GotCurrentTime
+        , reloadEffect
+        ]
     )
 
 

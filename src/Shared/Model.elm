@@ -4,6 +4,7 @@ import Bridge
 import Components.Toast
 import Dict exposing (Dict)
 import Event exposing (EventDefinition)
+import NetworkStatus exposing (NetworkStatus)
 import Subscriptions
 import Sync
 import UserManagement
@@ -34,4 +35,5 @@ type alias Model =
     , menuOpen : Bool
     , version : Maybe String
     , toasts : Components.Toast.Model
+    , networkStatus : NetworkStatus
     }
