@@ -1,4 +1,4 @@
-module Components.Input exposing (text, view)
+module Components.Input exposing (text, view, withId)
 
 import Html exposing (Html)
 import Html.Attributes as Attr
@@ -13,6 +13,7 @@ type alias Input msg =
     , placeholder : String
     , action : String -> msg
     , error : Maybe String
+    , id : Maybe String
     }
 
 
@@ -23,7 +24,13 @@ text caption action error value =
     , placeholder = caption
     , action = action
     , error = error
+    , id = Nothing
     }
+
+
+withId : String -> Input msg -> Input msg
+withId id data =
+    { data | id = Just id }
 
 
 withPlaceholder : String -> Input msg -> Input msg
@@ -67,6 +74,7 @@ view data =
                 , Events.onInput data.action
                 , Attr.class "block w-full rounded-full border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-fuchsia-600 sm:text-sm sm:leading-6"
                 , Attr.placeholder data.placeholder
+                , Attr.id (Maybe.withDefault (nameToId data.caption) data.id)
                 ]
                 []
             , Html.div
@@ -93,3 +101,8 @@ view data =
             ]
             [ Html.text errorMessage ]
         ]
+
+
+nameToId : String -> String
+nameToId name =
+    String.toLower name |> String.replace " " "-" |> (\s -> s ++ "-input")

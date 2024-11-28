@@ -1,11 +1,13 @@
 module Pages.Lists.Id_.CreateItem exposing (Model, Msg(..), page)
 
 import Auth
+import Browser.Dom as Dom
 import Components.AppBar as AppBar
 import Components.Button as Button
 import Components.Input as Input
 import Components.KeyListener as KeyListener
 import Components.Select as Select
+import Components.Toast
 import Effect exposing (Effect)
 import Event
 import EventMetadataHelper
@@ -18,6 +20,7 @@ import Page exposing (Page)
 import Route exposing (Route)
 import Route.Path
 import Shared
+import Task
 import Time
 import View exposing (View)
 
@@ -69,17 +72,31 @@ init route () =
 -- UPDATE
 
 
+type BatchMode
+    = SingleItem
+    | MultipleItems
+
+
 type Msg
     = ItemNameChanged String
     | ItemDescriptionChanged String
     | CreateItemButtonClicked
-    | GotTimeForCreateItem Time.Posix
+    | CreateMoreButtonClicked
+    | GotTimeForCreateItem BatchMode Time.Posix
     | ItemPriorityChanged String
+    | NoOp
+    | BackClicked
 
 
 update : Shared.Model -> Msg -> Model -> ( Model, Effect Msg )
 update shared msg model =
     case msg of
+        NoOp ->
+            ( model, Effect.none )
+
+        BackClicked ->
+            ( model, Effect.pushRoutePath (Route.Path.Lists_ListId_ { listId = model.listId }) )
+
         ItemPriorityChanged newPriority ->
             ( { model | itemPriority = itemPriorityFromString newPriority }, Effect.none )
 
@@ -103,42 +120,70 @@ update shared msg model =
                     ( { model | error = error }, Effect.none )
 
                 Nothing ->
-                    ( { model | error = Nothing }, Effect.getTime GotTimeForCreateItem )
+                    ( { model | error = Nothing }, Effect.getTime (GotTimeForCreateItem SingleItem) )
 
-        GotTimeForCreateItem timestamp ->
+        CreateMoreButtonClicked ->
+            let
+                error =
+                    if String.isEmpty model.itemName then
+                        Just "Name is required"
+
+                    else
+                        Nothing
+            in
+            case error of
+                Just _ ->
+                    ( { model | error = error }, Effect.none )
+
+                Nothing ->
+                    ( { model | error = Nothing }, Effect.getTime (GotTimeForCreateItem MultipleItems) )
+
+        GotTimeForCreateItem batchMode timestamp ->
             let
                 eventResult : Result String Event.EventMetadata
                 eventResult =
-                    case EventMetadataHelper.createEventMetadata shared.nextIds (\ids -> model.listId) shared.user timestamp of
-                        Ok eventMetadata ->
-                            Ok eventMetadata
-
-                        Err error ->
-                            Err error
+                    EventMetadataHelper.createEventMetadata shared.nextIds (\ids -> model.listId) shared.user timestamp
             in
             case eventResult of
                 Ok eventMetadata ->
-                    ( model
-                    , Effect.batch
-                        [ Effect.addEvent <|
-                            Event.createItemCreatedEvent
-                                eventMetadata
-                                { itemName = model.itemName
-                                , itemId = shared.nextIds |> Maybe.map (\ids -> ids.itemId) |> Maybe.withDefault ""
-                                , itemDescription =
-                                    if String.isEmpty model.itemDescription then
-                                        Nothing
+                    let
+                        createItemEffect =
+                            Effect.addEvent <|
+                                Event.createItemCreatedEvent
+                                    eventMetadata
+                                    { itemName = model.itemName
+                                    , itemId = shared.nextIds |> Maybe.map .itemId |> Maybe.withDefault ""
+                                    , itemDescription =
+                                        if String.isEmpty model.itemDescription then
+                                            Nothing
 
-                                    else
-                                        Just model.itemDescription
-                                , itemPriority = Just model.itemPriority
-                                }
-                        , Effect.pushRoutePath (Route.Path.Lists_ListId_ { listId = model.listId })
-                        ]
+                                        else
+                                            Just model.itemDescription
+                                    , itemPriority = Just model.itemPriority
+                                    }
+
+                        navigationEffect =
+                            case batchMode of
+                                SingleItem ->
+                                    [ Effect.pushRoutePath (Route.Path.Lists_ListId_ { listId = model.listId }) ]
+
+                                MultipleItems ->
+                                    [ Effect.sendCmd (Task.attempt (\_ -> NoOp) (Dom.focus "item-name-input")) ]
+
+                        baseEffects =
+                            [ createItemEffect
+                            , Effect.generateIds
+                            , Effect.addToast (Components.Toast.success (model.itemName ++ " created"))
+                            ]
+                    in
+                    ( { model
+                        | itemName = ""
+                        , itemDescription = ""
+                      }
+                    , Effect.batch (baseEffects ++ navigationEffect)
                     )
 
                 Err error ->
-                    --TODO
                     ( model, Effect.none )
 
 
@@ -196,7 +241,7 @@ onValidEnter model =
     KeyListener.onKeyUp
         (\key ->
             if key == "Enter" && validate model == Nothing then
-                Just CreateItemButtonClicked
+                Just CreateMoreButtonClicked
 
             else
                 Nothing
@@ -218,7 +263,9 @@ viewCreateItemForm shared model =
         |> AppBar.withContent
             [ Html.div
                 [ onValidEnter model ]
-                [ Input.text "Name" ItemNameChanged (validateName model) model.itemName |> Input.view
+                [ Input.text "Name" ItemNameChanged (validateName model) model.itemName
+                    |> Input.withId "item-name-input"
+                    |> Input.view
                 , Input.text "Description" ItemDescriptionChanged (validateDescription model) model.itemDescription |> Input.view
                 , Select.select "Priority"
                     ItemPriorityChanged
@@ -235,5 +282,14 @@ viewCreateItemForm shared model =
                         Html.text ""
                 ]
             ]
-        |> AppBar.withActions [ Button.button "Create" CreateItemButtonClicked |> Button.withDisabled buttonDisabled |> Button.view ]
+        |> AppBar.withActions
+            [ Button.button "Back" BackClicked
+                |> Button.view
+            , Button.button "Create & Add More" CreateMoreButtonClicked
+                |> Button.withDisabled buttonDisabled
+                |> Button.view
+            , Button.button "Create" CreateItemButtonClicked
+                |> Button.withDisabled buttonDisabled
+                |> Button.view
+            ]
         |> AppBar.view
