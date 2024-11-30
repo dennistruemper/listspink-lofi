@@ -38,7 +38,7 @@ view data =
     Html.button
         [ Attr.type_ "button"
         , Events.onClick data.action
-        , Attr.class <| "rounded-full " ++ bgColor ++ " px-3.5 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fuchsia-500"
+        , Attr.class <| "rounded-full " ++ bgColor ++ " px-3.5 py-2 text-sm font-semibold text-white shadow-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fuchsia-500"
         , Attr.disabled data.disabled
         ]
         [ text data.text ]

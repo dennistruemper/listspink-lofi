@@ -35,7 +35,7 @@ view data =
         , Html.select
             [ Html.Attributes.id ("select-" ++ data.text)
             , Html.Attributes.name data.text
-            , Html.Attributes.class "block w-full rounded-full border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-fuchsia-600 sm:text-sm sm:leading-6"
+            , Html.Attributes.class "block w-full rounded-full border-0 py-1.5 text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-fuchsia-600 sm:text-sm sm:leading-6"
             , Html.Events.onInput data.action
             ]
             (List.map

@@ -5,16 +5,17 @@
     "server": "lamdera live",
     "frontend": "elm-land server",
     "css-watch": "npm run build-css -- --watch",
-    "build-css": "npx tailwindcss -i ./src/input.css -o ./public/style.css",
+    "build-css": "npx @tailwindcss/cli -i ./src/input.css -o ./public/style.css",
     "build": "rm -rf ./dist && elm-land build && ",
     "check": "npm run test && lamdera check",
     "publish-check": "npm run test && lamdera check && node scripts/update-cache-version.js && git add public/serviceWorker.js elm-pkg-js/interop.js",
     "publish": "lamdera deploy"
   },
   "devDependencies": {
+    "@tailwindcss/cli": "4.0.0-beta.4",
     "@tailwindcss/forms": "0.5.9",
     "elm-land": "0.20.1",
     "elm-test-rs": "3.0.0-5",
-    "tailwindcss": "3.4.10"
+    "tailwindcss": "4.0.0-beta.4"
   }
 }

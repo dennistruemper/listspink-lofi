@@ -184,13 +184,13 @@ typeToClass toastType =
 viewSingle : (Msg -> msg) -> Toast -> Html msg
 viewSingle convertMsg toast =
     Html.div
-        [ Attr.class "mb-2 px-4 py-2 text-white rounded shadow-lg flex items-center justify-between"
+        [ Attr.class "mb-2 px-4 py-2 text-white rounded-sm shadow-lg flex items-center justify-between"
         , Attr.class (typeToClass toast.toastType)
         ]
         ([ Html.text toast.message ]
             ++ (if toast.withRemove then
                     [ Html.button
-                        [ Attr.class "ml-4 p-1 hover:bg-black/20 rounded transition-colors"
+                        [ Attr.class "ml-4 p-1 hover:bg-black/20 rounded-sm transition-colors"
                         , Events.onClick (convertMsg (RemoveToast toast.id))
                         ]
                         [ svg

@@ -245,7 +245,7 @@ appBar captionInput toContentMsg =
                     div [] []
     in
     header
-        [ Attr.class "flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8"
+        [ Attr.class "flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-xs sm:gap-x-6 sm:px-6 lg:px-8"
         ]
         [ button
             [ Attr.type_ "button"

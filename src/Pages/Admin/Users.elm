@@ -316,7 +316,7 @@ viewUserCard model userData =
             Html.div
                 [ Attr.class """
                     absolute bottom-0 left-0 right-0 h-24
-                    bg-gradient-to-t from-white to-transparent
+                    bg-linear-to-t from-white to-transparent
                   """
                 ]
                 []
@@ -387,7 +387,7 @@ viewNoResults query =
         , Html.button
             [ Attr.class """
                 mt-4 text-purple-600 hover:text-purple-700
-                underline focus:outline-none
+                underline focus:outline-hidden
               """
             , Events.onClick (UpdateSearchQuery "")
             ]
@@ -410,12 +410,12 @@ viewConfirmationDialog userId =
             , Html.div
                 [ Attr.class "flex justify-end space-x-4" ]
                 [ Html.button
-                    [ Attr.class "px-4 py-2 text-gray-600 hover:bg-gray-100 rounded"
+                    [ Attr.class "px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-sm"
                     , Events.onClick CancelDelete
                     ]
                     [ Html.text "Cancel" ]
                 , Html.button
-                    [ Attr.class "px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded"
+                    [ Attr.class "px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-sm"
                     , Events.onClick (ConfirmDeleteUser userId)
                     ]
                     [ Html.text "Delete" ]

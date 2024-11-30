@@ -72,7 +72,7 @@ view data =
                 , Attr.id data.caption
                 , Attr.value data.value
                 , Events.onInput data.action
-                , Attr.class "block w-full rounded-full border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-fuchsia-600 sm:text-sm sm:leading-6"
+                , Attr.class "block w-full rounded-full border-0 py-1.5 text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-fuchsia-600 sm:text-sm sm:leading-6"
                 , Attr.placeholder data.placeholder
                 , Attr.id (Maybe.withDefault (nameToId data.caption) data.id)
                 ]
