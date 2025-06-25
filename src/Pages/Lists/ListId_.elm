@@ -19,6 +19,7 @@ import NetworkStatus
 import Page exposing (Page)
 import Route exposing (Route)
 import Route.Path
+import Set exposing (Set)
 import Shared
 import Svg exposing (path, svg)
 import Svg.Attributes as SvgAttr
@@ -57,6 +58,7 @@ type alias Model =
     , listName : Maybe String
     , currentTime : Time.Posix
     , showDoneAfter : Int
+    , expandedDescriptions : Set String
     }
 
 
@@ -89,6 +91,7 @@ init listId shared () =
                 |> Maybe.map .name
       , currentTime = Time.millisToPosix 0
       , showDoneAfter = showDoneAfter2h
+      , expandedDescriptions = Set.empty
       }
     , Effect.batch
         [ Effect.getTime GotCurrentTime
@@ -107,6 +110,7 @@ type Msg
     | AddItemClicked
     | GotCurrentTime Time.Posix
     | ToggleArchiveClicked
+    | ToggleDescription String
 
 
 update : Shared.Model -> Msg -> Model -> ( Model, Effect Msg )
@@ -158,6 +162,18 @@ update shared msg model =
             , Effect.none
             )
 
+        ToggleDescription itemId ->
+            ( { model
+                | expandedDescriptions =
+                    if Set.member itemId model.expandedDescriptions then
+                        Set.remove itemId model.expandedDescriptions
+
+                    else
+                        Set.insert itemId model.expandedDescriptions
+              }
+            , Effect.none
+            )
+
 
 
 -- SUBSCRIPTIONS
@@ -199,7 +215,7 @@ view shared model =
                             |> Dict.values
                             |> withoutItemsDoneForMoreThanOneHour model.currentTime model.showDoneAfter
                             |> toPriorityBuckets
-                            |> viewPriorityBuckets model.listId
+                            |> viewPriorityBuckets model model.listId
                         )
                     |> AppBar.withActions
                         [ Button.button toggleArchiveButtonCaption ToggleArchiveClicked |> Button.view
@@ -233,8 +249,8 @@ toPriorityBuckets items =
             Dict.empty
 
 
-viewPriorityBuckets : String -> Dict String (List Event.PinkItem) -> List (Html.Html Msg)
-viewPriorityBuckets listId buckets =
+viewPriorityBuckets : Model -> String -> Dict String (List Event.PinkItem) -> List (Html.Html Msg)
+viewPriorityBuckets model listId buckets =
     if Dict.isEmpty buckets then
         [ Html.text "No items jet" ]
 
@@ -248,7 +264,7 @@ viewPriorityBuckets listId buckets =
                             Just
                                 (([ viewStickyHeader (ItemPriority.itemPriorityToString priority) ]
                                     ++ (items
-                                            |> List.map (\item -> viewItem listId item)
+                                            |> List.map (\item -> viewItem listId model.expandedDescriptions item)
                                        )
                                  )
                                     |> Html.div []
@@ -270,8 +286,8 @@ viewStickyHeader caption =
         ]
 
 
-viewItem : String -> Event.PinkItem -> Html.Html Msg
-viewItem listId item =
+viewItem : String -> Set String -> Event.PinkItem -> Html.Html Msg
+viewItem listId expandedDescriptions item =
     let
         checked =
             case item.completedAt of
@@ -280,6 +296,66 @@ viewItem listId item =
 
                 Nothing ->
                     False
+
+        itemClasses =
+            if checked then
+                "text-gray-500 line-through"
+
+            else
+                "text-gray-900"
+
+        isExpandedValue =
+            Set.member item.itemId expandedDescriptions
+
+        description =
+            Maybe.withDefault "" item.description
+
+        truncatedDescription =
+            if not isExpandedValue && String.length description > 100 then
+                String.left 100 description ++ "..."
+
+            else
+                description
+
+        descriptionView descriptionInput isExpanded =
+            if String.length descriptionInput > 0 then
+                Html.div
+                    [ Html.Attributes.class "mt-1 group cursor-pointer"
+                    , Html.Events.onClick (ToggleDescription item.itemId)
+                    ]
+                    [ Html.div
+                        [ Html.Attributes.class "flex items-center text-xs text-gray-400 hover:text-gray-600"
+                        ]
+                        [ Html.span
+                            [ Html.Attributes.class "mr-1" ]
+                            [ Html.text "📝" ]
+                        , Html.span
+                            [ Html.Attributes.class "text-[10px] group-hover:text-gray-600" ]
+                            [ Html.text
+                                (if isExpanded then
+                                    "↑ Show less"
+
+                                 else
+                                    "↓ Show more"
+                                )
+                            ]
+                        ]
+                    , Html.div
+                        [ Html.Attributes.class "text-gray-600 italic transition-all duration-200"
+                        , Html.Attributes.style "max-height"
+                            (if isExpanded then
+                                "200px"
+
+                             else
+                                "2.5em"
+                            )
+                        , Html.Attributes.style "overflow" "hidden"
+                        ]
+                        [ Html.text truncatedDescription ]
+                    ]
+
+            else
+                Html.text ""
     in
     Html.li
         [ Html.Attributes.class "flex justify-between w-full gap-x-6 px-4 py-5 hover:bg-gray-50 sm:px-6"
@@ -297,24 +373,24 @@ viewItem listId item =
             , Html.div
                 [ Html.Attributes.class "min-w-0 flex-auto"
                 ]
-                [ Html.p
-                    [ Html.Attributes.class "text-sm font-semibold leading-6 text-gray-900"
+                [ Html.div
+                    [ Html.Attributes.class ("text-sm font-semibold leading-6 " ++ itemClasses)
                     ]
-                    [ Html.div
-                        []
-                        [ Html.span [] []
-                        , Html.text item.name
+                    [ Html.text item.name ]
+                , Html.div
+                    [ Html.Attributes.class "mt-1 text-xs leading-5 text-gray-500"
+                    ]
+                    [ descriptionView (Maybe.withDefault "" item.description) isExpandedValue
+                    , Html.div
+                        [ Html.Attributes.class "flex gap-3 mt-1 text-gray-400"
                         ]
-                    ]
-                , Html.p
-                    [ Html.Attributes.class "mt-1 flex text-xs leading-5 text-gray-500"
-                    ]
-                    [ Html.div
-                        [ Html.Attributes.class "relative truncate"
-                        ]
-                        [ (\time -> Format.time time)
-                            item.createdAt
-                            |> Html.text
+                        [ Html.span [] [ Html.text ("Created " ++ Format.time item.createdAt) ]
+                        , case item.completedAt of
+                            Just completedTime ->
+                                Html.span [] [ Html.text ("• Completed " ++ Format.time completedTime) ]
+
+                            Nothing ->
+                                Html.text ""
                         ]
                     ]
                 ]

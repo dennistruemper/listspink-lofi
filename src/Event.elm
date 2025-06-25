@@ -3,6 +3,7 @@ module Event exposing
     , EventDefinition(..)
     , EventMetadata
     , ItemCreatedData
+    , ItemDeletedData
     , ItemStateChangedData
     , ItemUpdatedData
     , ListCreatedData
@@ -12,6 +13,7 @@ module Event exposing
     , PinkList
     , State
     , createItemCreatedEvent
+    , createItemDeletedEvent
     , createItemStateChangedEvent
     , createItemUpdatedEvent
     , createListCreatedEvent
@@ -46,6 +48,7 @@ type EventData
     | ItemCreated ItemCreatedData
     | ItemStateChanged ItemStateChangedData
     | ItemUpdated ItemUpdatedData
+    | ItemDeleted ItemDeletedData
 
 
 type alias ListCreatedData =
@@ -73,6 +76,10 @@ type alias ItemCreatedData =
 
 type alias ItemStateChangedData =
     { itemId : String, newState : Bool }
+
+
+type alias ItemDeletedData =
+    { itemId : String }
 
 
 type EventDefinition
@@ -125,6 +132,14 @@ createListSharedWithUserEvent :
     -> EventDefinition
 createListSharedWithUserEvent metadata data =
     Event metadata (ListSharedWithUser data)
+
+
+createItemDeletedEvent :
+    EventMetadata
+    -> { itemId : String }
+    -> EventDefinition
+createItemDeletedEvent metadata data =
+    Event metadata (ItemDeleted data)
 
 
 getMetadata : EventDefinition -> EventMetadata
@@ -223,6 +238,9 @@ projectEvent event state =
                 ItemUpdated itemData ->
                     handleItemUpdated metadata itemData state
 
+                ItemDeleted itemData ->
+                    handleItemDeleted metadata itemData state
+
 
 handleListCreated : EventMetadata -> ListCreatedData -> State -> State
 handleListCreated metadata listData state =
@@ -304,6 +322,19 @@ handleItemUpdated metadata itemData state =
         (\list ->
             { list
                 | items = updateItem itemData.itemId (updateItemFields metadata itemData) list.items
+                , lastUpdatedAt = metadata.timestamp
+                , numberOfUpdates = list.numberOfUpdates + 1
+            }
+        )
+        state
+
+
+handleItemDeleted : EventMetadata -> ItemDeletedData -> State -> State
+handleItemDeleted metadata itemData state =
+    updateList metadata.aggregateId
+        (\list ->
+            { list
+                | items = Dict.remove itemData.itemId list.items
                 , lastUpdatedAt = metadata.timestamp
                 , numberOfUpdates = list.numberOfUpdates + 1
             }
