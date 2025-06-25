@@ -3,19 +3,23 @@ module Event exposing
     , EventDefinition(..)
     , EventMetadata
     , ItemCreatedData
+    , ItemDeletedData
     , ItemStateChangedData
     , ItemUpdatedData
     , ListCreatedData
     , ListSharedWithUserData
+    , ListUnsharedWithUserData
     , ListUpdatedData
     , PinkItem
     , PinkList
     , State
     , createItemCreatedEvent
+    , createItemDeletedEvent
     , createItemStateChangedEvent
     , createItemUpdatedEvent
     , createListCreatedEvent
     , createListSharedWithUserEvent
+    , createListUnsharedWithUserEvent
     , createListUpdatedEvent
     , getAggregateId
     , getEventId
@@ -46,6 +50,8 @@ type EventData
     | ItemCreated ItemCreatedData
     | ItemStateChanged ItemStateChangedData
     | ItemUpdated ItemUpdatedData
+    | ItemDeleted ItemDeletedData
+    | ListUnsharedWithUser ListUnsharedWithUserData
 
 
 type alias ListCreatedData =
@@ -63,6 +69,10 @@ type alias ListSharedWithUserData =
     { userId : String, listId : String }
 
 
+type alias ListUnsharedWithUserData =
+    { userId : String, listId : String }
+
+
 type alias ItemUpdatedData =
     { itemId : String, listId : String, name : Maybe String, completed : Maybe (Maybe Time.Posix), itemPriority : Maybe ItemPriority, description : Maybe String }
 
@@ -73,6 +83,10 @@ type alias ItemCreatedData =
 
 type alias ItemStateChangedData =
     { itemId : String, newState : Bool }
+
+
+type alias ItemDeletedData =
+    { itemId : String }
 
 
 type EventDefinition
@@ -125,6 +139,22 @@ createListSharedWithUserEvent :
     -> EventDefinition
 createListSharedWithUserEvent metadata data =
     Event metadata (ListSharedWithUser data)
+
+
+createItemDeletedEvent :
+    EventMetadata
+    -> { itemId : String }
+    -> EventDefinition
+createItemDeletedEvent metadata data =
+    Event metadata (ItemDeleted data)
+
+
+createListUnsharedWithUserEvent :
+    EventMetadata
+    -> { userId : String, listId : String }
+    -> EventDefinition
+createListUnsharedWithUserEvent metadata data =
+    Event metadata (ListUnsharedWithUser data)
 
 
 getMetadata : EventDefinition -> EventMetadata
@@ -187,6 +217,7 @@ type alias PinkItem =
     , lastUpdatedAt : Time.Posix
     , numberOfUpdates : Int
     , priority : ItemPriority
+    , deletedAt : Maybe Time.Posix
     }
 
 
@@ -222,6 +253,12 @@ projectEvent event state =
 
                 ItemUpdated itemData ->
                     handleItemUpdated metadata itemData state
+
+                ItemDeleted itemData ->
+                    handleItemDeleted metadata itemData state
+
+                ListUnsharedWithUser listData ->
+                    handleListUnsharedWithUser listData state
 
 
 handleListCreated : EventMetadata -> ListCreatedData -> State -> State
@@ -276,6 +313,7 @@ handleItemCreated metadata itemData state =
                         , lastUpdatedAt = metadata.timestamp
                         , numberOfUpdates = 0
                         , priority = Maybe.withDefault ItemPriority.MediumItemPriority itemData.itemPriority
+                        , deletedAt = Nothing
                         }
                         list.items
                 , lastUpdatedAt = metadata.timestamp
@@ -309,6 +347,35 @@ handleItemUpdated metadata itemData state =
             }
         )
         state
+
+
+handleItemDeleted : EventMetadata -> ItemDeletedData -> State -> State
+handleItemDeleted metadata itemData state =
+    updateList metadata.aggregateId
+        (\list ->
+            { list
+                | items = updateItem itemData.itemId (markItemAsDeleted metadata) list.items
+                , lastUpdatedAt = metadata.timestamp
+                , numberOfUpdates = list.numberOfUpdates + 1
+            }
+        )
+        state
+
+
+handleListUnsharedWithUser : ListUnsharedWithUserData -> State -> State
+handleListUnsharedWithUser listData state =
+    { state
+        | lists = Dict.remove listData.listId state.lists
+    }
+
+
+markItemAsDeleted : EventMetadata -> PinkItem -> PinkItem
+markItemAsDeleted metadata item =
+    { item
+        | deletedAt = Just metadata.timestamp
+        , lastUpdatedAt = metadata.timestamp
+        , numberOfUpdates = item.numberOfUpdates + 1
+    }
 
 
 

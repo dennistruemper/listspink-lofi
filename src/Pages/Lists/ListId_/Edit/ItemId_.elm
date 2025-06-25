@@ -68,6 +68,7 @@ type alias Model =
     , createdAt : Time.Posix
     , lastUpdatedAt : Time.Posix
     , numberOfUpdates : Int
+    , showDeleteConfirmation : Bool
     }
 
 
@@ -137,6 +138,7 @@ init shared params () =
       , createdAt = createdAt
       , lastUpdatedAt = lastUpdatedAt
       , numberOfUpdates = numberOfUpdates
+      , showDeleteConfirmation = False
       }
     , Effect.none
     )
@@ -177,6 +179,10 @@ type Msg
     | GotTimeForUpdatedItem Time.Posix
     | ItemPriorityChanged String
     | ItemDescriptionChanged String
+    | DeleteClicked
+    | ConfirmDeleteClicked
+    | CancelDeleteClicked
+    | GotTimeForDeleteItem Time.Posix
 
 
 update : Shared.Model -> Msg -> Model -> ( Model, Effect Msg )
@@ -196,6 +202,15 @@ update shared msg model =
 
         ItemDescriptionChanged description ->
             ( { model | itemDescription = description }, Effect.none )
+
+        DeleteClicked ->
+            ( { model | showDeleteConfirmation = True }, Effect.none )
+
+        ConfirmDeleteClicked ->
+            ( { model | showDeleteConfirmation = False }, Effect.getTime GotTimeForDeleteItem )
+
+        CancelDeleteClicked ->
+            ( { model | showDeleteConfirmation = False }, Effect.none )
 
         GotTimeForUpdatedItem timestamp ->
             let
@@ -259,6 +274,27 @@ update shared msg model =
 
                 Err error ->
                     --TODO
+                    ( model, Effect.none )
+
+        GotTimeForDeleteItem timestamp ->
+            let
+                eventResult =
+                    EventMetadataHelper.createEventMetadata
+                        shared.nextIds
+                        (\_ -> model.listId)
+                        shared.user
+                        timestamp
+            in
+            case eventResult of
+                Ok eventMetadata ->
+                    ( model
+                    , Effect.batch
+                        [ Effect.addEvent <| Event.createItemDeletedEvent eventMetadata { itemId = model.itemId }
+                        , Effect.replaceRoutePath (Route.Path.Lists_ListId_ { listId = model.listId })
+                        ]
+                    )
+
+                Err _ ->
                     ( model, Effect.none )
 
 
@@ -327,10 +363,53 @@ view model =
                     ]
                 ]
             |> AppBar.withActions
-                [ Button.button "Update Item" SaveClicked
-                    |> Button.withDisabled saveButtonDisabled
-                    |> Button.view
+                [ Html.div
+                    [ Html.Attributes.class "flex w-full justify-between items-center gap-2" ]
+                    [ Button.button "Delete" DeleteClicked
+                        |> Button.view
+                    , Html.div [ Html.Attributes.class "flex-1" ] [] -- Spacer
+                    , Button.button "Update Item" SaveClicked
+                        |> Button.withDisabled saveButtonDisabled
+                        |> Button.view
+                    ]
                 ]
             |> AppBar.view
+        , if model.showDeleteConfirmation then
+            viewDeleteModal model
+
+          else
+            Html.text ""
         ]
     }
+
+
+viewDeleteModal : Model -> Html.Html Msg
+viewDeleteModal model =
+    Html.div
+        [ Html.Attributes.class "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+        ]
+        [ Html.div
+            [ Html.Attributes.class "bg-white rounded-lg p-6 w-full max-w-md mx-auto shadow-xl"
+            ]
+            [ Html.div
+                [ Html.Attributes.class "text-center"
+                ]
+                [ Html.h3
+                    [ Html.Attributes.class "text-lg font-medium text-gray-900 mb-4"
+                    ]
+                    [ Html.text "Delete Item" ]
+                , Html.p
+                    [ Html.Attributes.class "text-sm text-gray-500 mb-6"
+                    ]
+                    [ Html.text ("Are you sure you want to delete \"" ++ model.itemName ++ "\"? This action cannot be undone.") ]
+                , Html.div
+                    [ Html.Attributes.class "flex justify-end space-x-3"
+                    ]
+                    [ Button.button "Cancel" CancelDeleteClicked
+                        |> Button.view
+                    , Button.button "Delete" ConfirmDeleteClicked
+                        |> Button.view
+                    ]
+                ]
+            ]
+        ]

@@ -1,6 +1,7 @@
 module Pages.Lists.Edit.ListId_ exposing (Model, Msg(..), page)
 
 import Auth
+import Bridge
 import Components.AppBar as AppBar
 import Components.Button as Button
 import Components.Caption as Caption
@@ -16,6 +17,7 @@ import EventMetadataHelper
 import Format
 import Html
 import Html.Attributes exposing (src)
+import Lamdera
 import Layouts
 import Page exposing (Page)
 import Route exposing (Route)
@@ -91,6 +93,8 @@ type Msg
     | UpdateListButtonClicked
     | GotTimeForUpdateList Time.Posix
     | CopyShareLinkClicked String
+    | UnsubscribeClicked
+    | GotTimeForUnsubscribe Time.Posix
 
 
 update : Shared.Model -> Msg -> Model -> ( Model, Effect Msg )
@@ -134,6 +138,40 @@ update shared msg model =
 
         CopyShareLinkClicked shareUrl ->
             ( model, Effect.copyToClipboard shareUrl )
+
+        UnsubscribeClicked ->
+            ( model, Effect.getTime GotTimeForUnsubscribe )
+
+        GotTimeForUnsubscribe timestamp ->
+            let
+                eventResult =
+                    EventMetadataHelper.createEventMetadata
+                        shared.nextIds
+                        (\_ -> model.listId)
+                        shared.user
+                        timestamp
+            in
+            case eventResult of
+                Ok eventMetadata ->
+                    case shared.user of
+                        Just user ->
+                            case getUserId user of
+                                Just userId ->
+                                    ( model
+                                    , Effect.batch
+                                        [ Effect.addEvent <| Event.createListUnsharedWithUserEvent eventMetadata { userId = userId, listId = model.listId }
+                                        , Effect.replaceRoutePath Route.Path.Lists
+                                        ]
+                                    )
+
+                                Nothing ->
+                                    ( model, Effect.none )
+
+                        Nothing ->
+                            ( model, Effect.none )
+
+                Err _ ->
+                    ( model, Effect.none )
 
 
 
@@ -185,14 +223,13 @@ view shared model =
     let
         maybeList =
             shared.state.lists
-                |> Dict.values
-                |> List.filter (\l -> l.listId == model.listId)
-                |> List.head
+                |> Dict.get model.listId
     in
     { title = title
     , body =
         [ case maybeList of
             Just list ->
+                -- Show the normal list edit content
                 let
                     shareUrl =
                         model.fullHostNameAndPort ++ (Route.Path.Share_ListId_ { listId = list.listId } |> Route.Path.toString)
@@ -200,6 +237,20 @@ view shared model =
                     qrCodeConfig =
                         QrCode.qrCode shareUrl
                             |> QrCode.withSize 250
+
+                    -- Check if current user can unsubscribe
+                    canUnsubscribe =
+                        case shared.user of
+                            Just user ->
+                                case getUserId user of
+                                    Just userId ->
+                                        List.member userId list.users || list.listId == userId
+
+                                    Nothing ->
+                                        False
+
+                            Nothing ->
+                                False
                 in
                 AppBar.appBar
                     |> AppBar.withContent
@@ -241,7 +292,12 @@ view shared model =
                             ]
                         ]
                     |> AppBar.withActions
-                        [ Button.button "Update List" UpdateListButtonClicked
+                        [ if canUnsubscribe then
+                            Button.button "Leave List" UnsubscribeClicked |> Button.view
+
+                          else
+                            Html.text ""
+                        , Button.button "Update List" UpdateListButtonClicked
                             |> Button.withDisabled
                                 ((model.listName |> Maybe.withDefault "" |> String.isEmpty)
                                     || (model.listName |> Maybe.withDefault "")
@@ -252,6 +308,37 @@ view shared model =
                     |> AppBar.view
 
             Nothing ->
-                Html.text "List not found"
+                -- List no longer exists or user doesn't have access
+                Html.div
+                    [ Html.Attributes.class "flex items-center justify-center min-h-screen"
+                    ]
+                    [ Html.div
+                        [ Html.Attributes.class "text-center"
+                        ]
+                        [ Html.h2
+                            [ Html.Attributes.class "text-lg font-medium text-gray-900 mb-2"
+                            ]
+                            [ Html.text "List Not Found" ]
+                        , Html.p
+                            [ Html.Attributes.class "text-sm text-gray-500 mb-4"
+                            ]
+                            [ Html.text "This list is no longer available or you don't have access to it." ]
+                        , Html.a
+                            [ Html.Attributes.href (Route.Path.Lists |> Route.Path.toString)
+                            , Html.Attributes.class "text-fuchsia-600 hover:text-fuchsia-500"
+                            ]
+                            [ Html.text "Go back to lists" ]
+                        ]
+                    ]
         ]
     }
+
+
+getUserId : Bridge.User -> Maybe String
+getUserId user =
+    case user of
+        Bridge.Unknown ->
+            Nothing
+
+        Bridge.UserOnDevice userData ->
+            Just userData.userId

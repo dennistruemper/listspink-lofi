@@ -88,6 +88,13 @@ listSharedWithUserCodec =
         |> S.finishRecord
 
 
+listUnsharedWithUserCodec =
+    S.record Event.ListUnsharedWithUserData
+        |> S.field .userId S.string
+        |> S.field .listId S.string
+        |> S.finishRecord
+
+
 itemCreatedCodec =
     S.record Event.ItemCreatedData
         |> S.field .itemId S.string
@@ -138,10 +145,16 @@ itemUpdatedCodec =
         |> S.finishRecord
 
 
+itemDeletedCodec =
+    S.record Event.ItemDeletedData
+        |> S.field .itemId S.string
+        |> S.finishRecord
+
+
 eventDataCodec : S.Codec e Event.EventData
 eventDataCodec =
     S.customType
-        (\listCreatedEncoder listUpdatedEncoder itemCreatedEncoder itemStateChangedEncoder itemUpdatedEncoder listSharedWithUserEncoder value ->
+        (\listCreatedEncoder listUpdatedEncoder itemCreatedEncoder itemStateChangedEncoder itemUpdatedEncoder listSharedWithUserEncoder itemDeletedEncoder listUnsharedWithUserEncoder value ->
             case value of
                 Event.ListCreated listCreatedData ->
                     listCreatedEncoder listCreatedData
@@ -160,6 +173,12 @@ eventDataCodec =
 
                 Event.ListSharedWithUser listSharedWithUserData ->
                     listSharedWithUserEncoder listSharedWithUserData
+
+                Event.ItemDeleted itemDeletedData ->
+                    itemDeletedEncoder itemDeletedData
+
+                Event.ListUnsharedWithUser listUnsharedWithUserData ->
+                    listUnsharedWithUserEncoder listUnsharedWithUserData
         )
         |> S.variant1 Event.ListCreated listCreatedCodec
         |> S.variant1 Event.ListUpdated listUpdatedCodec
@@ -167,6 +186,8 @@ eventDataCodec =
         |> S.variant1 Event.ItemStateChanged itemStateChangedCodec
         |> S.variant1 Event.ItemUpdated itemUpdatedCodec
         |> S.variant1 Event.ListSharedWithUser listSharedWithUserCodec
+        |> S.variant1 Event.ItemDeleted itemDeletedCodec
+        |> S.variant1 Event.ListUnsharedWithUser listUnsharedWithUserCodec
         |> S.finishCustomType
 
 
