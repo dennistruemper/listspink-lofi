@@ -202,6 +202,7 @@ type alias PinkItem =
     , lastUpdatedAt : Time.Posix
     , numberOfUpdates : Int
     , priority : ItemPriority
+    , deletedAt : Maybe Time.Posix
     }
 
 
@@ -294,6 +295,7 @@ handleItemCreated metadata itemData state =
                         , lastUpdatedAt = metadata.timestamp
                         , numberOfUpdates = 0
                         , priority = Maybe.withDefault ItemPriority.MediumItemPriority itemData.itemPriority
+                        , deletedAt = Nothing
                         }
                         list.items
                 , lastUpdatedAt = metadata.timestamp
@@ -334,12 +336,21 @@ handleItemDeleted metadata itemData state =
     updateList metadata.aggregateId
         (\list ->
             { list
-                | items = Dict.remove itemData.itemId list.items
+                | items = updateItem itemData.itemId (markItemAsDeleted metadata) list.items
                 , lastUpdatedAt = metadata.timestamp
                 , numberOfUpdates = list.numberOfUpdates + 1
             }
         )
         state
+
+
+markItemAsDeleted : EventMetadata -> PinkItem -> PinkItem
+markItemAsDeleted metadata item =
+    { item
+        | deletedAt = Just metadata.timestamp
+        , lastUpdatedAt = metadata.timestamp
+        , numberOfUpdates = item.numberOfUpdates + 1
+    }
 
 
 
