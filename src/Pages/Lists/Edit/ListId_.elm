@@ -1,6 +1,7 @@
 module Pages.Lists.Edit.ListId_ exposing (Model, Msg(..), page)
 
 import Auth
+import Bridge
 import Components.AppBar as AppBar
 import Components.Button as Button
 import Components.Caption as Caption
@@ -16,6 +17,7 @@ import EventMetadataHelper
 import Format
 import Html
 import Html.Attributes exposing (src)
+import Lamdera
 import Layouts
 import Page exposing (Page)
 import Route exposing (Route)
@@ -91,6 +93,8 @@ type Msg
     | UpdateListButtonClicked
     | GotTimeForUpdateList Time.Posix
     | CopyShareLinkClicked String
+    | UnsubscribeClicked
+    | GotTimeForUnsubscribe Time.Posix
 
 
 update : Shared.Model -> Msg -> Model -> ( Model, Effect Msg )
@@ -134,6 +138,41 @@ update shared msg model =
 
         CopyShareLinkClicked shareUrl ->
             ( model, Effect.copyToClipboard shareUrl )
+
+        UnsubscribeClicked ->
+            ( model, Effect.getTime GotTimeForUnsubscribe )
+
+        GotTimeForUnsubscribe timestamp ->
+            let
+                eventResult =
+                    EventMetadataHelper.createEventMetadata
+                        shared.nextIds
+                        (\_ -> model.listId)
+                        shared.user
+                        timestamp
+            in
+            case eventResult of
+                Ok eventMetadata ->
+                    case shared.user of
+                        Just user ->
+                            case getUserId user of
+                                Just userId ->
+                                    ( model
+                                    , Effect.batch
+                                        [ Effect.addEvent <| Event.createListUnsharedWithUserEvent eventMetadata { userId = userId, listId = model.listId }
+                                        , Effect.sendCmd <| Lamdera.sendToBackend (Bridge.UnsubscribeFromList { listId = model.listId })
+                                        , Effect.replaceRoutePath Route.Path.Lists
+                                        ]
+                                    )
+
+                                Nothing ->
+                                    ( model, Effect.none )
+
+                        Nothing ->
+                            ( model, Effect.none )
+
+                Err _ ->
+                    ( model, Effect.none )
 
 
 
@@ -200,6 +239,20 @@ view shared model =
                     qrCodeConfig =
                         QrCode.qrCode shareUrl
                             |> QrCode.withSize 250
+
+                    -- Check if current user can unsubscribe
+                    canUnsubscribe =
+                        case shared.user of
+                            Just user ->
+                                case getUserId user of
+                                    Just userId ->
+                                        True
+
+                                    Nothing ->
+                                        False
+
+                            Nothing ->
+                                False
                 in
                 AppBar.appBar
                     |> AppBar.withContent
@@ -241,7 +294,12 @@ view shared model =
                             ]
                         ]
                     |> AppBar.withActions
-                        [ Button.button "Update List" UpdateListButtonClicked
+                        [ if canUnsubscribe then
+                            Button.button "Leave List" UnsubscribeClicked |> Button.view
+
+                          else
+                            Html.text ""
+                        , Button.button "Update List" UpdateListButtonClicked
                             |> Button.withDisabled
                                 ((model.listName |> Maybe.withDefault "" |> String.isEmpty)
                                     || (model.listName |> Maybe.withDefault "")
@@ -255,3 +313,13 @@ view shared model =
                 Html.text "List not found"
         ]
     }
+
+
+getUserId : Bridge.User -> Maybe String
+getUserId user =
+    case user of
+        Bridge.Unknown ->
+            Nothing
+
+        Bridge.UserOnDevice userData ->
+            Just userData.userId

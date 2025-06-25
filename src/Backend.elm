@@ -11,6 +11,7 @@ import Main.Pages.Msg
 import Pages.Share.ListId_
 import Random
 import Role
+import Set exposing (Set)
 import Subscriptions
 import Sync
 import Task
@@ -206,12 +207,25 @@ update backendMsg model =
                                 newSyncModel =
                                     Sync.addEventToBackend event now newSubscriptions model.userManagement model.syncModel
 
+                                -- Get all users subscribed to this aggregate
+                                subscribedUsers =
+                                    Subscriptions.getSubscriptionsByAggregateId newSubscriptions (Event.getAggregateId event)
+                                        |> List.map .userId
+
+                                -- Get all sessions for these users
+                                subscribedSessions =
+                                    subscribedUsers
+                                        |> List.map
+                                            (\userId ->
+                                                UserManagement.getAllSessionsForUser userId model.userManagement
+                                                    |> List.map (\session -> { sessionId = session, userId = userId })
+                                            )
+                                        |> List.concat
+
                                 commands =
-                                    newSyncModel.subscribedSessions
+                                    subscribedSessions
                                         |> List.map .sessionId
                                         |> List.map (\session -> Lamdera.sendToFrontend session <| EventSyncResult { events = [ event ], lastSyncServerTime = now })
-
-                                -- TODO "Send events to connected clients"
                             in
                             ( { model | syncModel = newSyncModel.newBackendModel, subscriptions = newSubscriptions }, Cmd.batch commands )
 
@@ -241,10 +255,50 @@ update backendMsg model =
                         Bridge.NoOp ->
                             ( model, Cmd.none )
 
+                        UnsubscribeFromList { listId } ->
+                            let
+                                subscriptionToRemove =
+                                    { userId = user.userId
+                                    , aggregateId = listId
+                                    }
+
+                                newSubscriptions =
+                                    Subscriptions.removeSubscription subscriptionToRemove model.subscriptions
+                            in
+                            ( { model | subscriptions = newSubscriptions }
+                            , Cmd.none
+                            )
+
 
 updateFromFrontend : SessionId -> ClientId -> ToBackend -> Model -> ( Model, Cmd BackendMsg )
 updateFromFrontend sessionId clientId msg model =
-    ( model, Task.perform (FromFrontendWithTime sessionId clientId msg) Time.now )
+    case msg of
+        UnsubscribeFromList { listId } ->
+            let
+                userData =
+                    UserManagement.getUserForSession sessionId model.userManagement
+
+                updatedModel =
+                    case userData of
+                        Just user ->
+                            let
+                                subscriptionToRemove =
+                                    { userId = user.userId
+                                    , aggregateId = listId
+                                    }
+
+                                newSubscriptions =
+                                    Subscriptions.removeSubscription subscriptionToRemove model.subscriptions
+                            in
+                            { model | subscriptions = newSubscriptions }
+
+                        Nothing ->
+                            model
+            in
+            ( updatedModel, Cmd.none )
+
+        _ ->
+            ( model, Task.perform (FromFrontendWithTime sessionId clientId msg) Time.now )
 
 
 handleHello : Time.Posix -> Bridge.User -> Model -> String -> ( Model, Cmd BackendMsg )

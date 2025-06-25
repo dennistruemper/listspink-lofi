@@ -8,6 +8,7 @@ module Event exposing
     , ItemUpdatedData
     , ListCreatedData
     , ListSharedWithUserData
+    , ListUnsharedWithUserData
     , ListUpdatedData
     , PinkItem
     , PinkList
@@ -18,6 +19,7 @@ module Event exposing
     , createItemUpdatedEvent
     , createListCreatedEvent
     , createListSharedWithUserEvent
+    , createListUnsharedWithUserEvent
     , createListUpdatedEvent
     , getAggregateId
     , getEventId
@@ -49,6 +51,7 @@ type EventData
     | ItemStateChanged ItemStateChangedData
     | ItemUpdated ItemUpdatedData
     | ItemDeleted ItemDeletedData
+    | ListUnsharedWithUser ListUnsharedWithUserData
 
 
 type alias ListCreatedData =
@@ -63,6 +66,10 @@ type alias ListUpdatedData =
 
 
 type alias ListSharedWithUserData =
+    { userId : String, listId : String }
+
+
+type alias ListUnsharedWithUserData =
     { userId : String, listId : String }
 
 
@@ -140,6 +147,14 @@ createItemDeletedEvent :
     -> EventDefinition
 createItemDeletedEvent metadata data =
     Event metadata (ItemDeleted data)
+
+
+createListUnsharedWithUserEvent :
+    EventMetadata
+    -> { userId : String, listId : String }
+    -> EventDefinition
+createListUnsharedWithUserEvent metadata data =
+    Event metadata (ListUnsharedWithUser data)
 
 
 getMetadata : EventDefinition -> EventMetadata
@@ -242,6 +257,9 @@ projectEvent event state =
                 ItemDeleted itemData ->
                     handleItemDeleted metadata itemData state
 
+                ListUnsharedWithUser listData ->
+                    handleListUnsharedWithUser listData state
+
 
 handleListCreated : EventMetadata -> ListCreatedData -> State -> State
 handleListCreated metadata listData state =
@@ -342,6 +360,13 @@ handleItemDeleted metadata itemData state =
             }
         )
         state
+
+
+handleListUnsharedWithUser : ListUnsharedWithUserData -> State -> State
+handleListUnsharedWithUser listData state =
+    { state
+        | lists = Dict.remove listData.listId state.lists
+    }
 
 
 markItemAsDeleted : EventMetadata -> PinkItem -> PinkItem
