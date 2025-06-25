@@ -56,5 +56,4 @@ type ToBackend
     | RequestNewEvents Time.Posix
     | RequestListSubscription { listId : String }
     | ReloadAllForAggregate { aggregateId : String }
-    | UnsubscribeFromList { listId : String }
     | NoOp -- for migration only

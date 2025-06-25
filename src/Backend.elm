@@ -255,48 +255,10 @@ update backendMsg model =
                         Bridge.NoOp ->
                             ( model, Cmd.none )
 
-                        UnsubscribeFromList { listId } ->
-                            let
-                                subscriptionToRemove =
-                                    { userId = user.userId
-                                    , aggregateId = listId
-                                    }
-
-                                newSubscriptions =
-                                    Subscriptions.removeSubscription subscriptionToRemove model.subscriptions
-                            in
-                            ( { model | subscriptions = newSubscriptions }
-                            , Cmd.none
-                            )
-
 
 updateFromFrontend : SessionId -> ClientId -> ToBackend -> Model -> ( Model, Cmd BackendMsg )
 updateFromFrontend sessionId clientId msg model =
     case msg of
-        UnsubscribeFromList { listId } ->
-            let
-                userData =
-                    UserManagement.getUserForSession sessionId model.userManagement
-
-                updatedModel =
-                    case userData of
-                        Just user ->
-                            let
-                                subscriptionToRemove =
-                                    { userId = user.userId
-                                    , aggregateId = listId
-                                    }
-
-                                newSubscriptions =
-                                    Subscriptions.removeSubscription subscriptionToRemove model.subscriptions
-                            in
-                            { model | subscriptions = newSubscriptions }
-
-                        Nothing ->
-                            model
-            in
-            ( updatedModel, Cmd.none )
-
         _ ->
             ( model, Task.perform (FromFrontendWithTime sessionId clientId msg) Time.now )
 

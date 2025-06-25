@@ -160,7 +160,6 @@ update shared msg model =
                                     ( model
                                     , Effect.batch
                                         [ Effect.addEvent <| Event.createListUnsharedWithUserEvent eventMetadata { userId = userId, listId = model.listId }
-                                        , Effect.sendCmd <| Lamdera.sendToBackend (Bridge.UnsubscribeFromList { listId = model.listId })
                                         , Effect.replaceRoutePath Route.Path.Lists
                                         ]
                                     )
@@ -224,14 +223,13 @@ view shared model =
     let
         maybeList =
             shared.state.lists
-                |> Dict.values
-                |> List.filter (\l -> l.listId == model.listId)
-                |> List.head
+                |> Dict.get model.listId
     in
     { title = title
     , body =
         [ case maybeList of
             Just list ->
+                -- Show the normal list edit content
                 let
                     shareUrl =
                         model.fullHostNameAndPort ++ (Route.Path.Share_ListId_ { listId = list.listId } |> Route.Path.toString)
@@ -246,7 +244,7 @@ view shared model =
                             Just user ->
                                 case getUserId user of
                                     Just userId ->
-                                        True
+                                        List.member userId list.users || list.listId == userId
 
                                     Nothing ->
                                         False
@@ -310,7 +308,28 @@ view shared model =
                     |> AppBar.view
 
             Nothing ->
-                Html.text "List not found"
+                -- List no longer exists or user doesn't have access
+                Html.div
+                    [ Html.Attributes.class "flex items-center justify-center min-h-screen"
+                    ]
+                    [ Html.div
+                        [ Html.Attributes.class "text-center"
+                        ]
+                        [ Html.h2
+                            [ Html.Attributes.class "text-lg font-medium text-gray-900 mb-2"
+                            ]
+                            [ Html.text "List Not Found" ]
+                        , Html.p
+                            [ Html.Attributes.class "text-sm text-gray-500 mb-4"
+                            ]
+                            [ Html.text "This list is no longer available or you don't have access to it." ]
+                        , Html.a
+                            [ Html.Attributes.href (Route.Path.Lists |> Route.Path.toString)
+                            , Html.Attributes.class "text-fuchsia-600 hover:text-fuchsia-500"
+                            ]
+                            [ Html.text "Go back to lists" ]
+                        ]
+                    ]
         ]
     }
 
